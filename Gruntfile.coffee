@@ -3,12 +3,6 @@
 
 
 
-
-# # Globbing
-# for performance reasons we're only matching one level down:
-# 'test/spec/{,*/}*.js'
-# use this if you want to recursively match all subfolders:
-# 'test/spec/**/*.js'
 module.exports = (grunt, options) ->
   pkg = grunt.file.readJSON('package.json')
   require('load-grunt-tasks') grunt
@@ -28,30 +22,37 @@ module.exports = (grunt, options) ->
     # grunt-contrib-watch
     watch:
       js:
-        files: 'src/*.litcoffee'
-        tasks: ['coffeeify:basic']
+        files: 'src/**/*.litcoffee'
+        tasks: ['clean','docco','coffee']
 
-    clean:
-      dist: ['dist']
+    clean: ['dist']
 
-    # coffeeify
-    coffeeify:
-      basic:
-        options: {}
-        files: [
-            src: ['src/*.litcoffee', 'src/*.js']
-            dest: 'dist/mooog.js'
-        ]
+    coffee:
+      coffee_to_js:
+        options:
+          bare: true
+          sourceMap: true
+        expand: true
+        flatten: false
+        src: ["src/*.litcoffee"]
+        dest: 'dist'
+        ext: ".js"
 
+    docco:
+      debug:
+        src: ['src/**/*.litcoffee']
+        options:
+          output: 'docs/'
 
 
   ######### TASK DEFINITIONS #########
 
 
-
   # build, dev server, watch
   grunt.registerTask 'dev', [
-    'coffeeify'
+    'clean'
+    'docco'
+    'coffee'
     'watch'
   ]
 

@@ -4,12 +4,14 @@ Chainable AudioNode functions for Webkit browsers
 
 ## Docs
 
-Moog is documented in 
+Moog is documented in /docs/mooog.html
 
 ## Development
 
-*	Middleman
-*	npm/docco
+*   npm/docco
+*   npm/grunt
+
+
 
 
 

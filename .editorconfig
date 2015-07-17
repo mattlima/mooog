@@ -37,6 +37,10 @@ indent_size = 2
 indent_style = space
 indent_size = 2
 
+[*.litcoffee]
+indent_style = space
+indent_size = 2
+
 [*.rb]
 indent_style = space
 indent_size = 2

@@ -1,0 +1,10 @@
+{
+  "version": 3,
+  "file": "mooog.js",
+  "sourceRoot": "../../src/",
+  "sources": [
+    "mooog.litcoffee"
+  ],
+  "names": [],
+  "mappings": "AAIC,IAAA;;AAAM;EACQ,iBAAC,IAAD;IAAC,IAAC,CAAA,OAAD;IAER,CAAA;MAAA,IAAA,EAAM,SAAC,MAAD;eACJ,KAAA,CAAM,IAAC,CAAA,IAAD,GAAQ,CAAA,SAAA,GAAU,MAAV,GAAiB,IAAjB,CAAd;MADI,CAAN;KAAA;EAFO;;;;;;AAOd,OAAO,CAAC,GAAR,CAAY,SAAZ"
+}
