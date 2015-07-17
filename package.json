@@ -1,0 +1,30 @@
+{
+  "name": "moog",
+  "version": "0.0.1",
+  "description": "Chainable AudioNode wrapper functions",
+  "main": "Gruntfile.coffee",
+  "directories": {
+    "doc": "docs"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "coffeeify": "^1.0.0",
+    "docco": "^0.7.0",
+    "grunt": "^0.4.5",
+    "grunt-contrib-clean": "~0.5.0",
+    "grunt-contrib-coffee": "^0.13.0",
+    "grunt-contrib-concat": "~0.4.0",
+    "grunt-contrib-connect": "~0.7.1",
+    "grunt-contrib-copy": "~0.5.0",
+    "grunt-contrib-sass": "^0.9.2",
+    "grunt-contrib-uglify": "~0.4.0",
+    "grunt-contrib-watch": "~0.6.1",
+    "load-grunt-tasks": "^3.1.0",
+    "time-grunt": "^1.1.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Matt Lima <matt@3-tone.com>",
+  "license": "MIT"
+}
