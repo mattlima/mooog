@@ -1,13 +1,13 @@
-# Mooog
+## Mooog
 
-Chainable AudioNode objects
+Expose the API as the Moog global
 
-	class Wrapper
-		constructor: (@name) ->
 
-        move: (meters) ->
-          alert @name + " moved #{meters}m."
+    class Mooog
+      constructor: (@initOb) ->
 
-## Now do something different
+      context: ->
+        new Context()
 
-	console.log('goodbye')
+    window.Mooog = Mooog
+

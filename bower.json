@@ -1,0 +1,24 @@
+{
+  "name": "mooog",
+  "version": "0.0.1",
+  "homepage": "https://github.com/mattlima/mooog",
+  "authors": [
+    "Matt Lima <matt@3-tone.com>"
+  ],
+  "description": "Chainable Audiocontext nodes",
+  "main": "dist/mooog.js",
+  "license": "MIT",
+  "private": true,
+  "moduleType": [
+    "globals"
+  ],
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "devDependencies": {
+  }
+}

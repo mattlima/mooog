@@ -22,38 +22,79 @@ module.exports = (grunt, options) ->
     # grunt-contrib-watch
     watch:
       js:
-        files: 'src/**/*.litcoffee'
-        tasks: ['clean','docco','coffee']
+        files: ['src/**/*.litcoffee','src/**/*.coffee']
+        tasks: ['build']
 
-    clean: ['dist']
+    clean:
+      dist:
+        ['dist/*']
+      temp:
+        ['src/index.litcoffee']
 
     coffee:
       coffee_to_js:
         options:
-          bare: true
+#           bare: true
           sourceMap: true
         expand: true
         flatten: false
-        src: ["src/*.litcoffee"]
-        dest: 'dist'
-        ext: ".js"
+        files:
+          "dist/mooog.js": "src/index.litcoffee"
+
 
     docco:
       debug:
-        src: ['src/**/*.litcoffee']
+        src: ['src/index.litcoffee']
         options:
           output: 'docs/'
 
+    concat:
+      options:
+        separator: '\n'
+      dist:
+        src: ['src/mooog-doc.litcoffee', 'src/classes/*.litcoffee', 'src/mooog.litcoffee'],
+        dest: 'src/index.litcoffee',
+
+
+    coffeelint:
+      app: ['src/**/*.litcoffee']
+
+    uglify: {
+      mooog: {
+        options: {
+          sourceMap: true,
+          sourceMapName: 'dist/mooog.min.js.map'
+        },
+        files: {
+          'dist/mooog.min.js': ['dist/mooog.js']
+        }
+      }
+    }
 
   ######### TASK DEFINITIONS #########
 
 
-  # build, dev server, watch
+  # build, watch
   grunt.registerTask 'dev', [
-    'clean'
-    'docco'
-    'coffee'
+    'build'
     'watch'
+  ]
+  # concat and lint
+  grunt.registerTask 'build', [
+    'coffeelint'
+    'concat'
+#     'clean:dist'
+    'coffee'
+    'clean:temp'
+  ]
+  # build, docs
+  grunt.registerTask 'prod', [
+    'concat'
+    'docco'
+    'clean:dist'
+    'coffee'
+    'clean:temp'
+    'uglify'
   ]
 
 

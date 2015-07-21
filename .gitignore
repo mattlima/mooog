@@ -19,3 +19,7 @@
 
 #Ignore node stuff
 node_modules
+
+index.html
+
+jasmine_examples
