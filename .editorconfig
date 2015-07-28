@@ -39,6 +39,7 @@ indent_size = 2
 
 [*.litcoffee]
 indent_style = space
+trim_trailing_whitespace = false
 indent_size = 2
 
 [*.rb]
