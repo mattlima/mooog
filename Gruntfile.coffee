@@ -22,8 +22,9 @@ module.exports = (grunt, options) ->
     # grunt-contrib-watch
     watch:
       js:
-        files: ['src/**/*.litcoffee','src/**/*.coffee']
+        files: ['src/**/*.litcoffee','src/**/*.coffee', '!src/index.litcoffee']
         tasks: ['build']
+
 
     clean:
       dist:
@@ -33,9 +34,6 @@ module.exports = (grunt, options) ->
 
     coffee:
       coffee_to_js:
-        options:
-#           bare: true
-          sourceMap: true
         expand: true
         flatten: false
         files:
