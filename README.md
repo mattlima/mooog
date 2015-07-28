@@ -4,7 +4,7 @@ Chainable AudioNode functions for Webkit browsers
 
 ## Docs
 
-Moog is documented in /docs/mooog.html
+Mooog is documented in /docs/mooog.html
 
 ## Development
 

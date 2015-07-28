@@ -1,5 +1,5 @@
 {
-  "name": "moog",
+  "name": "mooog",
   "version": "0.0.1",
   "description": "Chainable AudioNode wrapper functions",
   "main": "Gruntfile.coffee",
