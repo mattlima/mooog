@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>Mooog</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+  <link rel="stylesheet" media="all" href="docco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+    
+    <ul class="sections">
+        
+        
+        
+        <li id="section-1">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+              <h1 id="mooog">Mooog</h1>
+<blockquote>
+<p>Chainable AudioNode objects</p>
+</blockquote>
+<h3 id="why-mooog-">Why Mooog?</h3>
+<p>Mooog is inspired by audio mixing boards on the one hand and jQuery chainable
+syntax on the other. It automatically does a lot of stuff so you don’t have to.</p>
+<h3 id="assumptions">Assumptions</h3>
+<p>Mooog assumes that you’ll be working with one or more chains of AudioNode
+objects, organized into tracks, like a mixer. It will automatically create a
+panner and a gain module that can be controlled from the track. It
+automatically routes the end of the chain to the destinationNode.</p>
+<h2 id="node">Node</h2>
+<blockquote>
+<p>Base class for all the node wrappers. </p>
+</blockquote>
+<p>The Mooog Node object wraps one or more AudioNode objects. By default it 
+exposes the <code>AudioNode</code> methods of the first AudioNode in the <code>_nodes</code>
+array. </p>
+<p><code>_instance</code>: The parent <code>Mooog</code> instance<br><code>node_list</code>: An array of which each element is either</p>
+<ul>
+<li>A string representing a Node typeof</li>
+<li>An <code>AudioNode</code></li>
+<li>A <code>Node</code></li>
+<li>An object (TBD)</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Node</span></span>
+  <span class="hljs-attribute">constructor</span>: <span class="hljs-function"><span class="hljs-params">(<span class="hljs-property">@_instance</span>, node_list...)</span> -&gt;</span>
+    <span class="hljs-property">@_destination</span> = <span class="hljs-property">@_instance</span>._destination
+    <span class="hljs-property">@context</span> = <span class="hljs-property">@_instance</span>.context</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-2">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-2">&#182;</a>
+              </div>
+              <p>We track incoming and outgoing connections to the node in these arrays.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-property">@_incoming</span> = []
+    <span class="hljs-property">@_outgoing</span> = []
+    <span class="hljs-property">@_nodes</span> = []
+    
+    node_list = [node_list] <span class="hljs-keyword">unless</span> node_list <span class="hljs-keyword">instanceof</span> Array
+    <span class="hljs-keyword">if</span> node_list.length <span class="hljs-keyword">is</span> <span class="hljs-number">1</span>
+      <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> node_list
+        t = <span class="hljs-property">@__typeof</span>(i)
+        <span class="hljs-keyword">if</span> t == <span class="hljs-string">"AudioNode"</span>
+          <span class="hljs-property">@_nodes</span>.push i
+        <span class="hljs-keyword">if</span> t == <span class="hljs-string">"string"</span>
+          <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> Mooog.LEGAL_NODES[i] <span class="hljs-property">@_instance</span>
+        <span class="hljs-keyword">if</span> t == <span class="hljs-string">"Node"</span>
+          <span class="hljs-keyword">return</span> i
+    <span class="hljs-keyword">else</span>
+      <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> node_list
+        t = <span class="hljs-property">@__typeof</span>(i)
+        <span class="hljs-keyword">if</span> t == <span class="hljs-string">"AudioNode"</span>
+          todo = i.constructor.name.replace(<span class="hljs-regexp">/Node/</span>,<span class="hljs-string">''</span>)
+          <span class="hljs-property">@_nodes</span>.push <span class="hljs-keyword">new</span> Mooog.LEGAL_NODES[todo] <span class="hljs-property">@_instance</span>
+        <span class="hljs-keyword">if</span> t == <span class="hljs-string">"string"</span>
+          <span class="hljs-property">@_insert_node</span> <span class="hljs-keyword">new</span> Mooog.LEGAL_NODES[i]( <span class="hljs-property">@_instance</span> ), <span class="hljs-number">0</span>
+        <span class="hljs-keyword">if</span> t == <span class="hljs-string">"Node"</span>
+          <span class="hljs-property">@_nodes</span>.push i</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-3">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-3">&#182;</a>
+              </div>
+              <h3 id="node-__typeof">Node.__typeof</h3>
+<p>This is a modified <code>typeof</code> to filter AudioContext API-specific object types</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  
+  <span class="hljs-attribute">__typeof</span>: <span class="hljs-function"><span class="hljs-params">(thing)</span> -&gt;</span>
+    <span class="hljs-keyword">return</span> <span class="hljs-string">"AudioParam"</span> <span class="hljs-keyword">if</span> thing <span class="hljs-keyword">instanceof</span> AudioParam
+    <span class="hljs-keyword">return</span> <span class="hljs-string">"AudioNode"</span> <span class="hljs-keyword">if</span> thing <span class="hljs-keyword">instanceof</span> AudioNode
+    <span class="hljs-keyword">return</span> <span class="hljs-string">"Node"</span> <span class="hljs-keyword">if</span> thing <span class="hljs-keyword">instanceof</span> Node
+    <span class="hljs-keyword">switch</span> <span class="hljs-keyword">typeof</span>(thing)
+      <span class="hljs-keyword">when</span> <span class="hljs-string">"string"</span> <span class="hljs-keyword">then</span> <span class="hljs-string">"string"</span>
+      <span class="hljs-keyword">when</span> <span class="hljs-string">"number"</span> <span class="hljs-keyword">then</span> <span class="hljs-string">"number"</span>
+      <span class="hljs-keyword">when</span> <span class="hljs-string">"function"</span> <span class="hljs-keyword">then</span> <span class="hljs-string">"function"</span>
+      <span class="hljs-keyword">when</span> <span class="hljs-string">"object"</span> <span class="hljs-keyword">then</span> <span class="hljs-string">"object"</span>
+      <span class="hljs-keyword">else</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-4">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-4">&#182;</a>
+              </div>
+              <p>console.log thing, typeof(thing)</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> Error <span class="hljs-string">"__typeof does not pass for "</span> + <span class="hljs-keyword">typeof</span>(thing)</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-5">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-5">&#182;</a>
+              </div>
+              <h3 id="node-insert_node">Node.insert_node</h3>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-attribute">insert_node</span>: <span class="hljs-function"><span class="hljs-params">(node, ord)</span> -&gt;</span>
+    length = <span class="hljs-property">@_nodes</span>.length
+    ord = length <span class="hljs-keyword">unless</span> ord?
+            
+    <span class="hljs-keyword">if</span> ord &gt; length
+      <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> Error(<span class="hljs-string">"Invalid index given to insert_node: "</span> + ord +
+      <span class="hljs-string">" out of "</span> + length)
+    <span class="hljs-built_in">console</span>.log <span class="hljs-string">'called insert on'</span>, node, ord
+
+    <span class="hljs-keyword">if</span> ord <span class="hljs-keyword">is</span> <span class="hljs-number">0</span>
+     
+      <span class="hljs-property">@connect_incoming</span> node
+      <span class="hljs-property">@disconnect_incoming</span> <span class="hljs-property">@_nodes</span>[<span class="hljs-number">0</span>]
+
+      <span class="hljs-keyword">if</span> length &gt; <span class="hljs-number">1</span>
+        node.connect <span class="hljs-property">@to</span> <span class="hljs-property">@_nodes</span>[<span class="hljs-number">0</span>]
+        <span class="hljs-built_in">console</span>.log <span class="hljs-string">'node.connect to '</span>, <span class="hljs-property">@_nodes</span>[<span class="hljs-number">0</span>]
+
+    <span class="hljs-keyword">if</span> ord <span class="hljs-keyword">is</span> length
+      <span class="hljs-property">@_nodes</span>[ord - <span class="hljs-number">1</span>].disconnect <span class="hljs-property">@from</span> <span class="hljs-property">@_destination</span> <span class="hljs-keyword">if</span> ord <span class="hljs-keyword">isnt</span> <span class="hljs-number">0</span>
+      <span class="hljs-built_in">console</span>.log(<span class="hljs-property">@_nodes</span>[ord - <span class="hljs-number">1</span>], <span class="hljs-string">'disconnect'</span>, <span class="hljs-property">@_destination</span>) <span class="hljs-keyword">if</span> ord <span class="hljs-keyword">isnt</span> <span class="hljs-number">0</span>
+      node.connect <span class="hljs-property">@to</span> <span class="hljs-property">@_destination</span>
+      <span class="hljs-built_in">console</span>.log node, <span class="hljs-string">'connect'</span>, <span class="hljs-property">@_destination</span>
+      <span class="hljs-property">@_nodes</span>[ord - <span class="hljs-number">1</span>].connect <span class="hljs-property">@to</span> node <span class="hljs-keyword">if</span> ord <span class="hljs-keyword">isnt</span> <span class="hljs-number">0</span>
+      <span class="hljs-built_in">console</span>.log <span class="hljs-property">@_nodes</span>[ord - <span class="hljs-number">1</span>], <span class="hljs-string">"connect"</span>, node <span class="hljs-keyword">if</span> ord <span class="hljs-keyword">isnt</span> <span class="hljs-number">0</span>
+
+    <span class="hljs-keyword">if</span> ord <span class="hljs-keyword">isnt</span> length <span class="hljs-keyword">and</span> ord <span class="hljs-keyword">isnt</span> <span class="hljs-number">0</span>
+      <span class="hljs-built_in">console</span>.log <span class="hljs-property">@_nodes</span>[ord - <span class="hljs-number">1</span>], <span class="hljs-string">"disconnect"</span>, <span class="hljs-property">@_nodes</span>[ord]
+      <span class="hljs-property">@_nodes</span>[ord - <span class="hljs-number">1</span>].disconnect <span class="hljs-property">@from</span> <span class="hljs-property">@_nodes</span>[ord]
+      <span class="hljs-built_in">console</span>.log <span class="hljs-property">@_nodes</span>[ord - <span class="hljs-number">1</span>], <span class="hljs-string">"connect"</span>, node
+      <span class="hljs-property">@_nodes</span>[ord - <span class="hljs-number">1</span>].connect <span class="hljs-property">@to</span> node
+      <span class="hljs-built_in">console</span>.log node, <span class="hljs-string">"connect"</span>, <span class="hljs-property">@_nodes</span>[ord]
+      node.connect <span class="hljs-property">@to</span> <span class="hljs-property">@_nodes</span>[ord]
+    
+    <span class="hljs-property">@_nodes</span>.splice ord, <span class="hljs-number">0</span>, node
+    <span class="hljs-built_in">console</span>.log <span class="hljs-string">"spliced:"</span>, <span class="hljs-property">@_nodes</span>
+
+
+    
+      
+
+  <span class="hljs-attribute">connect_incoming</span>: <span class="hljs-function">-&gt;</span>
+    <span class="hljs-built_in">console</span>.log <span class="hljs-string">'do incoming'</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-6">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-6">&#182;</a>
+              </div>
+              <p>todo: deal with incoming connections for 0 element</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+  <span class="hljs-attribute">disconnect_incoming</span>: <span class="hljs-function">-&gt;</span>
+    <span class="hljs-built_in">console</span>.log <span class="hljs-string">'undo incoming'</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-7">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-7">&#182;</a>
+              </div>
+              <p>todo: deal with incoming connections for 0 element</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-8">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-8">&#182;</a>
+              </div>
+              <h3 id="node-connect">Node.connect</h3>
+<p>We track all connections to and from the underlying <code>@base_node</code> by exposing
+modified connect and disconnect methods. 
+<code>node</code>: The node object or string ID of the object to which to connect.
+<code>param</code>: Optional string name of the <code>AudioParam</code> member of <code>node</code>to
+which to connect.
+<code>output</code>: Optional integer representing the output of this Node to use.
+<code>input</code>: If <code>param</code> is not specified (you are connecting to an <code>AudioNode</code>)
+then this integer argument can be used to specify the input of the target
+to connect to.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-attribute">connect</span>: <span class="hljs-function"><span class="hljs-params">(node, param, output, input)</span> -&gt;</span>
+    <span class="hljs-built_in">console</span>.log <span class="hljs-string">"called connect on "</span>, @, node
+    <span class="hljs-property">@_nodes</span>[ <span class="hljs-property">@_nodes</span>.length - <span class="hljs-number">1</span> ].connect node</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-9">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-9">&#182;</a>
+              </div>
+              <p>todo: deal with params
+@_outgoing.push [node, param, output, input]
+node.receive_connect @, param, output, input if node.receive_connect?
+@connect_base_node node, param, output, input</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  
+  
+  <span class="hljs-attribute">to</span>: <span class="hljs-function"><span class="hljs-params">(node)</span> -&gt;</span>
+    <span class="hljs-keyword">switch</span> <span class="hljs-property">@__typeof</span> node
+      <span class="hljs-keyword">when</span> <span class="hljs-string">"Node"</span> <span class="hljs-keyword">then</span> <span class="hljs-keyword">return</span> node._nodes[<span class="hljs-number">0</span>]
+      <span class="hljs-keyword">when</span> <span class="hljs-string">"AudioNode"</span> <span class="hljs-keyword">then</span> <span class="hljs-keyword">return</span> node
+      <span class="hljs-keyword">else</span> <span class="hljs-keyword">throw</span> New Error <span class="hljs-string">"Unknown node type passed to connect"</span>
+  
+  <span class="hljs-attribute">from</span>: @.prototype.to
+  
+  
+  <span class="hljs-attribute">expose_methods_of</span>: <span class="hljs-function"><span class="hljs-params">(node)</span> -&gt;</span>
+    <span class="hljs-keyword">for</span> key,val <span class="hljs-keyword">of</span> node
+      <span class="hljs-keyword">if</span> @[key]? <span class="hljs-keyword">then</span> <span class="hljs-keyword">continue</span>
+      <span class="hljs-keyword">switch</span> <span class="hljs-property">@__typeof</span> val
+        <span class="hljs-keyword">when</span> <span class="hljs-string">'function'</span>
+          @[key] = val.bind node
+        <span class="hljs-keyword">when</span> <span class="hljs-string">'AudioParam'</span>
+          @[key] = val
+        <span class="hljs-keyword">when</span> <span class="hljs-string">"string"</span>, <span class="hljs-string">"number"</span>
+          Object.defineProperty @, key, {
+            <span class="hljs-attribute">get</span>: <span class="hljs-function"><span class="hljs-params">()</span> -&gt;</span>
+              <span class="hljs-keyword">return</span> node.key
+            <span class="hljs-attribute">set</span>: <span class="hljs-function"><span class="hljs-params">(v)</span> -&gt;</span>
+              <span class="hljs-keyword">return</span> node.key = v
+          }
+        
+        
+  
+  
+  <span class="hljs-attribute">connect_base_node</span>: <span class="hljs-function"><span class="hljs-params">(node, param, output, input)</span> -&gt;</span>
+    <span class="hljs-built_in">console</span>.log <span class="hljs-string">"reconnecting"</span>, node, param, output, input
+    param_type = <span class="hljs-keyword">typeof</span> param
+    has_param = param_type == <span class="hljs-string">"string"</span>
+    <span class="hljs-keyword">switch</span> param_type
+      <span class="hljs-keyword">when</span> <span class="hljs-string">"string"</span>, <span class="hljs-string">"undefined"</span>
+        has_output = !!output
+        has_input = !!input
+      <span class="hljs-keyword">when</span> <span class="hljs-string">"number"</span>
+        [output, input, param] = [param, output, <span class="hljs-literal">undefined</span>]
+        has_output = !!output
+        has_input = !!input
+      <span class="hljs-keyword">else</span>
+        <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> Error(<span class="hljs-string">"Param argument specified but is not string or number."</span>)</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-10">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-10">&#182;</a>
+              </div>
+              <p>todo: remove this dev shim</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    node.base_node = node <span class="hljs-keyword">if</span> node <span class="hljs-keyword">instanceof</span> AudioNode
+    
+    <span class="hljs-keyword">if</span> has_param
+      <span class="hljs-keyword">if</span> has_output
+        <span class="hljs-property">@base_node</span>.connect node.base_node[param], output
+      <span class="hljs-keyword">else</span>
+        <span class="hljs-property">@base_node</span>.connect node.base_node[param]
+    <span class="hljs-keyword">else</span>
+      <span class="hljs-keyword">if</span> has_output <span class="hljs-keyword">and</span> has_input
+        <span class="hljs-property">@base_node</span>.connect node.base_node, output, input
+      <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> has_output
+        <span class="hljs-property">@base_node</span>.connect node.base_node, output
+      <span class="hljs-keyword">else</span>
+        <span class="hljs-property">@base_node</span>.connect node.base_node
+        
+      
+    
+      
+      
+  <span class="hljs-attribute">receive_connect</span>: <span class="hljs-function"><span class="hljs-params">(source, output, input)</span> -&gt;</span>
+    <span class="hljs-keyword">if</span> arguments[<span class="hljs-number">2</span>]?
+      <span class="hljs-property">@_incoming</span>.push [source, output, input]
+    <span class="hljs-keyword">else</span>
+      <span class="hljs-property">@_incoming</span>.push [source, output]</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-11">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-11">&#182;</a>
+              </div>
+              <h2 id="gain">Gain</h2>
+<p>Wraps the GainNode AudioContext object</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Gain</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Node</span></span>
+  <span class="hljs-attribute">constructor</span>: <span class="hljs-function"><span class="hljs-params">(<span class="hljs-property">@_instance</span>, node_list...)</span> -&gt;</span>
+    <span class="hljs-keyword">super</span>
+    <span class="hljs-property">@insert_node</span> <span class="hljs-property">@context</span>.createGain(), <span class="hljs-number">0</span>
+    <span class="hljs-property">@expose_methods_of</span> <span class="hljs-property">@_nodes</span>[<span class="hljs-number">0</span>]</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-12">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-12">&#182;</a>
+              </div>
+              <h2 id="oscillator">Oscillator</h2>
+<p>Wraps the OscillatorNode AudioContext object</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Oscillator</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Node</span></span>
+  <span class="hljs-attribute">constructor</span>: <span class="hljs-function"><span class="hljs-params">(<span class="hljs-property">@_instance</span>, node_list...)</span> -&gt;</span>
+    <span class="hljs-keyword">super</span>
+    <span class="hljs-property">@insert_node</span> <span class="hljs-property">@context</span>.createOscillator(), <span class="hljs-number">0</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-13">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-13">&#182;</a>
+              </div>
+              <p>@insert_node @context.createGain(), 1</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-property">@insert_node</span> <span class="hljs-keyword">new</span> Gain( <span class="hljs-property">@_instance</span>, <span class="hljs-string">'Gain'</span> )
+    <span class="hljs-property">@_is_started</span> = <span class="hljs-literal">false</span>
+
+  
+  <span class="hljs-attribute">start</span>: <span class="hljs-function"><span class="hljs-params">()</span> -&gt;</span>
+    <span class="hljs-keyword">if</span> <span class="hljs-property">@_is_started</span>
+      <span class="hljs-property">@_nodes</span>[<span class="hljs-number">1</span>].gain.value = <span class="hljs-number">1.0</span>
+    <span class="hljs-keyword">else</span>
+      <span class="hljs-property">@_nodes</span>[<span class="hljs-number">0</span>].start()
+      <span class="hljs-property">@_is_started</span> = <span class="hljs-literal">true</span>
+  
+  <span class="hljs-attribute">stop</span>: <span class="hljs-function"><span class="hljs-params">()</span> -&gt;</span>
+    <span class="hljs-property">@_nodes</span>[<span class="hljs-number">1</span>].gain.value = <span class="hljs-number">0</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-14">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-14">&#182;</a>
+              </div>
+              <h2 id="stereopanner">StereoPanner</h2>
+<p>Wraps the StereoPannerNode AudioContext object</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">StereoPanner</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Node</span></span>
+  <span class="hljs-attribute">constructor</span>: <span class="hljs-function"><span class="hljs-params">(<span class="hljs-property">@_instance</span>, node_list...)</span> -&gt;</span>
+    <span class="hljs-keyword">super</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-15">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-15">&#182;</a>
+              </div>
+              <h2 id="mooog">Mooog</h2>
+<p>Wraps the AudioContext object and exposes the Track object. Exposes the API
+as the Mooog global</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Mooog</span></span>
+
+  <span class="hljs-property">@LEGAL_NODES</span>:
+    <span class="hljs-string">'Oscillator'</span>: Oscillator
+    <span class="hljs-string">'StereoPanner'</span>: StereoPanner
+    <span class="hljs-string">'Gain'</span>: Gain
+
+  
+  <span class="hljs-attribute">constructor</span>: <span class="hljs-function"><span class="hljs-params">(<span class="hljs-property">@initOb</span>)</span> -&gt;</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-16">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-16">&#182;</a>
+              </div>
+              <p>Stores the type of constructor used for the AudioContext object
+(<code>AudioContext</code> or <code>webkitAudioContext</code>)</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-property">@_BROWSER_CONSTRUCTOR</span> = <span class="hljs-literal">false</span>
+    <span class="hljs-property">@context</span> = <span class="hljs-property">@create_context</span>()
+    <span class="hljs-property">@_destination</span> = <span class="hljs-property">@context</span>.destination
+    <span class="hljs-property">@_nodes</span> = {}
+    <span class="hljs-property">@_connections</span> = {}
+    <span class="hljs-property">@_node_id_count</span> = <span class="hljs-number">1</span>
+
+
+
+
+
+  <span class="hljs-attribute">create_context</span>: <span class="hljs-function"><span class="hljs-params">()</span> -&gt;</span>
+    <span class="hljs-keyword">if</span>(<span class="hljs-built_in">window</span>.AudioContext?)
+      <span class="hljs-property">@_BROWSER_CONSTRUCTOR</span> = <span class="hljs-string">'AudioContext'</span>
+      <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> AudioContext()
+    <span class="hljs-keyword">if</span>(<span class="hljs-built_in">window</span>.webkitAudioContext?)
+      <span class="hljs-property">@_BROWSER_CONSTRUCTOR</span> = <span class="hljs-string">'webkitAudioContext'</span>
+      <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> webkitAudioContext()
+    <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> Error(<span class="hljs-string">"This browser does not yet support the AudioContext API"</span>)</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-17">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-17">&#182;</a>
+              </div>
+              <p>The track object holds a chain of AudioNodes. By default it includes panner
+and gain stages.</p>
+<p>track: (id, params) -&gt;
+ return @_tracks[id] if @_tracks?[id]?
+ @_tracks[id] = new Track(id, this, params)</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    
+  <span class="hljs-attribute">node</span>: <span class="hljs-function"><span class="hljs-params">(id, node_list...)</span> -&gt;</span>
+    <span class="hljs-keyword">return</span> <span class="hljs-property">@_nodes</span>[id] <span class="hljs-keyword">if</span> <span class="hljs-property">@_nodes</span>?[id]?
+    <span class="hljs-property">@_nodes</span>[id] = <span class="hljs-keyword">new</span> Node(<span class="hljs-keyword">this</span>, node_list...)
+  
+  
+  <span class="hljs-attribute">create_connection</span>: <span class="hljs-function"><span class="hljs-params">(from, to)</span> -&gt;</span>
+    <span class="hljs-property">@_connections</span>[from]?[to] = <span class="hljs-literal">true</span>
+    
+  <span class="hljs-attribute">delete_connection</span>: <span class="hljs-function"><span class="hljs-params">(from, to)</span> -&gt;</span>
+    <span class="hljs-keyword">delete</span> <span class="hljs-property">@_connections</span>[from]?[to]
+    
+  <span class="hljs-attribute">next_node_id</span>: <span class="hljs-function">-&gt;</span>
+    <span class="hljs-property">@_node_id_count</span> += <span class="hljs-number">1</span>
+    <span class="hljs-string">"_node"</span> + <span class="hljs-property">@_node_id_count</span>
+
+    
+
+<span class="hljs-built_in">window</span>.Mooog = Mooog</pre></div></div>
+            
+        </li>
+        
+    </ul>
+  </div>
+</body>
+</html>

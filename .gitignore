@@ -20,6 +20,6 @@
 #Ignore node stuff
 node_modules
 
-index.html
+/index.html
 
 jasmine_examples
