@@ -45,12 +45,13 @@ module.exports = (grunt, options) ->
         src: ['src/index.litcoffee']
         options:
           output: 'docs/'
+          css: 'docco.css'
 
     concat:
       options:
         separator: '\n'
       dist:
-        src: ['src/mooog-doc.litcoffee', 'src/classes/*.litcoffee', 'src/mooog.litcoffee'],
+        src: ['src/mooog-doc.litcoffee', 'src/node.litcoffee',  'src/classes/*.litcoffee', 'src/mooog.litcoffee'],
         dest: 'src/index.litcoffee',
 
 
