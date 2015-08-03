@@ -164,62 +164,23 @@ to connect to.
       
       
       expose_methods_of: (node) ->
+        console.log "exposing", node
         for key,val of node
           if @[key]? then continue
+          console.log "- checking", @__typeof val
           switch @__typeof val
             when 'function'
               @[key] = val.bind node
             when 'AudioParam'
               @[key] = val
             when "string", "number"
-              Object.defineProperty @, key, {
-                get: () ->
-                  return node.key
-                set: (v) ->
-                  return node.key = v
-              }
-            
-            
-      
-      
-      connect_base_node: (node, param, output, input) ->
-        console.log "reconnecting", node, param, output, input
-        param_type = typeof param
-        has_param = param_type == "string"
-        switch param_type
-          when "string", "undefined"
-            has_output = !!output
-            has_input = !!input
-          when "number"
-            [output, input, param] = [param, output, undefined]
-            has_output = !!output
-            has_input = !!input
-          else
-            throw new Error("Param argument specified but is not string or number.")
+              ((o, node, key) ->
+                Object.defineProperty o, key, {
+                  get: ->
+                    node[key]
+                  set: (val) ->
+                    node[key] = val
+                  enumerable: true
+                  configurable: true
+                })(@, node, key)
 
-        #todo: remove this dev shim
-        node.base_node = node if node instanceof AudioNode
-        
-        if has_param
-          if has_output
-            @base_node.connect node.base_node[param], output
-          else
-            @base_node.connect node.base_node[param]
-        else
-          if has_output and has_input
-            @base_node.connect node.base_node, output, input
-          else if has_output
-            @base_node.connect node.base_node, output
-          else
-            @base_node.connect node.base_node
-            
-          
-        
-          
-          
-      receive_connect: (source, output, input) ->
-        if arguments[2]?
-          @_incoming.push [source, output, input]
-        else
-          @_incoming.push [source, output]
-          
