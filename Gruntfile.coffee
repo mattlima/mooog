@@ -46,6 +46,7 @@ module.exports = (grunt, options) ->
         options:
           output: 'docs/'
           css: 'docco.css'
+          layout: 'linear'
 
     concat:
       options:

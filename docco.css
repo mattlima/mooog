@@ -87,6 +87,18 @@ hr {
   margin: 20px 0;
 }
 
+
+div.page{
+  margin:0 auto;
+  padding: 0 20px;
+  max-width:1000px;
+}
+div.highlight{
+  padding:15px;
+  background-color:#FFF;
+  border:1px solid #EEE;
+}
+
 pre, tt, code {
   font-size: 12px; line-height: 16px;
   font-family: Menlo, Monaco, Consolas, "Lucida Console", monospace;

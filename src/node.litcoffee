@@ -54,8 +54,6 @@ Otherwise, this is one or more config objects.
         
         if node_list.length is 1
           return unless @constructor.name is "Node"
-          #if @__typeof node_list[0] is "AudioNode"
-          #  return
           if Mooog.LEGAL_NODES[node_list[0].node_type]?
             return new Mooog.LEGAL_NODES[node_list[0].node_type] @_instance, node_list[0]
           else
