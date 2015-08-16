@@ -1,7 +1,11 @@
 ## Mooog
 
 Wraps the AudioContext object and exposes the Track object. Exposes the API
-as the Mooog global
+as the Mooog global.  
+Config options:
+  - debug: Output debugging messages to the console. *Default: false*
+  - default_gain: `Gain` objects that are initiated will have their gain
+automatically set to this value. *Default: 0.5*
 
 
     class Mooog
@@ -22,12 +26,13 @@ object (`AudioContext` or `webkitAudioContext`)
         @_destination = @context.destination
         @config =
           debug: false
+          default_gain: 0.5
         
         @init(@initConfig)
 
         @_nodes = {}
         #@_connections = {}
-        #@_node_id_count = 1
+
 
 
       init: (initConfig) ->

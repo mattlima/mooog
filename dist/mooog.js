@@ -229,7 +229,7 @@
       }
       switch (this.__typeof(node1)) {
         case "Node":
-          source = node1._nodes[source._nodes.length - 1];
+          source = node1._nodes[node1._nodes.length - 1];
           break;
         case "AudioNode":
         case "AudioParam":
@@ -265,6 +265,42 @@
         input = 0;
       }
       return this.safely_disconnect(this, node, output, input);
+    };
+
+    Node.prototype.param = function(key, val) {
+      var k, v;
+      if (this.__typeof(key) === 'object') {
+        for (k in key) {
+          v = key[k];
+          this.get_set(k, v);
+        }
+        return this;
+      }
+      this.get_set(key, val);
+      return this;
+    };
+
+    Node.prototype.get_set = function(key, val) {
+      if (this[key] == null) {
+        return;
+      }
+      switch (this.__typeof(this[key])) {
+        case "AudioParam":
+          if (val != null) {
+            this[key].value = val;
+            return this;
+          } else {
+            return this[key].value;
+          }
+          break;
+        default:
+          if (val != null) {
+            this[key] = val;
+            return this;
+          } else {
+            return this[key];
+          }
+      }
     };
 
     Node.prototype.debug = function() {
@@ -364,7 +400,8 @@
       this.context = this.create_context();
       this._destination = this.context.destination;
       this.config = {
-        debug: false
+        debug: false,
+        default_gain: 0.5
       };
       this.init(this.initConfig);
       this._nodes = {};

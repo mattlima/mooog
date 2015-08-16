@@ -209,7 +209,10 @@ to connect to.
         #@_outgoing.push [node, param, output, input]
         #node.receive_connect @, param, output, input if node.receive_connect?
         #@connect_base_node node, param, output, input
-      
+
+
+### Node.to, Node.from
+These functions are synonyms and exist to improve code readability.
       
       to: (node) ->
         switch @__typeof node
@@ -219,6 +222,10 @@ to connect to.
       
       from: @.prototype.to
       
+
+### Node.expose_methods_of
+Exposes the properties of a wrapped `AudioNode` on `this`
+
       
       expose_methods_of: (node) ->
         @debug "exposing", node
@@ -248,7 +255,7 @@ a node that's not already connected.
 
       safely_disconnect: (node1, node2, output = 0, input = 0) ->
         switch @__typeof node1
-          when "Node" then source = node1._nodes[ source._nodes.length - 1 ]
+          when "Node" then source = node1._nodes[ node1._nodes.length - 1 ]
           when "AudioNode", "AudioParam" then source = node1
           else throw new Error "Unknown node type passed to connect"
         switch @__typeof node2
@@ -259,6 +266,7 @@ a node that's not already connected.
           source.disconnect target, output, input
         catch e
           @debug("ignored InvalidAccessError disconnecting #{target} from #{source}")
+
       
 ### Node.disconnect
 Replace the native `disconnect` function with a safe version, in case it is called directly.
@@ -266,6 +274,36 @@ Replace the native `disconnect` function with a safe version, in case it is call
       disconnect: (node, output = 0, input = 0) ->
         @safely_disconnect @, node, output, input
 
+
+
+### Node.param
+jQuery-style getter/setter that also works on `AudioParam` properties.
+  
+      param: (key, val) ->
+        if @__typeof(key) is 'object'
+          @get_set k, v for k, v of key
+          return this
+        @get_set key, val
+        return this
+
+
+
+### Node.get_set
+Handles the getting/setting for `Node.param`
+
+      get_set: (key, val) ->
+        return unless @[key]?
+        switch @__typeof @[key]
+          when "AudioParam"
+            if val?
+              @[key].value = val
+              return this
+            else @[key].value
+          else
+            if val?
+              @[key] = val
+              return this
+            else @[key]
 
 
 ### Node.debug

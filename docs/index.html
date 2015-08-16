@@ -279,17 +279,27 @@ node.receive_connect @, param, output, input if node.receive_connect?
 @connect_base_node node, param, output, input</p>
 
         
-          <div class='highlight'><pre>  
-  
-  <span class="hljs-attribute">to</span>: <span class="hljs-function"><span class="hljs-params">(node)</span> -&gt;</span>
+      
+        
+        <h3 id="node-to-node-from">Node.to, Node.from</h3>
+<p>These functions are synonyms and exist to improve code readability.</p>
+
+        
+          <div class='highlight'><pre>  <span class="hljs-attribute">to</span>: <span class="hljs-function"><span class="hljs-params">(node)</span> -&gt;</span>
     <span class="hljs-keyword">switch</span> <span class="hljs-property">@__typeof</span> node
       <span class="hljs-keyword">when</span> <span class="hljs-string">"Node"</span> <span class="hljs-keyword">then</span> <span class="hljs-keyword">return</span> node._nodes[<span class="hljs-number">0</span>]
       <span class="hljs-keyword">when</span> <span class="hljs-string">"AudioNode"</span> <span class="hljs-keyword">then</span> <span class="hljs-keyword">return</span> node
       <span class="hljs-keyword">else</span> <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> Error <span class="hljs-string">"Unknown node type passed to connect"</span>
   
-  <span class="hljs-attribute">from</span>: @.prototype.to
-  
-  
+  <span class="hljs-attribute">from</span>: @.prototype.to</pre></div>
+        
+      
+        
+        <h3 id="node-expose_methods_of">Node.expose_methods_of</h3>
+<p>Exposes the properties of a wrapped <code>AudioNode</code> on <code>this</code></p>
+
+        
+          <div class='highlight'><pre>  
   <span class="hljs-attribute">expose_methods_of</span>: <span class="hljs-function"><span class="hljs-params">(node)</span> -&gt;</span>
     <span class="hljs-property">@debug</span> <span class="hljs-string">"exposing"</span>, node
     <span class="hljs-keyword">for</span> key,val <span class="hljs-keyword">of</span> node
@@ -325,7 +335,7 @@ a node that’s not already connected.</p>
         
           <div class='highlight'><pre>  <span class="hljs-attribute">safely_disconnect</span>: <span class="hljs-function"><span class="hljs-params">(node1, node2, output = <span class="hljs-number">0</span>, input = <span class="hljs-number">0</span>)</span> -&gt;</span>
     <span class="hljs-keyword">switch</span> <span class="hljs-property">@__typeof</span> node1
-      <span class="hljs-keyword">when</span> <span class="hljs-string">"Node"</span> <span class="hljs-keyword">then</span> source = node1._nodes[ source._nodes.length - <span class="hljs-number">1</span> ]
+      <span class="hljs-keyword">when</span> <span class="hljs-string">"Node"</span> <span class="hljs-keyword">then</span> source = node1._nodes[ node1._nodes.length - <span class="hljs-number">1</span> ]
       <span class="hljs-keyword">when</span> <span class="hljs-string">"AudioNode"</span>, <span class="hljs-string">"AudioParam"</span> <span class="hljs-keyword">then</span> source = node1
       <span class="hljs-keyword">else</span> <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> Error <span class="hljs-string">"Unknown node type passed to connect"</span>
     <span class="hljs-keyword">switch</span> <span class="hljs-property">@__typeof</span> node2
@@ -345,6 +355,26 @@ a node that’s not already connected.</p>
         
           <div class='highlight'><pre>  <span class="hljs-attribute">disconnect</span>: <span class="hljs-function"><span class="hljs-params">(node, output = <span class="hljs-number">0</span>, input = <span class="hljs-number">0</span>)</span> -&gt;</span>
     <span class="hljs-property">@safely_disconnect</span> @, node, output, input</pre></div>
+        
+      
+        
+        <h3 id="node-param">Node.param</h3>
+<p>jQuery-style getter/setter that also works on <code>AudioParam</code> properties</p>
+
+        
+          <div class='highlight'><pre>  <span class="hljs-attribute">param</span>: <span class="hljs-function"><span class="hljs-params">(key, val)</span> -&gt;</span>
+    <span class="hljs-keyword">return</span> <span class="hljs-keyword">unless</span> @[key]?
+    <span class="hljs-keyword">switch</span> <span class="hljs-property">@__typeof</span> @[key]
+      <span class="hljs-keyword">when</span> <span class="hljs-string">"AudioParam"</span>
+        <span class="hljs-keyword">if</span> val?
+          @[key].value = val
+          <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>
+        <span class="hljs-keyword">else</span> @[key].value
+      <span class="hljs-keyword">else</span>
+        <span class="hljs-keyword">if</span> val?
+          @[key] = val
+          <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>
+        <span class="hljs-keyword">else</span> @[key]</pre></div>
         
       
         
@@ -418,7 +448,12 @@ a node that’s not already connected.</p>
         
         <h2 id="mooog">Mooog</h2>
 <p>Wraps the AudioContext object and exposes the Track object. Exposes the API
-as the Mooog global</p>
+as the Mooog global.<br>Config options:</p>
+<ul>
+<li>debug: Output debugging messages to the console. <em>Default: false</em></li>
+<li>default_gain: <code>Gain</code> objects that are initiated will have their gain
+automatically set to this value. <em>Default: 0.5</em></li>
+</ul>
 
         
           <div class='highlight'><pre><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Mooog</span></span>
@@ -442,6 +477,7 @@ object (<code>AudioContext</code> or <code>webkitAudioContext</code>)</p>
     <span class="hljs-property">@_destination</span> = <span class="hljs-property">@context</span>.destination
     <span class="hljs-property">@config</span> =
       <span class="hljs-attribute">debug</span>: <span class="hljs-literal">false</span>
+      <span class="hljs-attribute">default_gain</span>: <span class="hljs-number">0.5</span>
     
     <span class="hljs-property">@init</span>(<span class="hljs-property">@initConfig</span>)
 

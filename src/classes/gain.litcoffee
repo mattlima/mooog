@@ -8,6 +8,7 @@ Wraps the GainNode AudioContext object
         super
         @configure_from(config)
         @insert_node @context.createGain(), 0
+        #@_nodes[0].gain.value = @_instance.default_gain
         @expose_methods_of @_nodes[0]
 
       
