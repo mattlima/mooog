@@ -22,4 +22,6 @@ node_modules
 
 /index.html
 
+/scratch
+
 jasmine_examples
