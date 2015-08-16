@@ -57,6 +57,11 @@ module.exports = (grunt, options) ->
 
     coffeelint:
       app: ['src/**/*.litcoffee']
+      options:
+        max_line_length:
+          "value": 100,
+          "level": "error",
+          "limitComments": true
 
     uglify: {
       mooog: {
