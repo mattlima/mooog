@@ -125,17 +125,10 @@ This is a modified `typeof` to filter AudioContext API-specific object types
         return "AudioParam" if thing instanceof AudioParam
         return "AudioNode" if thing instanceof AudioNode
         return "AudioBuffer" if thing instanceof AudioBuffer
+        return "PeriodicWave" if thing instanceof PeriodicWave
+        return "AudioListener" if thing instanceof AudioListener
         return "Node" if thing instanceof Node
-        switch typeof(thing)
-          when "string" then "string"
-          when "number" then "number"
-          when "function" then "function"
-          when "object" then "object"
-          when "boolean" then "boolean"
-          when "undefined" then "undefined"
-          else
-            throw new Error "__typeof does not pass for " + typeof(thing)
-            
+        return typeof(thing)
       
 ### Node.insert_node
 
@@ -336,7 +329,7 @@ Handles the getting/setting for `Node.param`
         switch @__typeof @[key]
           when "AudioParam"
             if val?
-              @[key].value = val
+              @[key].setValueAtTime val, 0
               return this
             else @[key].value
           else

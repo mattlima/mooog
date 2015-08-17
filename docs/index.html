@@ -65,6 +65,13 @@ underlying AudioNode. Many of them offer additional functionality.</p>
 create a panner and a gain module that can be controlled from a single place, as
 well as effect sends. It automatically routes the end of its internal chain
 to the destinationNode.</p>
+<h3 id="patches">Patches</h3>
+<ul>
+<li>Allows <code>Oscillator</code>, <code>AudioBufferSource</code> nodes to be <code>stop()</code>ed and 
+<code>start()</code>ed again without throwing errors.</li>
+<li>Changes in frequency are made instant on <code>Oscillators</code> when done with <code>param()</code>
+so that there is no portamento.</li>
+</ul>
 <h3 id="attributions">Attributions</h3>
 <p>The Convolver <code>Node</code> comes with some presets that make use of impulse responses
 from the <a href="http://www.openairlib.net/">OpenAir</a> project:</p>
@@ -225,16 +232,10 @@ properties and sets any <code>AudioNode</code>-specific properties supplied in t
     <span class="hljs-keyword">return</span> <span class="hljs-string">"AudioParam"</span> <span class="hljs-keyword">if</span> thing <span class="hljs-keyword">instanceof</span> AudioParam
     <span class="hljs-keyword">return</span> <span class="hljs-string">"AudioNode"</span> <span class="hljs-keyword">if</span> thing <span class="hljs-keyword">instanceof</span> AudioNode
     <span class="hljs-keyword">return</span> <span class="hljs-string">"AudioBuffer"</span> <span class="hljs-keyword">if</span> thing <span class="hljs-keyword">instanceof</span> AudioBuffer
+    <span class="hljs-keyword">return</span> <span class="hljs-string">"PeriodicWave"</span> <span class="hljs-keyword">if</span> thing <span class="hljs-keyword">instanceof</span> PeriodicWave
+    <span class="hljs-keyword">return</span> <span class="hljs-string">"AudioListener"</span> <span class="hljs-keyword">if</span> thing <span class="hljs-keyword">instanceof</span> AudioListener
     <span class="hljs-keyword">return</span> <span class="hljs-string">"Node"</span> <span class="hljs-keyword">if</span> thing <span class="hljs-keyword">instanceof</span> Node
-    <span class="hljs-keyword">switch</span> <span class="hljs-keyword">typeof</span>(thing)
-      <span class="hljs-keyword">when</span> <span class="hljs-string">"string"</span> <span class="hljs-keyword">then</span> <span class="hljs-string">"string"</span>
-      <span class="hljs-keyword">when</span> <span class="hljs-string">"number"</span> <span class="hljs-keyword">then</span> <span class="hljs-string">"number"</span>
-      <span class="hljs-keyword">when</span> <span class="hljs-string">"function"</span> <span class="hljs-keyword">then</span> <span class="hljs-string">"function"</span>
-      <span class="hljs-keyword">when</span> <span class="hljs-string">"object"</span> <span class="hljs-keyword">then</span> <span class="hljs-string">"object"</span>
-      <span class="hljs-keyword">when</span> <span class="hljs-string">"boolean"</span> <span class="hljs-keyword">then</span> <span class="hljs-string">"boolean"</span>
-      <span class="hljs-keyword">when</span> <span class="hljs-string">"undefined"</span> <span class="hljs-keyword">then</span> <span class="hljs-string">"undefined"</span>
-      <span class="hljs-keyword">else</span>
-        <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> Error <span class="hljs-string">"__typeof does not pass for "</span> + <span class="hljs-keyword">typeof</span>(thing)</pre></div>
+    <span class="hljs-keyword">return</span> <span class="hljs-keyword">typeof</span>(thing)</pre></div>
         
       
         
@@ -459,7 +460,7 @@ a node that’s not already connected.</p>
     <span class="hljs-keyword">switch</span> <span class="hljs-property">@__typeof</span> @[key]
       <span class="hljs-keyword">when</span> <span class="hljs-string">"AudioParam"</span>
         <span class="hljs-keyword">if</span> val?
-          @[key].value = val
+          @[key].setValueAtTime val, <span class="hljs-number">0</span>
           <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>
         <span class="hljs-keyword">else</span> @[key].value
       <span class="hljs-keyword">else</span>

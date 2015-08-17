@@ -59,6 +59,17 @@ create a panner and a gain module that can be controlled from a single place, as
 well as effect sends. It automatically routes the end of its internal chain
 to the destinationNode.
 
+
+### Patches
+  - Allows `Oscillator`, `AudioBufferSource` nodes to be `stop()`ed and 
+  `start()`ed again without throwing errors.
+  - Changes in to `AudioParam` values are made instantly (when done with `param()`)
+  so that there is no portamento.
+  
+## Todo
+  - Make AudioBufferSource start()able
+  - Patch frequency of oscillator to avoid portamento
+
 ### Attributions
 The Convolver `Node` comes with some presets that make use of impulse responses
 from the [OpenAir](http://www.openairlib.net/) project:

@@ -95,25 +95,16 @@
       if (thing instanceof AudioBuffer) {
         return "AudioBuffer";
       }
+      if (thing instanceof PeriodicWave) {
+        return "PeriodicWave";
+      }
+      if (thing instanceof AudioListener) {
+        return "AudioListener";
+      }
       if (thing instanceof Node) {
         return "Node";
       }
-      switch (typeof thing) {
-        case "string":
-          return "string";
-        case "number":
-          return "number";
-        case "function":
-          return "function";
-        case "object":
-          return "object";
-        case "boolean":
-          return "boolean";
-        case "undefined":
-          return "undefined";
-        default:
-          throw new Error("__typeof does not pass for " + typeof thing);
-      }
+      return typeof thing;
     };
 
     Node.prototype.insert_node = function(node, ord) {
@@ -351,7 +342,7 @@
       switch (this.__typeof(this[key])) {
         case "AudioParam":
           if (val != null) {
-            this[key].value = val;
+            this[key].setValueAtTime(val, 0);
             return this;
           } else {
             return this[key].value;
