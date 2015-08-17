@@ -236,16 +236,16 @@ to connect to.
 
 
 ### Node.chain
-Like `Node.connect` but returns the `Node` you are connecting to. To use
-with `AudioParam`s, use the name of the param as the second argument (and
-the base `Node` as the first).
+Like `Node.connect` with two important differences. First, it returns the 
+`Node` you are connecting to. Second, it automatically disconnects the callind
+`Node` from the context's `AudioDestinationNode`. To use with `AudioParam`s, 
+use the name of the param as the second argument (and the base `Node` as the first).
 
       chain: (node, output = 0, input = 0) ->
-        
-        @debug node, @__typeof(node), typeof(output)
         if @__typeof(node) is "AudioParam" and typeof(output) isnt 'string'
           throw new Error "Node.chain() can only target AudioParams when used with
           the signature .chain(target_node:Node, target_param_name:string)"
+        @disconnect @_destination
         @connect node, output, input, false
 
 
@@ -296,11 +296,11 @@ a node that's not already connected.
         switch @__typeof node1
           when "Node" then source = node1._nodes[ node1._nodes.length - 1 ]
           when "AudioNode", "AudioParam" then source = node1
-          else throw new Error "Unknown node type passed to connect"
+          else throw new Error "Unknown node type passed to disconnect"
         switch @__typeof node2
           when "Node" then target = node2._nodes[0]
           when "AudioNode", "AudioParam" then target = node2
-          else throw new Error "Unknown node type passed to connect"
+          else throw new Error "Unknown node type passed to disconnect"
         try
           source.disconnect target, output, input
         catch e

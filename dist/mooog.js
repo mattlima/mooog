@@ -222,10 +222,10 @@
       if (input == null) {
         input = 0;
       }
-      this.debug(node, this.__typeof(node), typeof output);
       if (this.__typeof(node) === "AudioParam" && typeof output !== 'string') {
         throw new Error("Node.chain() can only target AudioParams when used with the signature .chain(target_node:Node, target_param_name:string)");
       }
+      this.disconnect(this._destination);
       return this.connect(node, output, input, false);
     };
 
@@ -299,7 +299,7 @@
           source = node1;
           break;
         default:
-          throw new Error("Unknown node type passed to connect");
+          throw new Error("Unknown node type passed to disconnect");
       }
       switch (this.__typeof(node2)) {
         case "Node":
@@ -310,7 +310,7 @@
           target = node2;
           break;
         default:
-          throw new Error("Unknown node type passed to connect");
+          throw new Error("Unknown node type passed to disconnect");
       }
       try {
         source.disconnect(target, output, input);
