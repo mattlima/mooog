@@ -29,14 +29,14 @@ osc.start();
 ```javascript
 M = new Mooog();
 M.node(
-    { id:'lfo', node_type:'Oscillator', connect_to_destination:false, type:'sawtooth', frequency:3 }
+    { id:'lfo', node_type:'Oscillator', type:'sawtooth', frequency:3 }
   )
   .start()
   .chain(
-    M.node( {id:'gain',node_type:'Gain',connect_to_destination:false,gain:40} )
+    M.node( {id:'gain', node_type:'Gain', gain:40} )
   )
   .chain(
-    M.node({id:'osc',node_type:'Oscillator',frequency:300}), 'frequency'
+    M.node({id:'osc', node_type:'Oscillator', frequency:300}), 'frequency'
   )
   .start()
 ```

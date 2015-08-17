@@ -21,7 +21,7 @@
 <h3 id="what-is-mooog-">What is Mooog?</h3>
 <p>Mooog is inspired by audio mixing boards on the one hand and jQuery chainable
 syntax on the other. It automatically does a lot of stuff so you don’t have to.
-Mooog’s goal is to take some of the tedium work out of working with AudioNodes,
+Mooog’s goal is to take some of the tedium out of working with AudioNodes,
 as well as patching some odd behaviors. With Mooog, instead of writing this:</p>
 <pre><code class="lang-javascript">AudioContext = AudioContext || webkitAudioContext;  
 <span class="hljs-keyword">var</span> ctxt = <span class="hljs-keyword">new</span> AudioContext();  
@@ -41,14 +41,14 @@ osc.start();
 <p>…you can write this:</p>
 <pre><code class="lang-javascript">M = <span class="hljs-keyword">new</span> Mooog();
 M.node(
-    { id:<span class="hljs-string">'lfo'</span>, node_type:<span class="hljs-string">'Oscillator'</span>, connect_to_destination:<span class="hljs-literal">false</span>, type:<span class="hljs-string">'sawtooth'</span>, frequency:<span class="hljs-number">3</span> }
+    { id:<span class="hljs-string">'lfo'</span>, node_type:<span class="hljs-string">'Oscillator'</span>, type:<span class="hljs-string">'sawtooth'</span>, frequency:<span class="hljs-number">3</span> }
   )
   .start()
   .chain(
-    M.node( {id:<span class="hljs-string">'gain'</span>,node_type:<span class="hljs-string">'Gain'</span>,connect_to_destination:<span class="hljs-literal">false</span>,gain:<span class="hljs-number">40</span>} )
+    M.node( {id:<span class="hljs-string">'gain'</span>, node_type:<span class="hljs-string">'Gain'</span>, gain:<span class="hljs-number">40</span>} )
   )
   .chain(
-    M.node({id:<span class="hljs-string">'osc'</span>,node_type:<span class="hljs-string">'Oscillator'</span>,frequency:<span class="hljs-number">300</span>}), <span class="hljs-string">'frequency'</span>
+    M.node({id:<span class="hljs-string">'osc'</span>, node_type:<span class="hljs-string">'Oscillator'</span>, frequency:<span class="hljs-number">300</span>}), <span class="hljs-string">'frequency'</span>
   )
   .start()
 </code></pre>
@@ -107,8 +107,11 @@ or an object with initialization params (see below) </p>
 <li><code>connect_to_destination</code>: Boolean indicating whether the last in this node’s 
 <code>_nodes</code> array is automatically connected to the <code>AudioDestinationNode</code>. <em>default: true</em></li>
 </ul>
-<p>Additional properties<br>Any additional key-value pairs will be used to set properties of the underlying <code>AudioNode</code>
-object after initialization. </p>
+<p>Additional properties  </p>
+<ul>
+<li>Any additional key-value pairs will be used to set properties of the underlying <code>AudioNode</code>
+object after initialization. </li>
+</ul>
 
           
             <div class='highlight'><pre><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Node</span></span>
@@ -183,8 +186,8 @@ should be set on the zero node</p>
       
         
         <h3 id="node-zero_node_setup">Node.zero_node_setup</h3>
-<p>XORs the supplied configuration object with the defaults to return an object the properties of which
-should be set on the zero node</p>
+<p>Runs after the Node constructor by the inheriting classes. Exposes the underlying <code>AudioNode</code> 
+properties and sets any <code>AudioNode</code>-specific properties supplied in the configuration object.</p>
 
         
           <div class='highlight'><pre>  <span class="hljs-attribute">zero_node_setup</span>: <span class="hljs-function"><span class="hljs-params">(config)</span> -&gt;</span>
@@ -221,12 +224,14 @@ should be set on the zero node</p>
   <span class="hljs-attribute">__typeof</span>: <span class="hljs-function"><span class="hljs-params">(thing)</span> -&gt;</span>
     <span class="hljs-keyword">return</span> <span class="hljs-string">"AudioParam"</span> <span class="hljs-keyword">if</span> thing <span class="hljs-keyword">instanceof</span> AudioParam
     <span class="hljs-keyword">return</span> <span class="hljs-string">"AudioNode"</span> <span class="hljs-keyword">if</span> thing <span class="hljs-keyword">instanceof</span> AudioNode
+    <span class="hljs-keyword">return</span> <span class="hljs-string">"AudioBuffer"</span> <span class="hljs-keyword">if</span> thing <span class="hljs-keyword">instanceof</span> AudioBuffer
     <span class="hljs-keyword">return</span> <span class="hljs-string">"Node"</span> <span class="hljs-keyword">if</span> thing <span class="hljs-keyword">instanceof</span> Node
     <span class="hljs-keyword">switch</span> <span class="hljs-keyword">typeof</span>(thing)
       <span class="hljs-keyword">when</span> <span class="hljs-string">"string"</span> <span class="hljs-keyword">then</span> <span class="hljs-string">"string"</span>
       <span class="hljs-keyword">when</span> <span class="hljs-string">"number"</span> <span class="hljs-keyword">then</span> <span class="hljs-string">"number"</span>
       <span class="hljs-keyword">when</span> <span class="hljs-string">"function"</span> <span class="hljs-keyword">then</span> <span class="hljs-string">"function"</span>
       <span class="hljs-keyword">when</span> <span class="hljs-string">"object"</span> <span class="hljs-keyword">then</span> <span class="hljs-string">"object"</span>
+      <span class="hljs-keyword">when</span> <span class="hljs-string">"boolean"</span> <span class="hljs-keyword">then</span> <span class="hljs-string">"boolean"</span>
       <span class="hljs-keyword">when</span> <span class="hljs-string">"undefined"</span> <span class="hljs-keyword">then</span> <span class="hljs-string">"undefined"</span>
       <span class="hljs-keyword">else</span>
         <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> Error <span class="hljs-string">"__typeof does not pass for "</span> + <span class="hljs-keyword">typeof</span>(thing)</pre></div>
@@ -339,17 +344,17 @@ to connect to.  </p>
       
         
         <h3 id="node-chain">Node.chain</h3>
-<p>Like <code>Node.connect</code> but returns the <code>Node</code> you are connecting to. To use
-with <code>AudioParam</code>s, use the name of the param as the second argument (and
-the base <code>Node</code> as the first).</p>
+<p>Like <code>Node.connect</code> with two important differences. First, it returns the 
+<code>Node</code> you are connecting to. Second, it automatically disconnects the callind
+<code>Node</code> from the context’s <code>AudioDestinationNode</code>. To use with <code>AudioParam</code>s, 
+use the name of the param as the second argument (and the base <code>Node</code> as the first).</p>
 
         
           <div class='highlight'><pre>  <span class="hljs-attribute">chain</span>: <span class="hljs-function"><span class="hljs-params">(node, output = <span class="hljs-number">0</span>, input = <span class="hljs-number">0</span>)</span> -&gt;</span>
-    
-    <span class="hljs-property">@debug</span> node, <span class="hljs-property">@__typeof</span>(node), <span class="hljs-keyword">typeof</span>(output)
     <span class="hljs-keyword">if</span> <span class="hljs-property">@__typeof</span>(node) <span class="hljs-keyword">is</span> <span class="hljs-string">"AudioParam"</span> <span class="hljs-keyword">and</span> <span class="hljs-keyword">typeof</span>(output) <span class="hljs-keyword">isnt</span> <span class="hljs-string">'string'</span>
       <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> Error <span class="hljs-string">"Node.chain() can only target AudioParams when used with
       the signature .chain(target_node:Node, target_param_name:string)"</span>
+    <span class="hljs-property">@disconnect</span> <span class="hljs-property">@_destination</span>
     <span class="hljs-property">@connect</span> node, output, input, <span class="hljs-literal">false</span></pre></div>
         
       
@@ -380,7 +385,7 @@ the base <code>Node</code> as the first).</p>
         
       
         
-        <p>@debug “- checking”, @__typeof val</p>
+        <p>@debug “- checking #{key}: got”, @__typeof val</p>
 
         
           <div class='highlight'><pre>      <span class="hljs-keyword">switch</span> <span class="hljs-property">@__typeof</span> val
@@ -388,7 +393,7 @@ the base <code>Node</code> as the first).</p>
           @[key] = val.bind node
         <span class="hljs-keyword">when</span> <span class="hljs-string">'AudioParam'</span>
           @[key] = val
-        <span class="hljs-keyword">when</span> <span class="hljs-string">"string"</span>, <span class="hljs-string">"number"</span>
+        <span class="hljs-keyword">when</span> <span class="hljs-string">"string"</span>, <span class="hljs-string">"number"</span>, <span class="hljs-string">"boolean"</span>, <span class="hljs-string">"object"</span>
           (<span class="hljs-function"><span class="hljs-params">(o, node, key)</span> -&gt;</span>
             Object.defineProperty o, key, {
               <span class="hljs-attribute">get</span>: <span class="hljs-function">-&gt;</span>
@@ -410,11 +415,11 @@ a node that’s not already connected.</p>
     <span class="hljs-keyword">switch</span> <span class="hljs-property">@__typeof</span> node1
       <span class="hljs-keyword">when</span> <span class="hljs-string">"Node"</span> <span class="hljs-keyword">then</span> source = node1._nodes[ node1._nodes.length - <span class="hljs-number">1</span> ]
       <span class="hljs-keyword">when</span> <span class="hljs-string">"AudioNode"</span>, <span class="hljs-string">"AudioParam"</span> <span class="hljs-keyword">then</span> source = node1
-      <span class="hljs-keyword">else</span> <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> Error <span class="hljs-string">"Unknown node type passed to connect"</span>
+      <span class="hljs-keyword">else</span> <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> Error <span class="hljs-string">"Unknown node type passed to disconnect"</span>
     <span class="hljs-keyword">switch</span> <span class="hljs-property">@__typeof</span> node2
       <span class="hljs-keyword">when</span> <span class="hljs-string">"Node"</span> <span class="hljs-keyword">then</span> target = node2._nodes[<span class="hljs-number">0</span>]
       <span class="hljs-keyword">when</span> <span class="hljs-string">"AudioNode"</span>, <span class="hljs-string">"AudioParam"</span> <span class="hljs-keyword">then</span> target = node2
-      <span class="hljs-keyword">else</span> <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> Error <span class="hljs-string">"Unknown node type passed to connect"</span>
+      <span class="hljs-keyword">else</span> <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> Error <span class="hljs-string">"Unknown node type passed to disconnect"</span>
     <span class="hljs-keyword">try</span>
       source.disconnect target, output, input
     <span class="hljs-keyword">catch</span> e
@@ -465,12 +470,77 @@ a node that’s not already connected.</p>
         
       
         
+        <h3 id="node-define_buffer_source_properties">Node.define_buffer_source_properties</h3>
+<p>Sets up useful functions on <code>Node</code>s that have a <code>buffer</code> property </p>
+
+        
+          <div class='highlight'><pre>  <span class="hljs-attribute">define_buffer_source_properties</span>: <span class="hljs-function"><span class="hljs-params">()</span> -&gt;</span>
+    <span class="hljs-property">@_buffer_source_file_url</span> = <span class="hljs-string">''</span>
+    Object.defineProperty @, <span class="hljs-string">'buffer_source_file'</span>, {
+      <span class="hljs-attribute">get</span>: <span class="hljs-function">-&gt;</span>
+        <span class="hljs-property">@_buffer_source_file_url</span>
+      <span class="hljs-attribute">set</span>: <span class="hljs-function"><span class="hljs-params">(filename)</span> =&gt;</span>
+        request = <span class="hljs-keyword">new</span> XMLHttpRequest()
+        request.open(<span class="hljs-string">'GET'</span>, filename, <span class="hljs-literal">true</span>)
+        request.responseType = <span class="hljs-string">'arraybuffer'</span>
+        request.onload = <span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span>
+          <span class="hljs-property">@debug</span> <span class="hljs-string">"loaded <span class="hljs-subst">#{filename}</span>"</span>
+          <span class="hljs-property">@_buffer_source_file_url</span> = filename
+          <span class="hljs-property">@_instance</span>.context.decodeAudioData request.response, <span class="hljs-function"><span class="hljs-params">(buffer)</span> =&gt;</span>
+            <span class="hljs-property">@debug</span> <span class="hljs-string">"setting buffer"</span>,buffer
+            <span class="hljs-property">@buffer</span> = buffer
+          , <span class="hljs-function"><span class="hljs-params">(error)</span> -&gt;</span>
+            <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> Error(<span class="hljs-string">"Could not decode audio data from <span class="hljs-subst">#{request.responseURL}</span>
+             - unsupported file format?"</span>)
+        request.send()
+      <span class="hljs-attribute">enumerable</span>: <span class="hljs-literal">true</span>
+      <span class="hljs-attribute">configurable</span>: <span class="hljs-literal">true</span>
+    }</pre></div>
+        
+      
+        
         <h3 id="node-debug">Node.debug</h3>
 <p>Logs to the console if the debug config option is on</p>
 
         
           <div class='highlight'><pre>  <span class="hljs-attribute">debug</span>: <span class="hljs-function"><span class="hljs-params">(a...)</span> -&gt;</span>
     <span class="hljs-built_in">console</span>.log(a...) <span class="hljs-keyword">if</span> <span class="hljs-property">@_instance</span>.config.debug</pre></div>
+        
+      
+        
+        <h2 id="audiobuffersource">AudioBufferSource</h2>
+<p>Wraps the AudioBufferSourceNode AudioContext object</p>
+
+        
+          <div class='highlight'><pre><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">AudioBufferSource</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Node</span></span>
+  <span class="hljs-attribute">constructor</span>: <span class="hljs-function"><span class="hljs-params">(<span class="hljs-property">@_instance</span>, config = {})</span> -&gt;</span>
+    config.node_type = <span class="hljs-string">'AudioBufferSource'</span>
+    <span class="hljs-keyword">super</span>
+    <span class="hljs-property">@configure_from</span>(config)
+    
+    <span class="hljs-property">@insert_node</span> <span class="hljs-property">@context</span>.createBufferSource(), <span class="hljs-number">0</span>
+    <span class="hljs-property">@define_buffer_source_properties</span>()
+    
+    
+    <span class="hljs-property">@zero_node_setup</span> config</pre></div>
+        
+      
+        
+        <h2 id="convolver">Convolver</h2>
+<p>Wraps the ConvolverNode AudioContext object</p>
+
+        
+          <div class='highlight'><pre><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Convolver</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Node</span></span>
+  <span class="hljs-attribute">constructor</span>: <span class="hljs-function"><span class="hljs-params">(<span class="hljs-property">@_instance</span>, config = {})</span> -&gt;</span>
+    config.node_type = <span class="hljs-string">'Convolver'</span>
+    <span class="hljs-keyword">super</span>
+    <span class="hljs-property">@configure_from</span>(config)
+    
+    <span class="hljs-property">@insert_node</span> <span class="hljs-property">@context</span>.createConvolver(), <span class="hljs-number">0</span>
+    <span class="hljs-property">@define_buffer_source_properties</span>()
+    
+    
+    <span class="hljs-property">@zero_node_setup</span> config</pre></div>
         
       
         
@@ -550,6 +620,8 @@ automatically set to this value. <em>Default: 0.5</em></li>
     <span class="hljs-string">'Oscillator'</span>: Oscillator
     <span class="hljs-string">'StereoPanner'</span>: StereoPanner
     <span class="hljs-string">'Gain'</span>: Gain
+    <span class="hljs-string">'AudioBufferSource'</span>: AudioBufferSource
+    <span class="hljs-string">'Convolver'</span>: Convolver
 
   
   <span class="hljs-attribute">constructor</span>: <span class="hljs-function"><span class="hljs-params">(<span class="hljs-property">@initConfig</span> = {})</span> -&gt;</span></pre></div>
