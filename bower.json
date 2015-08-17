@@ -21,10 +21,10 @@
     "docco.css",
     "Gemfile*",
     "Gruntfile*",
-    "package.json"
-    "Rakefile"
-    "server.rb"
-    "spec"
+    "package.json",
+    "Rakefile",
+    "server.rb",
+    "spec",
     "src"
   ],
   "devDependencies": {
