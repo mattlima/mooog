@@ -18,7 +18,7 @@
     "bower_components",
     "test",
     "tests",
-    "docco.css",
+    "/docco.css",
     "Gemfile*",
     "Gruntfile*",
     "package.json",
