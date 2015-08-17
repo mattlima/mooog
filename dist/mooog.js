@@ -1,5 +1,5 @@
 (function() {
-  var Gain, Mooog, Node, Oscillator, StereoPanner,
+  var AudioBufferSource, Convolver, Gain, Mooog, Node, Oscillator, StereoPanner,
     slice = [].slice,
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
@@ -92,6 +92,9 @@
       if (thing instanceof AudioNode) {
         return "AudioNode";
       }
+      if (thing instanceof AudioBuffer) {
+        return "AudioBuffer";
+      }
       if (thing instanceof Node) {
         return "Node";
       }
@@ -104,6 +107,8 @@
           return "function";
         case "object":
           return "object";
+        case "boolean":
+          return "boolean";
         case "undefined":
           return "undefined";
         default:
@@ -255,6 +260,8 @@
             break;
           case "string":
           case "number":
+          case "boolean":
+          case "object":
             results.push((function(o, node, key) {
               return Object.defineProperty(o, key, {
                 get: function() {
@@ -360,6 +367,36 @@
       }
     };
 
+    Node.prototype.define_buffer_source_properties = function() {
+      this._buffer_source_file_url = '';
+      return Object.defineProperty(this, 'buffer_source_file', {
+        get: function() {
+          return this._buffer_source_file_url;
+        },
+        set: (function(_this) {
+          return function(filename) {
+            var request;
+            request = new XMLHttpRequest();
+            request.open('GET', filename, true);
+            request.responseType = 'arraybuffer';
+            request.onload = function() {
+              _this.debug("loaded " + filename);
+              _this._buffer_source_file_url = filename;
+              return _this._instance.context.decodeAudioData(request.response, function(buffer) {
+                _this.debug("setting buffer", buffer);
+                return _this.buffer = buffer;
+              }, function(error) {
+                throw new Error("Could not decode audio data from " + request.responseURL + " - unsupported file format?");
+              });
+            };
+            return request.send();
+          };
+        })(this),
+        enumerable: true,
+        configurable: true
+      });
+    };
+
     Node.prototype.debug = function() {
       var a;
       a = 1 <= arguments.length ? slice.call(arguments, 0) : [];
@@ -371,6 +408,46 @@
     return Node;
 
   })();
+
+  AudioBufferSource = (function(superClass) {
+    extend(AudioBufferSource, superClass);
+
+    function AudioBufferSource(_instance, config) {
+      this._instance = _instance;
+      if (config == null) {
+        config = {};
+      }
+      config.node_type = 'AudioBufferSource';
+      AudioBufferSource.__super__.constructor.apply(this, arguments);
+      this.configure_from(config);
+      this.insert_node(this.context.createBufferSource(), 0);
+      this.define_buffer_source_properties();
+      this.zero_node_setup(config);
+    }
+
+    return AudioBufferSource;
+
+  })(Node);
+
+  Convolver = (function(superClass) {
+    extend(Convolver, superClass);
+
+    function Convolver(_instance, config) {
+      this._instance = _instance;
+      if (config == null) {
+        config = {};
+      }
+      config.node_type = 'Convolver';
+      Convolver.__super__.constructor.apply(this, arguments);
+      this.configure_from(config);
+      this.insert_node(this.context.createConvolver(), 0);
+      this.define_buffer_source_properties();
+      this.zero_node_setup(config);
+    }
+
+    return Convolver;
+
+  })(Node);
 
   Gain = (function(superClass) {
     extend(Gain, superClass);
@@ -453,7 +530,9 @@
     Mooog.LEGAL_NODES = {
       'Oscillator': Oscillator,
       'StereoPanner': StereoPanner,
-      'Gain': Gain
+      'Gain': Gain,
+      'AudioBufferSource': AudioBufferSource,
+      'Convolver': Convolver
     };
 
     function Mooog(initConfig1) {

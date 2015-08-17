@@ -6,7 +6,7 @@
 
 Mooog is inspired by audio mixing boards on the one hand and jQuery chainable
 syntax on the other. It automatically does a lot of stuff so you don't have to.
-Mooog's goal is to take some of the tedium work out of working with AudioNodes,
+Mooog's goal is to take some of the tedium out of working with AudioNodes,
 as well as patching some odd behaviors. With Mooog, instead of writing this:
 ```javascript
 AudioContext = AudioContext || webkitAudioContext;  
@@ -52,7 +52,7 @@ consistency is on the to-do list once the API stabilizes.
 ### Features
 Mooog provides nestable `Node` objects that wrap AudioNodes. At a minumum, they
 expose the methods of the wrapped Node, so you can talk to them just like the
-underlying AudioNode. Many of them offer additional functionality
+underlying AudioNode. Many of them offer additional functionality.
 
 There is also a specialized Node object called `Track`, which will automatically
 create a panner and a gain module that can be controlled from a single place, as

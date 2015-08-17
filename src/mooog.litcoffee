@@ -14,6 +14,8 @@ automatically set to this value. *Default: 0.5*
         'Oscillator': Oscillator
         'StereoPanner': StereoPanner
         'Gain': Gain
+        'AudioBufferSource': AudioBufferSource
+        'Convolver': Convolver
 
       
       constructor: (@initConfig = {}) ->

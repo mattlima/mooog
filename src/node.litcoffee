@@ -30,8 +30,8 @@ Optional properties
   - `connect_to_destination`: Boolean indicating whether the last in this node's 
 `_nodes` array is automatically connected to the `AudioDestinationNode`. *default: true*
 
-Additional properties
-Any additional key-value pairs will be used to set properties of the underlying `AudioNode`
+Additional properties  
+  - Any additional key-value pairs will be used to set properties of the underlying `AudioNode`
 object after initialization. 
 
 
@@ -93,8 +93,8 @@ should be set on the zero node
         
 
 ### Node.zero_node_setup
-XORs the supplied configuration object with the defaults to return an object the properties of which
-should be set on the zero node
+Runs after the Node constructor by the inheriting classes. Exposes the underlying `AudioNode` 
+properties and sets any `AudioNode`-specific properties supplied in the configuration object.
       
       zero_node_setup: (config) ->
         @expose_methods_of @_nodes[0]
@@ -115,15 +115,6 @@ Generates a new string identifier for this node.
       
       new_id: () ->
         "#{@.constructor.name}_#{Math.round(Math.random()*100000)}"
-  
-
-
-
-
-
-      
-        
-
 
 
 ### Node.__typeof
@@ -133,18 +124,18 @@ This is a modified `typeof` to filter AudioContext API-specific object types
       __typeof: (thing) ->
         return "AudioParam" if thing instanceof AudioParam
         return "AudioNode" if thing instanceof AudioNode
+        return "AudioBuffer" if thing instanceof AudioBuffer
         return "Node" if thing instanceof Node
         switch typeof(thing)
           when "string" then "string"
           when "number" then "number"
           when "function" then "function"
           when "object" then "object"
+          when "boolean" then "boolean"
           when "undefined" then "undefined"
           else
             throw new Error "__typeof does not pass for " + typeof(thing)
             
-            
-
       
 ### Node.insert_node
 
@@ -278,13 +269,13 @@ Exposes the properties of a wrapped `AudioNode` on `this`
         @debug "exposing", node
         for key,val of node
           if @[key]? then continue
-          #@debug "- checking", @__typeof val
+          #@debug "- checking #{key}: got", @__typeof val
           switch @__typeof val
             when 'function'
               @[key] = val.bind node
             when 'AudioParam'
               @[key] = val
-            when "string", "number"
+            when "string", "number", "boolean", "object"
               ((o, node, key) ->
                 Object.defineProperty o, key, {
                   get: ->
@@ -294,6 +285,7 @@ Exposes the properties of a wrapped `AudioNode` on `this`
                   enumerable: true
                   configurable: true
                 })(@, node, key)
+
 
 
 ### Node.safely_disconnect
@@ -352,6 +344,36 @@ Handles the getting/setting for `Node.param`
               @[key] = val
               return this
             else @[key]
+
+
+### Node.define_buffer_source_properties
+Sets up useful functions on `Node`s that have a `buffer` property 
+      
+      define_buffer_source_properties: () ->
+        @_buffer_source_file_url = ''
+        Object.defineProperty @, 'buffer_source_file', {
+          get: ->
+            @_buffer_source_file_url
+          set: (filename) =>
+            request = new XMLHttpRequest()
+            request.open('GET', filename, true)
+            request.responseType = 'arraybuffer'
+            request.onload = () =>
+              @debug "loaded #{filename}"
+              @_buffer_source_file_url = filename
+              @_instance.context.decodeAudioData request.response, (buffer) =>
+                @debug "setting buffer",buffer
+                @buffer = buffer
+              , (error) ->
+                throw new Error("Could not decode audio data from #{request.responseURL}
+                 - unsupported file format?")
+            request.send()
+          enumerable: true
+          configurable: true
+        }
+
+      
+
 
 
 ### Node.debug

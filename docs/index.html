@@ -38,8 +38,8 @@ osc.connect(ctxt.destination);
 lfo.start();  
 osc.start();
 </code></pre>
-<p>…you can write</p>
-<pre><code class="lang-javascript">M = <span class="hljs-keyword">new</span> Mooog({debug:<span class="hljs-literal">true</span>});
+<p>…you can write this:</p>
+<pre><code class="lang-javascript">M = <span class="hljs-keyword">new</span> Mooog();
 M.node(
     { id:<span class="hljs-string">'lfo'</span>, node_type:<span class="hljs-string">'Oscillator'</span>, connect_to_destination:<span class="hljs-literal">false</span>, type:<span class="hljs-string">'sawtooth'</span>, frequency:<span class="hljs-number">3</span> }
   )
@@ -60,7 +60,7 @@ consistency is on the to-do list once the API stabilizes. </p>
 <h3 id="features">Features</h3>
 <p>Mooog provides nestable <code>Node</code> objects that wrap AudioNodes. At a minumum, they
 expose the methods of the wrapped Node, so you can talk to them just like the
-underlying AudioNode. Many of them offer additional functionality</p>
+underlying AudioNode. Many of them offer additional functionality.</p>
 <p>There is also a specialized Node object called <code>Track</code>, which will automatically
 create a panner and a gain module that can be controlled from a single place, as
 well as effect sends. It automatically routes the end of its internal chain
@@ -107,8 +107,7 @@ or an object with initialization params (see below) </p>
 <li><code>connect_to_destination</code>: Boolean indicating whether the last in this node’s 
 <code>_nodes</code> array is automatically connected to the <code>AudioDestinationNode</code>. <em>default: true</em></li>
 </ul>
-<p>Additional properties
-Any additional key-value pairs will be used to set properties of the underlying <code>AudioNode</code>
+<p>Additional properties<br>Any additional key-value pairs will be used to set properties of the underlying <code>AudioNode</code>
 object after initialization. </p>
 
           
