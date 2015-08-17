@@ -66,10 +66,10 @@ module.exports = (grunt, options) ->
 
     uglify: {
       mooog: {
-        options: {
-          sourceMap: true,
+        options:
+          sourceMap: true
           sourceMapName: 'dist/mooog.min.js.map'
-        },
+          mangle: false
         files: {
           'dist/mooog.min.js': ['dist/mooog.js']
         }
