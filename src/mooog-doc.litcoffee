@@ -25,9 +25,9 @@ lfo.start();
 osc.start();
 ```
 
-...you can write
+...you can write this:
 ```javascript
-M = new Mooog({debug:true});
+M = new Mooog();
 M.node(
     { id:'lfo', node_type:'Oscillator', connect_to_destination:false, type:'sawtooth', frequency:3 }
   )
