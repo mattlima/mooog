@@ -30,6 +30,9 @@ Optional properties
   - `connect_to_destination`: Boolean indicating whether the last in this node's 
 `_nodes` array is automatically connected to the `AudioDestinationNode`. *default: true*
 
+Additional properties
+Any additional key-value pairs will be used to set properties of the underlying `AudioNode`
+object after initialization. 
 
 
 
@@ -40,8 +43,7 @@ Optional properties
         @_nodes = []
         @config_defaults =
           connect_to_destination: true
-        @debug "node_list:", node_list
-        @debug "constr:", @constructor.name
+        @config = {}
         
 Take care of first type signature (ID and string type)
 
@@ -65,16 +67,39 @@ Otherwise, this is one or more config objects.
             else
               throw new Error("Omitted or undefined node type in config options.")
 
-Enforce the required config properties here, and set others as necessary.
+        
+
+### Node.configure_from
+The config object can contain general configuration options or key/value pairs to be set on the
+wrapped `AudioNode`. This function merges the config defaults with the supplied options and sets
+the `config` property of the node
       
       configure_from: (ob) ->
-        @debug "config from", ob
         @id = if ob.id? then ob.id else @new_id()
-        @debug @id
         for k, v of @config_defaults
-          ob[k] ?= @config_defaults[k]
-        @config = ob
+          @config[k] = if (k of ob) then ob[k] else @config_defaults[k]
+        @config
 
+
+### Node.zero_node_settings
+XORs the supplied configuration object with the defaults to return an object the properties of which
+should be set on the zero node
+      
+      zero_node_settings: (ob) ->
+        zo = {}
+        for k, v of ob
+          zo[k] = v unless k of @config_defaults or k is 'node_type' or k is 'id'
+        zo
+        
+
+### Node.zero_node_setup
+XORs the supplied configuration object with the defaults to return an object the properties of which
+should be set on the zero node
+      
+      zero_node_setup: (config) ->
+        @expose_methods_of @_nodes[0]
+        for k, v of @zero_node_settings(config)
+          @param k, v
         
 ### Node.toString
 Includes the ID in the string representation of the object.      
@@ -134,7 +159,6 @@ This is a modified `typeof` to filter AudioContext API-specific object types
         @debug "insert_node of #{@} for", node, ord
 
         if ord is 0
-         
           @connect_incoming node
           @disconnect_incoming @_nodes[0]
 
@@ -165,7 +189,12 @@ This is a modified `typeof` to filter AudioContext API-specific object types
         @debug "- spliced:", @_nodes
 
   
-        
+### Node.add
+Shortcut for insert_node
+
+
+      add: (node) ->
+        @insert_node(node)
           
 
       connect_incoming: ->
@@ -178,37 +207,55 @@ This is a modified `typeof` to filter AudioContext API-specific object types
 
 
 ### Node.connect
-We track all connections to and from the underlying `@base_node` by exposing
-modified connect and disconnect methods. 
-`node`: The node object or string ID of the object to which to connect.
-`param`: Optional string name of the `AudioParam` member of `node`to
-which to connect.
-`output`: Optional integer representing the output of this Node to use.
+`node`: The node object or string ID of the object to which to connect.  
+`param`: Optional string name of the `AudioParam` member of `node` to
+which to connect.  
+`output`: Optional integer representing the output of this Node to use.  
 `input`: If `param` is not specified (you are connecting to an `AudioNode`)
 then this integer argument can be used to specify the input of the target
-to connect to.
-      #todo: Figure out how/whether to deal with params 
+to connect to.  
 
 
-      connect: (node, output = 0, input = 0) ->
-        @debug "called connect from #{@} to #{node}"
+
+      connect: (node, output = 0, input = 0, return_this = true) ->
+        @debug "called connect from #{@} to #{node}, #{output}"
         
         switch @__typeof node
+          
+          when "AudioParam"
+            @_nodes[ @_nodes.length - 1 ].connect node, output
+            return this
+          when "string"
+            node = @_instance.node node
+            target = node._nodes[0]
           when "Node"
             target = node._nodes[0]
-            @_nodes[ @_nodes.length - 1 ].connect target, output, input
           when "AudioNode"
             target = node
-            @_nodes[ @_nodes.length - 1 ].connect target, output, input
-          when "AudioParam"
-            target = node
-            @_nodes[ @_nodes.length - 1 ].connect target, output
           else throw new Error "Unknown node type passed to connect"
+          
+        switch
+          when typeof(output) is 'string'
+            @_nodes[ @_nodes.length - 1 ].connect target[output], input
+          when typeof(output) is 'number'
+            @_nodes[ @_nodes.length - 1 ].connect target, output, input
+        
+        return if return_this then this else node
 
-        #todo: deal with params
-        #@_outgoing.push [node, param, output, input]
-        #node.receive_connect @, param, output, input if node.receive_connect?
-        #@connect_base_node node, param, output, input
+
+
+### Node.chain
+Like `Node.connect` but returns the `Node` you are connecting to. To use
+with `AudioParam`s, use the name of the param as the second argument (and
+the base `Node` as the first).
+
+      chain: (node, output = 0, input = 0) ->
+        
+        @debug node, @__typeof(node), typeof(output)
+        if @__typeof(node) is "AudioParam" and typeof(output) isnt 'string'
+          throw new Error "Node.chain() can only target AudioParams when used with
+          the signature .chain(target_node:Node, target_param_name:string)"
+        @connect node, output, input, false
 
 
 ### Node.to, Node.from
@@ -266,6 +313,7 @@ a node that's not already connected.
           source.disconnect target, output, input
         catch e
           @debug("ignored InvalidAccessError disconnecting #{target} from #{source}")
+        @
 
       
 ### Node.disconnect

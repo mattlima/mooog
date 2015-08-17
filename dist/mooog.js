@@ -15,8 +15,7 @@
       this.config_defaults = {
         connect_to_destination: true
       };
-      this.debug("node_list:", node_list);
-      this.debug("constr:", this.constructor.name);
+      this.config = {};
       if (this.__typeof(node_list[0]) === "string" && this.__typeof(node_list[1]) === "string" && (Mooog.LEGAL_NODES[node_list[1]] != null)) {
         return new Mooog.LEGAL_NODES[node_list[1]](this._instance, {
           id: node_list[0]
@@ -45,17 +44,37 @@
 
     Node.prototype.configure_from = function(ob) {
       var k, ref, v;
-      this.debug("config from", ob);
       this.id = ob.id != null ? ob.id : this.new_id();
-      this.debug(this.id);
       ref = this.config_defaults;
       for (k in ref) {
         v = ref[k];
-        if (ob[k] == null) {
-          ob[k] = this.config_defaults[k];
+        this.config[k] = k in ob ? ob[k] : this.config_defaults[k];
+      }
+      return this.config;
+    };
+
+    Node.prototype.zero_node_settings = function(ob) {
+      var k, v, zo;
+      zo = {};
+      for (k in ob) {
+        v = ob[k];
+        if (!(k in this.config_defaults || k === 'node_type' || k === 'id')) {
+          zo[k] = v;
         }
       }
-      return this.config = ob;
+      return zo;
+    };
+
+    Node.prototype.zero_node_setup = function(config) {
+      var k, ref, results, v;
+      this.expose_methods_of(this._nodes[0]);
+      ref = this.zero_node_settings(config);
+      results = [];
+      for (k in ref) {
+        v = ref[k];
+        results.push(this.param(k, v));
+      }
+      return results;
     };
 
     Node.prototype.toString = function() {
@@ -140,11 +159,15 @@
       return this.debug("- spliced:", this._nodes);
     };
 
+    Node.prototype.add = function(node) {
+      return this.insert_node(node);
+    };
+
     Node.prototype.connect_incoming = function() {};
 
     Node.prototype.disconnect_incoming = function() {};
 
-    Node.prototype.connect = function(node, output, input) {
+    Node.prototype.connect = function(node, output, input, return_this) {
       var target;
       if (output == null) {
         output = 0;
@@ -152,20 +175,53 @@
       if (input == null) {
         input = 0;
       }
-      this.debug("called connect from " + this + " to " + node);
+      if (return_this == null) {
+        return_this = true;
+      }
+      this.debug("called connect from " + this + " to " + node + ", " + output);
       switch (this.__typeof(node)) {
+        case "AudioParam":
+          this._nodes[this._nodes.length - 1].connect(node, output);
+          return this;
+        case "string":
+          node = this._instance.node(node);
+          target = node._nodes[0];
+          break;
         case "Node":
           target = node._nodes[0];
-          return this._nodes[this._nodes.length - 1].connect(target, output, input);
+          break;
         case "AudioNode":
           target = node;
-          return this._nodes[this._nodes.length - 1].connect(target, output, input);
-        case "AudioParam":
-          target = node;
-          return this._nodes[this._nodes.length - 1].connect(target, output);
+          break;
         default:
           throw new Error("Unknown node type passed to connect");
       }
+      switch (false) {
+        case typeof output !== 'string':
+          this._nodes[this._nodes.length - 1].connect(target[output], input);
+          break;
+        case typeof output !== 'number':
+          this._nodes[this._nodes.length - 1].connect(target, output, input);
+      }
+      if (return_this) {
+        return this;
+      } else {
+        return node;
+      }
+    };
+
+    Node.prototype.chain = function(node, output, input) {
+      if (output == null) {
+        output = 0;
+      }
+      if (input == null) {
+        input = 0;
+      }
+      this.debug(node, this.__typeof(node), typeof output);
+      if (this.__typeof(node) === "AudioParam" && typeof output !== 'string') {
+        throw new Error("Node.chain() can only target AudioParams when used with the signature .chain(target_node:Node, target_param_name:string)");
+      }
+      return this.connect(node, output, input, false);
     };
 
     Node.prototype.to = function(node) {
@@ -250,11 +306,12 @@
           throw new Error("Unknown node type passed to connect");
       }
       try {
-        return source.disconnect(target, output, input);
+        source.disconnect(target, output, input);
       } catch (_error) {
         e = _error;
-        return this.debug("ignored InvalidAccessError disconnecting " + target + " from " + source);
+        this.debug("ignored InvalidAccessError disconnecting " + target + " from " + source);
       }
+      return this;
     };
 
     Node.prototype.disconnect = function(node, output, input) {
@@ -327,7 +384,8 @@
       Gain.__super__.constructor.apply(this, arguments);
       this.configure_from(config);
       this.insert_node(this.context.createGain(), 0);
-      this.expose_methods_of(this._nodes[0]);
+      this._nodes[0].gain.value = this._instance.config.default_gain;
+      this.zero_node_setup(config);
     }
 
     return Gain;
@@ -346,24 +404,26 @@
       Oscillator.__super__.constructor.apply(this, arguments);
       this.configure_from(config);
       this.insert_node(this.context.createOscillator(), 0);
+      this.zero_node_setup(config);
       this.insert_node(new Gain(this._instance, {
-        connect_to_destination: config.connect_to_destination
+        connect_to_destination: this.config.connect_to_destination
       }));
       this._is_started = false;
-      this.expose_methods_of(this._nodes[0]);
     }
 
     Oscillator.prototype.start = function() {
       if (this._is_started) {
-        return this._nodes[1].gain.value = 1.0;
+        this._nodes[1].gain.value = 1.0;
       } else {
         this._nodes[0].start();
-        return this._is_started = true;
+        this._is_started = true;
       }
+      return this;
     };
 
     Oscillator.prototype.stop = function() {
-      return this._nodes[1].gain.value = 0;
+      this._nodes[1].gain.value = 0;
+      return this;
     };
 
     return Oscillator;
@@ -381,6 +441,8 @@
       config.node_type = 'StereoPanner';
       StereoPanner.__super__.constructor.apply(this, arguments);
       this.configure_from(config);
+      this.insert_node(this.context.createStereoPanner(), 0);
+      this.zero_node_setup(config);
     }
 
     return StereoPanner;
@@ -437,6 +499,9 @@
     Mooog.prototype.node = function() {
       var id, node, node_list, ref, ref1;
       id = arguments[0], node_list = 2 <= arguments.length ? slice.call(arguments, 1) : [];
+      if (!arguments.length) {
+        return new Node(this);
+      }
       if (typeof id === 'string') {
         if (node_list.length) {
           return this._nodes[id] = (function(func, args, ctor) {

@@ -104,6 +104,13 @@ pre, tt, code {
   font-family: Menlo, Monaco, Consolas, "Lucida Console", monospace;
   margin: 0; padding: 0;
 }
+
+p code, ul li code{
+    font-size: 14px;
+    background-color: #EBE4FF;
+    display: inline-block;
+    padding: 0 2px;
+}
   .annotation pre {
     display: block;
     margin: 0;

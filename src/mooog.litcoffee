@@ -60,6 +60,7 @@ and gain stages.
 
         
       node: (id, node_list...) ->
+        return new Node(this) unless arguments.length
         if typeof id is 'string'
           if node_list.length
             @_nodes[id] = new Node(this, id, node_list...)
