@@ -50,11 +50,11 @@ of Google Chrome, and expects to run there. Ensuring cross-platform
 consistency is on the to-do list once the API stabilizes. 
 
 ### Features
-Mooog provides nestable `Node` objects that wrap AudioNodes. At a minumum, they
+Mooog provides nestable `MooogAudioNode` objects that wrap AudioNodes. At a minumum, they
 expose the methods of the wrapped Node, so you can talk to them just like the
 underlying AudioNode. Many of them offer additional functionality.
 
-There is also a specialized Node object called `Track`, which will automatically
+There is also a specialized MooogAudioNode object called `Track`, which will automatically
 create a panner and a gain module that can be controlled from a single place, as
 well as effect sends. It automatically routes the end of its internal chain
 to the destinationNode.
@@ -63,15 +63,15 @@ to the destinationNode.
 ### Patches
   - Allows `Oscillator`, `AudioBufferSource` nodes to be `stop()`ed and 
   `start()`ed again without throwing errors.
-  - Changes in to `AudioParam` values are made instantly (when done with `param()`)
-  so that there is no portamento.
+  - Changes to `AudioParam` values via `.param()` are made using setValueAtTime(0)
+  to ensure values are set instantly
   
 ## Todo
   - Make AudioBufferSource start()able
-  - Patch frequency of oscillator to avoid portamento
+
 
 ### Attributions
-The Convolver `Node` comes with some presets that make use of impulse responses
+The Convolver `MooogAudioNode` comes with some presets that make use of impulse responses
 from the [OpenAir](http://www.openairlib.net/) project:
 
   - *stalbans_a_binaural.wav*    

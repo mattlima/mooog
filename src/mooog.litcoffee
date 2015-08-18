@@ -62,15 +62,15 @@ and gain stages.
 
         
       node: (id, node_list...) ->
-        return new Node(this) unless arguments.length
+        return new MooogAudioNode(this) unless arguments.length
         if typeof id is 'string'
           if node_list.length
-            @_nodes[id] = new Node(this, id, node_list...)
+            @_nodes[id] = new MooogAudioNode(this, id, node_list...)
           else if @_nodes?[id]?
             return @_nodes[id]
-          else throw new Error("No node found with id #{id}")
+          else throw new Error("No MooogAudioNode found with id #{id}")
         else
-          node = new Node(this, [id].concat(node_list...)...)
+          node = new MooogAudioNode(this, [id].concat(node_list...)...)
           @_nodes[node.id] = node
       
       
@@ -84,6 +84,9 @@ and gain stages.
       #  @_node_id_count += 1
       #  "_node" + @_node_id_count
 
-        
+      @freq: (n) ->
+        440 * Math.pow(2,((n-69)/12))
+
+
 
     window.Mooog = Mooog

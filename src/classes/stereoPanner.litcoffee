@@ -2,7 +2,7 @@
 
 Wraps the StereoPannerNode AudioContext object
 
-    class StereoPanner extends Node
+    class StereoPanner extends MooogAudioNode
       constructor: (@_instance, config = {}) ->
         config.node_type = 'StereoPanner'
         super

@@ -1,11 +1,11 @@
 (function() {
-  var AudioBufferSource, Convolver, Gain, Mooog, Node, Oscillator, StereoPanner,
+  var AudioBufferSource, Convolver, Gain, Mooog, MooogAudioNode, Oscillator, StereoPanner,
     slice = [].slice,
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
 
-  Node = (function() {
-    function Node() {
+  MooogAudioNode = (function() {
+    function MooogAudioNode() {
       var _instance, i, j, len, node_list;
       _instance = arguments[0], node_list = 2 <= arguments.length ? slice.call(arguments, 1) : [];
       this._instance = _instance;
@@ -22,7 +22,7 @@
         });
       }
       if (node_list.length === 1) {
-        if (this.constructor.name !== "Node") {
+        if (this.constructor.name !== "MooogAudioNode") {
           return;
         }
         if (Mooog.LEGAL_NODES[node_list[0].node_type] != null) {
@@ -42,7 +42,7 @@
       }
     }
 
-    Node.prototype.configure_from = function(ob) {
+    MooogAudioNode.prototype.configure_from = function(ob) {
       var k, ref, v;
       this.id = ob.id != null ? ob.id : this.new_id();
       ref = this.config_defaults;
@@ -53,7 +53,7 @@
       return this.config;
     };
 
-    Node.prototype.zero_node_settings = function(ob) {
+    MooogAudioNode.prototype.zero_node_settings = function(ob) {
       var k, v, zo;
       zo = {};
       for (k in ob) {
@@ -65,7 +65,7 @@
       return zo;
     };
 
-    Node.prototype.zero_node_setup = function(config) {
+    MooogAudioNode.prototype.zero_node_setup = function(config) {
       var k, ref, results, v;
       this.expose_methods_of(this._nodes[0]);
       ref = this.zero_node_settings(config);
@@ -77,15 +77,15 @@
       return results;
     };
 
-    Node.prototype.toString = function() {
+    MooogAudioNode.prototype.toString = function() {
       return (this.constructor.name + "#") + this.id;
     };
 
-    Node.prototype.new_id = function() {
+    MooogAudioNode.prototype.new_id = function() {
       return this.constructor.name + "_" + (Math.round(Math.random() * 100000));
     };
 
-    Node.prototype.__typeof = function(thing) {
+    MooogAudioNode.prototype.__typeof = function(thing) {
       if (thing instanceof AudioParam) {
         return "AudioParam";
       }
@@ -101,13 +101,13 @@
       if (thing instanceof AudioListener) {
         return "AudioListener";
       }
-      if (thing instanceof Node) {
-        return "Node";
+      if (thing instanceof MooogAudioNode) {
+        return "MooogAudioNode";
       }
       return typeof thing;
     };
 
-    Node.prototype.insert_node = function(node, ord) {
+    MooogAudioNode.prototype.insert_node = function(node, ord) {
       var length;
       length = this._nodes.length;
       if (ord == null) {
@@ -155,15 +155,15 @@
       return this.debug("- spliced:", this._nodes);
     };
 
-    Node.prototype.add = function(node) {
+    MooogAudioNode.prototype.add = function(node) {
       return this.insert_node(node);
     };
 
-    Node.prototype.connect_incoming = function() {};
+    MooogAudioNode.prototype.connect_incoming = function() {};
 
-    Node.prototype.disconnect_incoming = function() {};
+    MooogAudioNode.prototype.disconnect_incoming = function() {};
 
-    Node.prototype.connect = function(node, output, input, return_this) {
+    MooogAudioNode.prototype.connect = function(node, output, input, return_this) {
       var target;
       if (output == null) {
         output = 0;
@@ -183,7 +183,7 @@
           node = this._instance.node(node);
           target = node._nodes[0];
           break;
-        case "Node":
+        case "MooogAudioNode":
           target = node._nodes[0];
           break;
         case "AudioNode":
@@ -206,7 +206,7 @@
       }
     };
 
-    Node.prototype.chain = function(node, output, input) {
+    MooogAudioNode.prototype.chain = function(node, output, input) {
       if (output == null) {
         output = 0;
       }
@@ -214,15 +214,15 @@
         input = 0;
       }
       if (this.__typeof(node) === "AudioParam" && typeof output !== 'string') {
-        throw new Error("Node.chain() can only target AudioParams when used with the signature .chain(target_node:Node, target_param_name:string)");
+        throw new Error("MooogAudioNode.chain() can only target AudioParams when used with the signature .chain(target_node:Node, target_param_name:string)");
       }
       this.disconnect(this._destination);
       return this.connect(node, output, input, false);
     };
 
-    Node.prototype.to = function(node) {
+    MooogAudioNode.prototype.to = function(node) {
       switch (this.__typeof(node)) {
-        case "Node":
+        case "MooogAudioNode":
           return node._nodes[0];
         case "AudioNode":
           return node;
@@ -231,9 +231,9 @@
       }
     };
 
-    Node.prototype.from = Node.prototype.to;
+    MooogAudioNode.prototype.from = MooogAudioNode.prototype.to;
 
-    Node.prototype.expose_methods_of = function(node) {
+    MooogAudioNode.prototype.expose_methods_of = function(node) {
       var key, results, val;
       this.debug("exposing", node);
       results = [];
@@ -273,7 +273,7 @@
       return results;
     };
 
-    Node.prototype.safely_disconnect = function(node1, node2, output, input) {
+    MooogAudioNode.prototype.safely_disconnect = function(node1, node2, output, input) {
       var e, source, target;
       if (output == null) {
         output = 0;
@@ -282,7 +282,7 @@
         input = 0;
       }
       switch (this.__typeof(node1)) {
-        case "Node":
+        case "MooogAudioNode":
           source = node1._nodes[node1._nodes.length - 1];
           break;
         case "AudioNode":
@@ -293,7 +293,7 @@
           throw new Error("Unknown node type passed to disconnect");
       }
       switch (this.__typeof(node2)) {
-        case "Node":
+        case "MooogAudioNode":
           target = node2._nodes[0];
           break;
         case "AudioNode":
@@ -312,7 +312,7 @@
       return this;
     };
 
-    Node.prototype.disconnect = function(node, output, input) {
+    MooogAudioNode.prototype.disconnect = function(node, output, input) {
       if (output == null) {
         output = 0;
       }
@@ -322,7 +322,7 @@
       return this.safely_disconnect(this, node, output, input);
     };
 
-    Node.prototype.param = function(key, val) {
+    MooogAudioNode.prototype.param = function(key, val) {
       var k, v;
       if (this.__typeof(key) === 'object') {
         for (k in key) {
@@ -335,7 +335,7 @@
       return this;
     };
 
-    Node.prototype.get_set = function(key, val) {
+    MooogAudioNode.prototype.get_set = function(key, val) {
       if (this[key] == null) {
         return;
       }
@@ -358,7 +358,7 @@
       }
     };
 
-    Node.prototype.define_buffer_source_properties = function() {
+    MooogAudioNode.prototype.define_buffer_source_properties = function() {
       this._buffer_source_file_url = '';
       return Object.defineProperty(this, 'buffer_source_file', {
         get: function() {
@@ -388,7 +388,7 @@
       });
     };
 
-    Node.prototype.debug = function() {
+    MooogAudioNode.prototype.debug = function() {
       var a;
       a = 1 <= arguments.length ? slice.call(arguments, 0) : [];
       if (this._instance.config.debug) {
@@ -396,7 +396,7 @@
       }
     };
 
-    return Node;
+    return MooogAudioNode;
 
   })();
 
@@ -414,11 +414,30 @@
       this.insert_node(this.context.createBufferSource(), 0);
       this.define_buffer_source_properties();
       this.zero_node_setup(config);
+      this.insert_node(new Gain(this._instance, {
+        connect_to_destination: this.config.connect_to_destination
+      }));
+      this._is_started = false;
     }
+
+    AudioBufferSource.prototype.start = function() {
+      if (this._is_started) {
+        this._nodes[1].gain.value = 1.0;
+      } else {
+        this._nodes[0].start();
+        this._is_started = true;
+      }
+      return this;
+    };
+
+    AudioBufferSource.prototype.stop = function() {
+      this._nodes[1].gain.value = 0;
+      return this;
+    };
 
     return AudioBufferSource;
 
-  })(Node);
+  })(MooogAudioNode);
 
   Convolver = (function(superClass) {
     extend(Convolver, superClass);
@@ -438,7 +457,7 @@
 
     return Convolver;
 
-  })(Node);
+  })(MooogAudioNode);
 
   Gain = (function(superClass) {
     extend(Gain, superClass);
@@ -458,7 +477,7 @@
 
     return Gain;
 
-  })(Node);
+  })(MooogAudioNode);
 
   Oscillator = (function(superClass) {
     extend(Oscillator, superClass);
@@ -496,7 +515,7 @@
 
     return Oscillator;
 
-  })(Node);
+  })(MooogAudioNode);
 
   StereoPanner = (function(superClass) {
     extend(StereoPanner, superClass);
@@ -515,7 +534,7 @@
 
     return StereoPanner;
 
-  })(Node);
+  })(MooogAudioNode);
 
   Mooog = (function() {
     Mooog.LEGAL_NODES = {
@@ -570,7 +589,7 @@
       var id, node, node_list, ref, ref1;
       id = arguments[0], node_list = 2 <= arguments.length ? slice.call(arguments, 1) : [];
       if (!arguments.length) {
-        return new Node(this);
+        return new MooogAudioNode(this);
       }
       if (typeof id === 'string') {
         if (node_list.length) {
@@ -578,20 +597,24 @@
             ctor.prototype = func.prototype;
             var child = new ctor, result = func.apply(child, args);
             return Object(result) === result ? result : child;
-          })(Node, [this, id].concat(slice.call(node_list)), function(){});
+          })(MooogAudioNode, [this, id].concat(slice.call(node_list)), function(){});
         } else if (((ref = this._nodes) != null ? ref[id] : void 0) != null) {
           return this._nodes[id];
         } else {
-          throw new Error("No node found with id " + id);
+          throw new Error("No MooogAudioNode found with id " + id);
         }
       } else {
         node = (function(func, args, ctor) {
           ctor.prototype = func.prototype;
           var child = new ctor, result = func.apply(child, args);
           return Object(result) === result ? result : child;
-        })(Node, [this].concat(slice.call((ref1 = [id]).concat.apply(ref1, node_list))), function(){});
+        })(MooogAudioNode, [this].concat(slice.call((ref1 = [id]).concat.apply(ref1, node_list))), function(){});
         return this._nodes[node.id] = node;
       }
+    };
+
+    Mooog.freq = function(n) {
+      return 440 * Math.pow(2, (n - 69) / 12);
     };
 
     return Mooog;

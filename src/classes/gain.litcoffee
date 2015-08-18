@@ -2,7 +2,7 @@
 
 Wraps the GainNode AudioContext object
 
-    class Gain extends Node
+    class Gain extends MooogAudioNode
       constructor: (@_instance, config = {}) ->
         config.node_type = 'Gain'
         super

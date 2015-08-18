@@ -2,7 +2,7 @@
 
 Wraps the ConvolverNode AudioContext object
 
-    class Convolver extends Node
+    class Convolver extends MooogAudioNode
       constructor: (@_instance, config = {}) ->
         config.node_type = 'Convolver'
         super

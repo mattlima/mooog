@@ -1,14 +1,14 @@
-## Node
+## MooogAudioNode
 
 Base class for all the node wrappers. 
 
-The Mooog Node object wraps one or more AudioNode objects. By default it 
+The MooogAudioNode object wraps one or more AudioNode objects. By default it 
 exposes the `AudioNode` methods of the first AudioNode in the `_nodes`
 array. 
 
 Signatures:
 
-> Node(instance:Mooog , id:string, node_def:mixed)
+> MooogAudioNode(instance:Mooog , id:string, node_def:mixed)
 
 `_instance`: The parent `Mooog` instance  
 `id`: A unique identifier to assign to this Node
@@ -17,7 +17,7 @@ or an object with initialization params (see below)
 
 
 
-> Node(instance:Mooog , node_definition:object [, node_definition...])
+> MooogAudioNode(instance:Mooog , node_definition:object [, node_definition...])
 
 `_instance`: The parent `Mooog` instance  
 `node_definition`: An object used to create and configure the new Node. 
@@ -26,7 +26,7 @@ Required properties:
   - `id`: Unique string identifier
   - `node_type`: String indicating the type of Node (Oscillator, Gain, etc.)
   
-Optional properties
+Optional properties for all nodes
   - `connect_to_destination`: Boolean indicating whether the last in this node's 
 `_nodes` array is automatically connected to the `AudioDestinationNode`. *default: true*
 
@@ -36,7 +36,7 @@ object after initialization.
 
 
 
-    class Node
+    class MooogAudioNode
       constructor: (@_instance, node_list...) ->
         @_destination = @_instance._destination
         @context = @_instance.context
@@ -55,7 +55,7 @@ Take care of first type signature (ID and string type)
 Otherwise, this is one or more config objects.
         
         if node_list.length is 1
-          return unless @constructor.name is "Node"
+          return unless @constructor.name is "MooogAudioNode"
           if Mooog.LEGAL_NODES[node_list[0].node_type]?
             return new Mooog.LEGAL_NODES[node_list[0].node_type] @_instance, node_list[0]
           else
@@ -69,7 +69,7 @@ Otherwise, this is one or more config objects.
 
         
 
-### Node.configure_from
+### MooogAudioNode.configure_from
 The config object can contain general configuration options or key/value pairs to be set on the
 wrapped `AudioNode`. This function merges the config defaults with the supplied options and sets
 the `config` property of the node
@@ -81,7 +81,7 @@ the `config` property of the node
         @config
 
 
-### Node.zero_node_settings
+### MooogAudioNode.zero_node_settings
 XORs the supplied configuration object with the defaults to return an object the properties of which
 should be set on the zero node
       
@@ -92,16 +92,17 @@ should be set on the zero node
         zo
         
 
-### Node.zero_node_setup
-Runs after the Node constructor by the inheriting classes. Exposes the underlying `AudioNode` 
-properties and sets any `AudioNode`-specific properties supplied in the configuration object.
+### MooogAudioNode.zero_node_setup
+Runs after the MooogAudioNode constructor by the inheriting classes. Exposes the underlying
+`AudioNode` properties and sets any `AudioNode`-specific properties supplied in the 
+configuration object.
       
       zero_node_setup: (config) ->
         @expose_methods_of @_nodes[0]
         for k, v of @zero_node_settings(config)
           @param k, v
         
-### Node.toString
+### MooogAudioNode.toString
 Includes the ID in the string representation of the object.      
 
       toString: () ->
@@ -109,7 +110,7 @@ Includes the ID in the string representation of the object.
 
 
 
-### Node.new_id
+### MooogAudioNode.new_id
 Generates a new string identifier for this node.
       
       
@@ -117,7 +118,7 @@ Generates a new string identifier for this node.
         "#{@.constructor.name}_#{Math.round(Math.random()*100000)}"
 
 
-### Node.__typeof
+### MooogAudioNode.__typeof
 This is a modified `typeof` to filter AudioContext API-specific object types
       
       
@@ -127,10 +128,10 @@ This is a modified `typeof` to filter AudioContext API-specific object types
         return "AudioBuffer" if thing instanceof AudioBuffer
         return "PeriodicWave" if thing instanceof PeriodicWave
         return "AudioListener" if thing instanceof AudioListener
-        return "Node" if thing instanceof Node
+        return "MooogAudioNode" if thing instanceof MooogAudioNode
         return typeof(thing)
       
-### Node.insert_node
+### MooogAudioNode.insert_node
 
 
       insert_node: (node, ord) ->
@@ -173,7 +174,7 @@ This is a modified `typeof` to filter AudioContext API-specific object types
         @debug "- spliced:", @_nodes
 
   
-### Node.add
+### MooogAudioNode.add
 Shortcut for insert_node
 
 
@@ -190,7 +191,7 @@ Shortcut for insert_node
         #todo: deal with incoming connections for 0 element
 
 
-### Node.connect
+### MooogAudioNode.connect
 `node`: The node object or string ID of the object to which to connect.  
 `param`: Optional string name of the `AudioParam` member of `node` to
 which to connect.  
@@ -212,7 +213,7 @@ to connect to.
           when "string"
             node = @_instance.node node
             target = node._nodes[0]
-          when "Node"
+          when "MooogAudioNode"
             target = node._nodes[0]
           when "AudioNode"
             target = node
@@ -228,33 +229,33 @@ to connect to.
 
 
 
-### Node.chain
-Like `Node.connect` with two important differences. First, it returns the 
-`Node` you are connecting to. Second, it automatically disconnects the callind
-`Node` from the context's `AudioDestinationNode`. To use with `AudioParam`s, 
-use the name of the param as the second argument (and the base `Node` as the first).
+### MooogAudioNode.chain
+Like `MooogAudioNode.connect` with two important differences. First, it returns the 
+`MooogAudioNode` you are connecting to. Second, it automatically disconnects the callind
+`MooogAudioNode` from the context's `AudioDestinationNode`. To use with `AudioParam`s, 
+use the name of the param as the second argument (and the base `MooogAudioNode` as the first).
 
       chain: (node, output = 0, input = 0) ->
         if @__typeof(node) is "AudioParam" and typeof(output) isnt 'string'
-          throw new Error "Node.chain() can only target AudioParams when used with
+          throw new Error "MooogAudioNode.chain() can only target AudioParams when used with
           the signature .chain(target_node:Node, target_param_name:string)"
         @disconnect @_destination
         @connect node, output, input, false
 
 
-### Node.to, Node.from
+### MooogAudioNode.to, MooogAudioNode.from
 These functions are synonyms and exist to improve code readability.
       
       to: (node) ->
         switch @__typeof node
-          when "Node" then return node._nodes[0]
+          when "MooogAudioNode" then return node._nodes[0]
           when "AudioNode" then return node
           else throw new Error "Unknown node type passed to connect"
       
       from: @.prototype.to
       
 
-### Node.expose_methods_of
+### MooogAudioNode.expose_methods_of
 Exposes the properties of a wrapped `AudioNode` on `this`
 
       
@@ -281,17 +282,17 @@ Exposes the properties of a wrapped `AudioNode` on `this`
 
 
 
-### Node.safely_disconnect
+### MooogAudioNode.safely_disconnect
 Prevents `InvalidAccessError`s from stopping program execution if you try to use disconnect on 
 a node that's not already connected.
 
       safely_disconnect: (node1, node2, output = 0, input = 0) ->
         switch @__typeof node1
-          when "Node" then source = node1._nodes[ node1._nodes.length - 1 ]
+          when "MooogAudioNode" then source = node1._nodes[ node1._nodes.length - 1 ]
           when "AudioNode", "AudioParam" then source = node1
           else throw new Error "Unknown node type passed to disconnect"
         switch @__typeof node2
-          when "Node" then target = node2._nodes[0]
+          when "MooogAudioNode" then target = node2._nodes[0]
           when "AudioNode", "AudioParam" then target = node2
           else throw new Error "Unknown node type passed to disconnect"
         try
@@ -301,7 +302,7 @@ a node that's not already connected.
         @
 
       
-### Node.disconnect
+### MooogAudioNode.disconnect
 Replace the native `disconnect` function with a safe version, in case it is called directly.
 
       disconnect: (node, output = 0, input = 0) ->
@@ -309,7 +310,7 @@ Replace the native `disconnect` function with a safe version, in case it is call
 
 
 
-### Node.param
+### MooogAudioNode.param
 jQuery-style getter/setter that also works on `AudioParam` properties.
   
       param: (key, val) ->
@@ -321,8 +322,8 @@ jQuery-style getter/setter that also works on `AudioParam` properties.
 
 
 
-### Node.get_set
-Handles the getting/setting for `Node.param`
+### MooogAudioNode.get_set
+Handles the getting/setting for `MooogAudioNode.param`
 
       get_set: (key, val) ->
         return unless @[key]?
@@ -339,8 +340,8 @@ Handles the getting/setting for `Node.param`
             else @[key]
 
 
-### Node.define_buffer_source_properties
-Sets up useful functions on `Node`s that have a `buffer` property 
+### MooogAudioNode.define_buffer_source_properties
+Sets up useful functions on `MooogAudioNode`s that have a `buffer` property 
       
       define_buffer_source_properties: () ->
         @_buffer_source_file_url = ''
@@ -369,7 +370,7 @@ Sets up useful functions on `Node`s that have a `buffer` property
 
 
 
-### Node.debug
+### MooogAudioNode.debug
 Logs to the console if the debug config option is on
   
       debug: (a...) ->

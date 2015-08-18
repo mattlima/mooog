@@ -2,7 +2,7 @@
 
 Wraps the OscillatorNode AudioContext object
 
-    class Oscillator extends Node
+    class Oscillator extends MooogAudioNode
       constructor: (@_instance, config = {}) ->
         config.node_type = 'Oscillator'
         super
