@@ -100,6 +100,7 @@ configuration object.
       zero_node_setup: (config) ->
         @expose_methods_of @_nodes[0]
         for k, v of @zero_node_settings(config)
+          @debug "zero node settings, #{k} = #{v}"
           @param k, v
         
 ### MooogAudioNode.toString
@@ -290,10 +291,12 @@ a node that's not already connected.
         switch @__typeof node1
           when "MooogAudioNode" then source = node1._nodes[ node1._nodes.length - 1 ]
           when "AudioNode", "AudioParam" then source = node1
+          when "string" then source = @_instance.node node1
           else throw new Error "Unknown node type passed to disconnect"
         switch @__typeof node2
           when "MooogAudioNode" then target = node2._nodes[0]
           when "AudioNode", "AudioParam" then target = node2
+          when "string" then target = @_instance.node node2
           else throw new Error "Unknown node type passed to disconnect"
         try
           source.disconnect target, output, input
@@ -317,8 +320,7 @@ jQuery-style getter/setter that also works on `AudioParam` properties.
         if @__typeof(key) is 'object'
           @get_set k, v for k, v of key
           return this
-        @get_set key, val
-        return this
+        return @get_set key, val
 
 
 
@@ -330,9 +332,10 @@ Handles the getting/setting for `MooogAudioNode.param`
         switch @__typeof @[key]
           when "AudioParam"
             if val?
-              @[key].setValueAtTime val, 0
+              @[key].setValueAtTime val, @context.currentTime
               return this
-            else @[key].value
+            else
+              @[key].value
           else
             if val?
               @[key] = val
@@ -364,6 +367,18 @@ Sets up useful functions on `MooogAudioNode`s that have a `buffer` property
             request.send()
           enumerable: true
           configurable: true
+        }
+        
+### MooogAudioNode.define_readonly_property
+
+        
+      define_readonly_property: (prop_name, func) ->
+        Object.defineProperty @, prop_name, {
+          get: func
+          set: () ->
+            throw new Error("#{@}.#{prop_name} is read-only")
+          enumerable: true
+          configurable: false
         }
 
       
