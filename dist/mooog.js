@@ -72,6 +72,7 @@
       results = [];
       for (k in ref) {
         v = ref[k];
+        this.debug("zero node settings, " + k + " = " + v);
         results.push(this.param(k, v));
       }
       return results;
@@ -289,6 +290,9 @@
         case "AudioParam":
           source = node1;
           break;
+        case "string":
+          source = this._instance.node(node1);
+          break;
         default:
           throw new Error("Unknown node type passed to disconnect");
       }
@@ -299,6 +303,9 @@
         case "AudioNode":
         case "AudioParam":
           target = node2;
+          break;
+        case "string":
+          target = this._instance.node(node2);
           break;
         default:
           throw new Error("Unknown node type passed to disconnect");
@@ -331,8 +338,7 @@
         }
         return this;
       }
-      this.get_set(key, val);
-      return this;
+      return this.get_set(key, val);
     };
 
     MooogAudioNode.prototype.get_set = function(key, val) {
@@ -342,7 +348,7 @@
       switch (this.__typeof(this[key])) {
         case "AudioParam":
           if (val != null) {
-            this[key].setValueAtTime(val, 0);
+            this[key].setValueAtTime(val, this.context.currentTime);
             return this;
           } else {
             return this[key].value;
@@ -388,6 +394,17 @@
       });
     };
 
+    MooogAudioNode.prototype.define_readonly_property = function(prop_name, func) {
+      return Object.defineProperty(this, prop_name, {
+        get: func,
+        set: function() {
+          throw new Error(this + "." + prop_name + " is read-only");
+        },
+        enumerable: true,
+        configurable: false
+      });
+    };
+
     MooogAudioNode.prototype.debug = function() {
       var a;
       a = 1 <= arguments.length ? slice.call(arguments, 0) : [];
@@ -415,12 +432,87 @@
       this.define_buffer_source_properties();
       this.zero_node_setup(config);
       this.insert_node(new Gain(this._instance, {
+        gain: 1.0,
         connect_to_destination: this.config.connect_to_destination
       }));
       this._is_started = false;
+      this._stop_timeout = false;
+      this._state = 'stopped';
+      this.define_readonly_property('state', (function(_this) {
+        return function() {
+          return _this._state;
+        };
+      })(this));
+      this._true_loop = this._nodes[0].loop;
+      this._nodes[0].loop = true;
+      this._true_loopStart = this._nodes[0].loopStart;
+      this._true_loopEnd = this._nodes[0].loopEnd;
+      Object.defineProperty(this, 'loop', {
+        get: function() {
+          return this._true_loop;
+        },
+        set: (function(_this) {
+          return function(val) {
+            _this._true_loop = val;
+            if (_this._state === 'playing') {
+              if (val) {
+                _this._nodes[0].loopEnd = _this._true_loopEnd;
+                return _this._nodes[0].loopStart = _this._true_loopStart;
+              } else {
+                _this._true_loopEnd = _this._nodes[0].loopEnd;
+                return _this._true_loopStart = _this._nodes[0].loopStart;
+              }
+            }
+          };
+        })(this),
+        enumerable: true,
+        configurable: true
+      });
+      Object.defineProperty(this, 'loopStart', {
+        get: function() {
+          return this._true_loopStart;
+        },
+        set: (function(_this) {
+          return function(val) {
+            _this._true_loopStart = val;
+            if (_this._true_loop && _this._state === 'playing') {
+              return _this._nodes[0].loopStart = _this._true_loopStart;
+            }
+          };
+        })(this),
+        enumerable: true,
+        configurable: true
+      });
+      Object.defineProperty(this, 'loopEnd', {
+        get: function() {
+          return this._true_loopEnd;
+        },
+        set: (function(_this) {
+          return function(val) {
+            _this._true_loopEnd = val;
+            if (_this._true_loop && _this._state === 'playing') {
+              return _this._nodes[0].loopEnd = _this._true_loopEnd;
+            }
+          };
+        })(this),
+        enumerable: true,
+        configurable: true
+      });
     }
 
     AudioBufferSource.prototype.start = function() {
+      if (this._state === 'playing') {
+        return;
+      }
+      this._state = 'playing';
+      if (this._true_loop) {
+        this._nodes[0].loopEnd = this._true_loopEnd;
+        this._nodes[0].loopStart = this._true_loopStart;
+      } else {
+        this._nodes[0].loopEnd = this._nodes[0].buffer.duration;
+        this._nodes[0].loopStart = 0;
+        this._stop_timeout = setTimeout(this.stop.bind(this), (Math.round(this._nodes[0].buffer.duration * 1000)) - 19);
+      }
       if (this._is_started) {
         this._nodes[1].gain.value = 1.0;
       } else {
@@ -431,7 +523,14 @@
     };
 
     AudioBufferSource.prototype.stop = function() {
+      if (this._state === 'stopped') {
+        return;
+      }
+      this._state = 'stopped';
+      clearTimeout(this._stop_timeout);
       this._nodes[1].gain.value = 0;
+      this._nodes[0].loopStart = 0;
+      this._nodes[0].loopEnd = 0.005;
       return this;
     };
 
@@ -496,9 +595,19 @@
         connect_to_destination: this.config.connect_to_destination
       }));
       this._is_started = false;
+      this._state = 'stopped';
+      this.define_readonly_property('state', (function(_this) {
+        return function() {
+          return _this._state;
+        };
+      })(this));
     }
 
     Oscillator.prototype.start = function() {
+      if (this._state === 'playing') {
+        return;
+      }
+      this._state = 'playing';
       if (this._is_started) {
         this._nodes[1].gain.value = 1.0;
       } else {
@@ -509,6 +618,10 @@
     };
 
     Oscillator.prototype.stop = function() {
+      if (this._state === 'stopped') {
+        return;
+      }
+      this._state = 'stopped';
       this._nodes[1].gain.value = 0;
       return this;
     };
