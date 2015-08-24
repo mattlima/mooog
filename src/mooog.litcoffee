@@ -16,6 +16,7 @@ automatically set to this value. *Default: 0.5*
         'Gain': Gain
         'AudioBufferSource': AudioBufferSource
         'Convolver': Convolver
+        'BiquadFilter': BiquadFilter
 
       
       constructor: (@initConfig = {}) ->
