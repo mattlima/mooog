@@ -380,7 +380,55 @@ Sets up useful functions on `MooogAudioNode`s that have a `buffer` property
           enumerable: true
           configurable: false
         }
+        
+        
+### MooogAudioNode.adsr
+Applies an ADSR envelope of value changes to an `AudioParam`. 
+`param`: An `AudioParam` or a string representing the name of the property, assumed to be on `this`. 
+`config`: Object with the following properties (FAKE_ZERO is a very small number 
+used in place of actual zero, which will throw errors when passed to 
+`exponentialRampToValueAtTime`).
+  - base: The value to start and end with. *Defaults to 'zero'*
+  - times: An array of time values representing the ending time of each of the 
+  ADSR stages. The first is relative to the currentTime, and the others are relative
+  to the previous value. The delay stage can be suppressed by passing an array of three 
+  elements, in which case the envelope will be an ASR and the `s` value will be ignored
+  - a: The final value of the parameter at the end of the attack stage. *Defaults to 1*
+  - s: The value of the parameter at the end of the delay stage (or attack stage, 
+  if delay is omitted), to be held until the beginning of the release stage. *Defaults to 1*
 
+
+      adsr: (param, config) ->
+        param = @[param] if typeof(param) is "string"
+        _0 = @_instance.config.fake_zero
+        { base, times, a, s } = config
+        base ?= _0
+        base = _0 if base is 0
+        a ?= 1
+        a = _0 if a is 0
+        s ?= 1
+        s = _0 if s is 0
+        t = @context.currentTime
+        times[0] ||= _0
+        times[1] ||= _0
+        times[2] ||= _0
+        if(times.length is 3)
+          #[a_time, s_time, r_time] = times
+          param.cancelScheduledValues t
+          param.setValueAtTime base , t
+          param.exponentialRampToValueAtTime a, t + times[0]
+          param.setValueAtTime a, t + times[0] + times[1]
+          param.exponentialRampToValueAtTime base , t + times[0] + times[1] + times[2]
+        else
+          times[3] ||= _0
+          #[a_time, d_time, s_time, r_time] = times
+          param.cancelScheduledValues t
+          param.setValueAtTime base , t
+          param.exponentialRampToValueAtTime a, t + times[0]
+          param.exponentialRampToValueAtTime s, t + times[0] + d_time
+          param.setValueAtTime s, t + times[0] + d_time + times[2]
+          param.exponentialRampToValueAtTime base , t + times[0] + d_time + times[2] + times[3]
+      
       
 
 

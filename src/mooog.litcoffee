@@ -31,6 +31,7 @@ object (`AudioContext` or `webkitAudioContext`)
           debug: false
           default_gain: 0.5
         
+          fake_zero: 1/32768
         @init(@initConfig)
 
         @_nodes = {}
