@@ -1,5 +1,5 @@
 (function() {
-  var AudioBufferSource, Convolver, Gain, Mooog, MooogAudioNode, Oscillator, StereoPanner,
+  var AudioBufferSource, BiquadFilter, Convolver, Gain, Mooog, MooogAudioNode, Oscillator, StereoPanner,
     slice = [].slice,
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
@@ -405,6 +405,52 @@
       });
     };
 
+    MooogAudioNode.prototype.adsr = function(param, config) {
+      var _0, a, base, s, t, times;
+      if (typeof param === "string") {
+        param = this[param];
+      }
+      _0 = this._instance.config.fake_zero;
+      base = config.base, times = config.times, a = config.a, s = config.s;
+      if (base == null) {
+        base = _0;
+      }
+      if (base === 0) {
+        base = _0;
+      }
+      if (a == null) {
+        a = 1;
+      }
+      if (a === 0) {
+        a = _0;
+      }
+      if (s == null) {
+        s = 1;
+      }
+      if (s === 0) {
+        s = _0;
+      }
+      t = this.context.currentTime;
+      times[0] || (times[0] = _0);
+      times[1] || (times[1] = _0);
+      times[2] || (times[2] = _0);
+      if (times.length === 3) {
+        param.cancelScheduledValues(t);
+        param.setValueAtTime(base, t);
+        param.exponentialRampToValueAtTime(a, t + times[0]);
+        param.setValueAtTime(a, t + times[0] + times[1]);
+        return param.exponentialRampToValueAtTime(base, t + times[0] + times[1] + times[2]);
+      } else {
+        times[3] || (times[3] = _0);
+        param.cancelScheduledValues(t);
+        param.setValueAtTime(base, t);
+        param.exponentialRampToValueAtTime(a, t + times[0]);
+        param.exponentialRampToValueAtTime(s, t + times[0] + d_time);
+        param.setValueAtTime(s, t + times[0] + d_time + times[2]);
+        return param.exponentialRampToValueAtTime(base, t + times[0] + d_time + times[2] + times[3]);
+      }
+    };
+
     MooogAudioNode.prototype.debug = function() {
       var a;
       a = 1 <= arguments.length ? slice.call(arguments, 0) : [];
@@ -538,6 +584,25 @@
 
   })(MooogAudioNode);
 
+  BiquadFilter = (function(superClass) {
+    extend(BiquadFilter, superClass);
+
+    function BiquadFilter(_instance, config) {
+      this._instance = _instance;
+      if (config == null) {
+        config = {};
+      }
+      config.node_type = 'BiquadFilter';
+      BiquadFilter.__super__.constructor.apply(this, arguments);
+      this.configure_from(config);
+      this.insert_node(this.context.createBiquadFilter(), 0);
+      this.zero_node_setup(config);
+    }
+
+    return BiquadFilter;
+
+  })(MooogAudioNode);
+
   Convolver = (function(superClass) {
     extend(Convolver, superClass);
 
@@ -655,7 +720,8 @@
       'StereoPanner': StereoPanner,
       'Gain': Gain,
       'AudioBufferSource': AudioBufferSource,
-      'Convolver': Convolver
+      'Convolver': Convolver,
+      'BiquadFilter': BiquadFilter
     };
 
     function Mooog(initConfig1) {
@@ -665,7 +731,9 @@
       this._destination = this.context.destination;
       this.config = {
         debug: false,
-        default_gain: 0.5
+        default_gain: 0.5,
+        periodic_wave_length: 2048,
+        fake_zero: 1 / 32768
       };
       this.init(this.initConfig);
       this._nodes = {};
@@ -728,6 +796,64 @@
 
     Mooog.freq = function(n) {
       return 440 * Math.pow(2, (n - 69) / 12);
+    };
+
+    Mooog.prototype.sawtoothPeriodicWave = function(harms) {
+      var a, i, imag, j, real, ref;
+      if (harms == null) {
+        harms = this.config.periodic_wave_length;
+      }
+      a = [0];
+      for (i = j = 1, ref = harms - 1; 1 <= ref ? j <= ref : j >= ref; i = 1 <= ref ? ++j : --j) {
+        a.push(1 / i);
+      }
+      real = new Float32Array(a);
+      imag = new Float32Array(real.length);
+      return this.context.createPeriodicWave(real, imag);
+    };
+
+    Mooog.prototype.squarePeriodicWave = function(harms) {
+      var a, i, imag, j, real, ref;
+      if (harms == null) {
+        harms = this.config.periodic_wave_length;
+      }
+      a = [0];
+      for (i = j = 1, ref = harms - 1; 1 <= ref ? j <= ref : j >= ref; i = 1 <= ref ? ++j : --j) {
+        if (i % 2 !== 0) {
+          a.push(2 / (Math.PI * i));
+        } else {
+          a.push(0);
+        }
+      }
+      real = new Float32Array(a);
+      imag = new Float32Array(real.length);
+      return this.context.createPeriodicWave(real, imag);
+    };
+
+    Mooog.prototype.trianglePeriodicWave = function(harms) {
+      var a, i, imag, j, real, ref;
+      if (harms == null) {
+        harms = this.config.periodic_wave_length;
+      }
+      a = [0];
+      for (i = j = 1, ref = harms - 1; 1 <= ref ? j <= ref : j >= ref; i = 1 <= ref ? ++j : --j) {
+        if (i % 2 !== 0) {
+          a.push(1 / (Math.pow(i, 2)));
+        } else {
+          a.push(0);
+        }
+      }
+      real = new Float32Array(a);
+      imag = new Float32Array(real.length);
+      return this.context.createPeriodicWave(real, imag);
+    };
+
+    Mooog.prototype.sinePeriodicWave = function(harms) {
+      var a, imag, real;
+      a = [0, 1];
+      real = new Float32Array(a);
+      imag = new Float32Array(real.length);
+      return this.context.createPeriodicWave(real, imag);
     };
 
     return Mooog;

@@ -30,7 +30,7 @@ object (`AudioContext` or `webkitAudioContext`)
         @config =
           debug: false
           default_gain: 0.5
-        
+          periodic_wave_length: 2048
           fake_zero: 1/32768
         @init(@initConfig)
 
@@ -88,6 +88,49 @@ and gain stages.
 
       @freq: (n) ->
         440 * Math.pow(2,((n-69)/12))
+
+      
+      sawtoothPeriodicWave: (harms) ->
+        harms ?= @config.periodic_wave_length
+        a = [0]
+        a.push(1/i) for i in [1..harms-1]
+        real = new Float32Array(a)
+        imag = new Float32Array(real.length)
+        return @context.createPeriodicWave(real, imag)
+
+    
+      squarePeriodicWave: (harms) ->
+        harms ?= @config.periodic_wave_length
+        a = [0]
+        for i in [1..harms-1]
+          if i%2 != 0
+            a.push(2/(Math.PI * i))
+          else
+            a.push(0)
+        real = new Float32Array(a)
+        imag = new Float32Array(real.length)
+        return @context.createPeriodicWave(real, imag)
+
+    
+      trianglePeriodicWave: (harms) ->
+        harms ?= @config.periodic_wave_length
+        a = [0]
+        for i in [1..harms-1]
+          if i%2 != 0
+            a.push(1/(Math.pow(i,2)))
+          else
+            a.push(0)
+        real = new Float32Array(a)
+        imag = new Float32Array(real.length)
+        return @context.createPeriodicWave(real, imag)
+    
+    
+      sinePeriodicWave: (harms) ->
+        a = [0, 1]
+        real = new Float32Array(a)
+        imag = new Float32Array(real.length)
+        return @context.createPeriodicWave(real, imag)
+
 
 
 

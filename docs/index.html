@@ -523,6 +523,67 @@ a node that’s not already connected.</p>
         
       
         
+        <h3 id="mooogaudionode-adsr">MooogAudioNode.adsr</h3>
+<p>Applies an ADSR envelope of value changes to an <code>AudioParam</code>. 
+<code>param</code>: An <code>AudioParam</code> or a string representing the name of the property, assumed to be on <code>this</code>. 
+<code>config</code>: Object with the following properties (FAKE_ZERO is a very small number 
+used in place of actual zero, which will throw errors when passed to 
+<code>exponentialRampToValueAtTime</code>).</p>
+<ul>
+<li>base: The value to start and end with. <em>Defaults to ‘zero’</em></li>
+<li>times: An array of time values representing the ending time of each of the 
+ADSR stages. The first is relative to the currentTime, and the others are relative
+to the previous value. The delay stage can be suppressed by passing an array of three 
+elements, in which case the envelope will be an ASR and the <code>s</code> value will be ignored</li>
+<li>a: The final value of the parameter at the end of the attack stage. <em>Defaults to 1</em></li>
+<li>s: The value of the parameter at the end of the delay stage (or attack stage, 
+if delay is omitted), to be held until the beginning of the release stage. <em>Defaults to 1</em></li>
+</ul>
+
+        
+          <div class='highlight'><pre>  <span class="hljs-attribute">adsr</span>: <span class="hljs-function"><span class="hljs-params">(param, config)</span> -&gt;</span>
+    param = @[param] <span class="hljs-keyword">if</span> <span class="hljs-keyword">typeof</span>(param) <span class="hljs-keyword">is</span> <span class="hljs-string">"string"</span>
+    _0 = <span class="hljs-property">@_instance</span>.config.fake_zero
+    { base, times, a, s } = config
+    base ?= _0
+    base = _0 <span class="hljs-keyword">if</span> base <span class="hljs-keyword">is</span> <span class="hljs-number">0</span>
+    a ?= <span class="hljs-number">1</span>
+    a = _0 <span class="hljs-keyword">if</span> a <span class="hljs-keyword">is</span> <span class="hljs-number">0</span>
+    s ?= <span class="hljs-number">1</span>
+    s = _0 <span class="hljs-keyword">if</span> s <span class="hljs-keyword">is</span> <span class="hljs-number">0</span>
+    t = <span class="hljs-property">@context</span>.currentTime
+    times[<span class="hljs-number">0</span>] ||= _0
+    times[<span class="hljs-number">1</span>] ||= _0
+    times[<span class="hljs-number">2</span>] ||= _0
+    <span class="hljs-keyword">if</span>(times.length <span class="hljs-keyword">is</span> <span class="hljs-number">3</span>)</pre></div>
+        
+      
+        
+        <p>[a_time, s_time, r_time] = times</p>
+
+        
+          <div class='highlight'><pre>      param.cancelScheduledValues t
+      param.setValueAtTime base , t
+      param.exponentialRampToValueAtTime a, t + times[<span class="hljs-number">0</span>]
+      param.setValueAtTime a, t + times[<span class="hljs-number">0</span>] + times[<span class="hljs-number">1</span>]
+      param.exponentialRampToValueAtTime base , t + times[<span class="hljs-number">0</span>] + times[<span class="hljs-number">1</span>] + times[<span class="hljs-number">2</span>]
+    <span class="hljs-keyword">else</span>
+      times[<span class="hljs-number">3</span>] ||= _0</pre></div>
+        
+      
+        
+        <p>[a_time, d_time, s_time, r_time] = times</p>
+
+        
+          <div class='highlight'><pre>      param.cancelScheduledValues t
+      param.setValueAtTime base , t
+      param.exponentialRampToValueAtTime a, t + times[<span class="hljs-number">0</span>]
+      param.exponentialRampToValueAtTime s, t + times[<span class="hljs-number">0</span>] + d_time
+      param.setValueAtTime s, t + times[<span class="hljs-number">0</span>] + d_time + times[<span class="hljs-number">2</span>]
+      param.exponentialRampToValueAtTime base , t + times[<span class="hljs-number">0</span>] + d_time + times[<span class="hljs-number">2</span>] + times[<span class="hljs-number">3</span>]</pre></div>
+        
+      
+        
         <h3 id="mooogaudionode-debug">MooogAudioNode.debug</h3>
 <p>Logs to the console if the debug config option is on</p>
 
@@ -636,6 +697,20 @@ playback from 0</p>
         
       
         
+        <h2 id="biquadfilter">BiquadFilter</h2>
+<p>Wraps the BiquadFilterNode AudioContext object</p>
+
+        
+          <div class='highlight'><pre><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">BiquadFilter</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">MooogAudioNode</span></span>
+  <span class="hljs-attribute">constructor</span>: <span class="hljs-function"><span class="hljs-params">(<span class="hljs-property">@_instance</span>, config = {})</span> -&gt;</span>
+    config.node_type = <span class="hljs-string">'BiquadFilter'</span>
+    <span class="hljs-keyword">super</span>
+    <span class="hljs-property">@configure_from</span>(config)
+    <span class="hljs-property">@insert_node</span> <span class="hljs-property">@context</span>.createBiquadFilter(), <span class="hljs-number">0</span>
+    <span class="hljs-property">@zero_node_setup</span> config</pre></div>
+        
+      
+        
         <h2 id="convolver">Convolver</h2>
 <p>Wraps the ConvolverNode AudioContext object</p>
 
@@ -738,6 +813,7 @@ automatically set to this value. <em>Default: 0.5</em></li>
     <span class="hljs-string">'Gain'</span>: Gain
     <span class="hljs-string">'AudioBufferSource'</span>: AudioBufferSource
     <span class="hljs-string">'Convolver'</span>: Convolver
+    <span class="hljs-string">'BiquadFilter'</span>: BiquadFilter
 
   
   <span class="hljs-attribute">constructor</span>: <span class="hljs-function"><span class="hljs-params">(<span class="hljs-property">@initConfig</span> = {})</span> -&gt;</span></pre></div>
@@ -754,7 +830,8 @@ object (<code>AudioContext</code> or <code>webkitAudioContext</code>)</p>
     <span class="hljs-property">@config</span> =
       <span class="hljs-attribute">debug</span>: <span class="hljs-literal">false</span>
       <span class="hljs-attribute">default_gain</span>: <span class="hljs-number">0.5</span>
-    
+      <span class="hljs-attribute">periodic_wave_length</span>: <span class="hljs-number">2048</span>
+      <span class="hljs-attribute">fake_zero</span>: <span class="hljs-number">1</span>/<span class="hljs-number">32768</span>
     <span class="hljs-property">@init</span>(<span class="hljs-property">@initConfig</span>)
 
     <span class="hljs-property">@_nodes</span> = {}</pre></div>
@@ -820,6 +897,49 @@ and gain stages.</p>
           <div class='highlight'><pre>
   <span class="hljs-property">@freq</span>: <span class="hljs-function"><span class="hljs-params">(n)</span> -&gt;</span>
     <span class="hljs-number">440</span> * Math.pow(<span class="hljs-number">2</span>,((n-<span class="hljs-number">69</span>)/<span class="hljs-number">12</span>))
+
+  
+  <span class="hljs-attribute">sawtoothPeriodicWave</span>: <span class="hljs-function"><span class="hljs-params">(harms)</span> -&gt;</span>
+    harms ?= <span class="hljs-property">@config</span>.periodic_wave_length
+    a = [<span class="hljs-number">0</span>]
+    a.push(<span class="hljs-number">1</span>/i) <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> [<span class="hljs-number">1.</span>.harms-<span class="hljs-number">1</span>]
+    real = <span class="hljs-keyword">new</span> Float32Array(a)
+    imag = <span class="hljs-keyword">new</span> Float32Array(real.length)
+    <span class="hljs-keyword">return</span> <span class="hljs-property">@context</span>.createPeriodicWave(real, imag)
+
+
+  <span class="hljs-attribute">squarePeriodicWave</span>: <span class="hljs-function"><span class="hljs-params">(harms)</span> -&gt;</span>
+    harms ?= <span class="hljs-property">@config</span>.periodic_wave_length
+    a = [<span class="hljs-number">0</span>]
+    <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> [<span class="hljs-number">1.</span>.harms-<span class="hljs-number">1</span>]
+      <span class="hljs-keyword">if</span> i%<span class="hljs-number">2</span> != <span class="hljs-number">0</span>
+        a.push(<span class="hljs-number">2</span>/(Math.PI * i))
+      <span class="hljs-keyword">else</span>
+        a.push(<span class="hljs-number">0</span>)
+    real = <span class="hljs-keyword">new</span> Float32Array(a)
+    imag = <span class="hljs-keyword">new</span> Float32Array(real.length)
+    <span class="hljs-keyword">return</span> <span class="hljs-property">@context</span>.createPeriodicWave(real, imag)
+
+
+  <span class="hljs-attribute">trianglePeriodicWave</span>: <span class="hljs-function"><span class="hljs-params">(harms)</span> -&gt;</span>
+    harms ?= <span class="hljs-property">@config</span>.periodic_wave_length
+    a = [<span class="hljs-number">0</span>]
+    <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> [<span class="hljs-number">1.</span>.harms-<span class="hljs-number">1</span>]
+      <span class="hljs-keyword">if</span> i%<span class="hljs-number">2</span> != <span class="hljs-number">0</span>
+        a.push(<span class="hljs-number">1</span>/(Math.pow(i,<span class="hljs-number">2</span>)))
+      <span class="hljs-keyword">else</span>
+        a.push(<span class="hljs-number">0</span>)
+    real = <span class="hljs-keyword">new</span> Float32Array(a)
+    imag = <span class="hljs-keyword">new</span> Float32Array(real.length)
+    <span class="hljs-keyword">return</span> <span class="hljs-property">@context</span>.createPeriodicWave(real, imag)
+
+
+  <span class="hljs-attribute">sinePeriodicWave</span>: <span class="hljs-function"><span class="hljs-params">(harms)</span> -&gt;</span>
+    a = [<span class="hljs-number">0</span>, <span class="hljs-number">1</span>]
+    real = <span class="hljs-keyword">new</span> Float32Array(a)
+    imag = <span class="hljs-keyword">new</span> Float32Array(real.length)
+    <span class="hljs-keyword">return</span> <span class="hljs-property">@context</span>.createPeriodicWave(real, imag)
+
 
 
 
