@@ -524,11 +524,9 @@ a node that’s not already connected.</p>
       
         
         <h3 id="mooogaudionode-adsr">MooogAudioNode.adsr</h3>
-<p>Applies an ADSR envelope of value changes to an <code>AudioParam</code>. 
-<code>param</code>: An <code>AudioParam</code> or a string representing the name of the property, assumed to be on <code>this</code>. 
-<code>config</code>: Object with the following properties (FAKE_ZERO is a very small number 
+<p>Applies an ADSR envelope of value changes to an <code>AudioParam</code>.<br><code>param</code>: An <code>AudioParam</code> or a string representing the name of the property, assumed to be on <code>this</code>.<br><code>config</code>: Object with the following properties (FAKE_ZERO is a very small number 
 used in place of actual zero, which will throw errors when passed to 
-<code>exponentialRampToValueAtTime</code>).</p>
+<code>exponentialRampToValueAtTime</code>).  </p>
 <ul>
 <li>base: The value to start and end with. <em>Defaults to ‘zero’</em></li>
 <li>times: An array of time values representing the ending time of each of the 

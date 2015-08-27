@@ -54,12 +54,30 @@ object (`AudioContext` or `webkitAudioContext`)
           return new webkitAudioContext()
         throw new Error("This browser does not yet support the AudioContext API")
 
-The track object holds a chain of AudioNodes. By default it includes panner
+
+### Mooog.track
+
+Creates a Track object holds a chain of AudioNodes. By default it includes panner
 and gain stages.
 
-      #track: (id, params) ->
-      #  return @_tracks[id] if @_tracks?[id]?
-      #  @_tracks[id] = new Track(id, this, params)
+
+`id`: A unique identifier to assign to this Track
+`node_list`: One or more config objects or `MooogAudioNode` objects to add to the `Track`
+
+
+      track: (id, node_list...) ->
+        return new Track(this) unless arguments.length
+        if typeof id is 'string'
+          if node_list.length
+            throw new Error("#{id} is already assigned to #{@_nodes[id]}") if @_nodes[id]?
+            @_nodes[id] = new Track(this, { id:id })
+            @_nodes[id].add node_list
+          else if @_nodes?[id]?
+            return @_nodes[id]
+          else throw new Error("No Track found with id #{id}")
+        else
+          throw new Error("Track id must be a string")
+          
 
 
         
@@ -67,6 +85,7 @@ and gain stages.
         return new MooogAudioNode(this) unless arguments.length
         if typeof id is 'string'
           if node_list.length
+            throw new Error("#{id} is already assigned to #{@_nodes[id]}") if @_nodes[id]?
             @_nodes[id] = new MooogAudioNode(this, id, node_list...)
           else if @_nodes?[id]?
             return @_nodes[id]

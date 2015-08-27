@@ -179,8 +179,13 @@ This is a modified `typeof` to filter AudioContext API-specific object types
 Shortcut for insert_node
 
 
-      add: (node) ->
-        @insert_node(node)
+      add: (nodes) ->
+        nodes = [nodes] unless nodes instanceof Array
+        for i in nodes
+          switch @__typeof i
+            when "MooogAudioNode" then @insert_node(i)
+            when "object" then @insert_node( @_instance.node i )
+            else throw new Error("Unknown argument type (should be config object or MooogAudioNode)")
           
 
       connect_incoming: ->
@@ -383,11 +388,11 @@ Sets up useful functions on `MooogAudioNode`s that have a `buffer` property
         
         
 ### MooogAudioNode.adsr
-Applies an ADSR envelope of value changes to an `AudioParam`. 
-`param`: An `AudioParam` or a string representing the name of the property, assumed to be on `this`. 
+Applies an ADSR envelope of value changes to an `AudioParam`.  
+`param`: An `AudioParam` or a string representing the name of the property, assumed to be on `this`.  
 `config`: Object with the following properties (FAKE_ZERO is a very small number 
 used in place of actual zero, which will throw errors when passed to 
-`exponentialRampToValueAtTime`).
+`exponentialRampToValueAtTime`).  
   - base: The value to start and end with. *Defaults to 'zero'*
   - times: An array of time values representing the ending time of each of the 
   ADSR stages. The first is relative to the currentTime, and the others are relative

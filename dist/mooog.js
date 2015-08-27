@@ -1,5 +1,5 @@
 (function() {
-  var AudioBufferSource, BiquadFilter, Convolver, Gain, Mooog, MooogAudioNode, Oscillator, StereoPanner,
+  var AudioBufferSource, BiquadFilter, Convolver, Gain, Mooog, MooogAudioNode, Oscillator, StereoPanner, Track,
     slice = [].slice,
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
@@ -156,8 +156,26 @@
       return this.debug("- spliced:", this._nodes);
     };
 
-    MooogAudioNode.prototype.add = function(node) {
-      return this.insert_node(node);
+    MooogAudioNode.prototype.add = function(nodes) {
+      var i, j, len, results;
+      if (!(nodes instanceof Array)) {
+        nodes = [nodes];
+      }
+      results = [];
+      for (j = 0, len = nodes.length; j < len; j++) {
+        i = nodes[j];
+        switch (this.__typeof(i)) {
+          case "MooogAudioNode":
+            results.push(this.insert_node(i));
+            break;
+          case "object":
+            results.push(this.insert_node(this._instance.node(i)));
+            break;
+          default:
+            throw new Error("Unknown argument type (should be config object or MooogAudioNode)");
+        }
+      }
+      return results;
     };
 
     MooogAudioNode.prototype.connect_incoming = function() {};
@@ -714,6 +732,22 @@
 
   })(MooogAudioNode);
 
+  Track = (function(superClass) {
+    extend(Track, superClass);
+
+    function Track(_instance, config) {
+      this._instance = _instance;
+      if (config == null) {
+        config = {};
+      }
+      config.node_type = 'Track';
+      Track.__super__.constructor.apply(this, arguments);
+    }
+
+    return Track;
+
+  })(MooogAudioNode);
+
   Mooog = (function() {
     Mooog.LEGAL_NODES = {
       'Oscillator': Oscillator,
@@ -766,6 +800,31 @@
       throw new Error("This browser does not yet support the AudioContext API");
     };
 
+    Mooog.prototype.track = function() {
+      var id, node_list, ref;
+      id = arguments[0], node_list = 2 <= arguments.length ? slice.call(arguments, 1) : [];
+      if (!arguments.length) {
+        return new Track(this);
+      }
+      if (typeof id === 'string') {
+        if (node_list.length) {
+          if (this._nodes[id] != null) {
+            throw new Error(id + " is already assigned to " + this._nodes[id]);
+          }
+          this._nodes[id] = new Track(this, {
+            id: id
+          });
+          return this._nodes[id].add(node_list);
+        } else if (((ref = this._nodes) != null ? ref[id] : void 0) != null) {
+          return this._nodes[id];
+        } else {
+          throw new Error("No Track found with id " + id);
+        }
+      } else {
+        throw new Error("Track id must be a string");
+      }
+    };
+
     Mooog.prototype.node = function() {
       var id, node, node_list, ref, ref1;
       id = arguments[0], node_list = 2 <= arguments.length ? slice.call(arguments, 1) : [];
@@ -774,6 +833,9 @@
       }
       if (typeof id === 'string') {
         if (node_list.length) {
+          if (this._nodes[id] != null) {
+            throw new Error(id + " is already assigned to " + this._nodes[id]);
+          }
           return this._nodes[id] = (function(func, args, ctor) {
             ctor.prototype = func.prototype;
             var child = new ctor, result = func.apply(child, args);
