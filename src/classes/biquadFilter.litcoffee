@@ -6,7 +6,7 @@ Wraps the BiquadFilterNode AudioContext object
       constructor: (@_instance, config = {}) ->
         config.node_type = 'BiquadFilter'
         super
-        @configure_from(config)
+        @configure_from config
         @insert_node @context.createBiquadFilter(), 0
         @zero_node_setup config
 

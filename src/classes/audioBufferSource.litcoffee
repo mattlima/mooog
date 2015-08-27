@@ -10,7 +10,7 @@ Wraps the AudioBufferSourceNode AudioContext object
       constructor: (@_instance, config = {}) ->
         config.node_type = 'AudioBufferSource'
         super
-        @configure_from(config)
+        @configure_from config
         
         @insert_node @context.createBufferSource(), 0
         @define_buffer_source_properties()

@@ -6,7 +6,7 @@ Wraps the OscillatorNode AudioContext object
       constructor: (@_instance, config = {}) ->
         config.node_type = 'Oscillator'
         super
-        @configure_from(config)
+        @configure_from config
         @insert_node @context.createOscillator(), 0
         @zero_node_setup config
         
