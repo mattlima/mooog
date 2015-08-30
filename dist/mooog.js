@@ -67,7 +67,9 @@
 
     MooogAudioNode.prototype.zero_node_setup = function(config) {
       var k, ref, results, v;
-      this.expose_methods_of(this._nodes[0]);
+      if (this._nodes[0] != null) {
+        this.expose_methods_of(this._nodes[0]);
+      }
       ref = this.zero_node_settings(config);
       results = [];
       for (k in ref) {
@@ -114,6 +116,9 @@
       if (ord == null) {
         ord = length;
       }
+      if (node._destination != null) {
+        node.disconnect(node._destination);
+      }
       if (ord > length) {
         throw new Error("Invalid index given to insert_node: " + ord + " out of " + length);
       }
@@ -122,35 +127,35 @@
         this.connect_incoming(node);
         this.disconnect_incoming(this._nodes[0]);
         if (length > 1) {
+          this.debug('- connect to ', this._nodes[0]);
           node.connect(this.to(this._nodes[0]));
-          this.debug('- node.connect to ', this._nodes[0]);
         }
       }
       if (ord === length) {
         if (ord !== 0) {
-          this.safely_disconnect(this._nodes[ord - 1], this.from(this._destination));
-        }
-        if (ord !== 0) {
           this.debug("- disconnect ", this._nodes[ord - 1], 'from', this._destination);
         }
-        if (this.config.connect_to_destination) {
-          node.connect(this.to(this._destination));
-          this.debug('- connect', node, 'to', this._destination);
-        }
         if (ord !== 0) {
-          this._nodes[ord - 1].connect(this.to(node));
+          this.safely_disconnect(this._nodes[ord - 1], this.from(this._destination));
+        }
+        if (this.config.connect_to_destination) {
+          this.debug('- connect', node, 'to', this._destination);
+          node.connect(this.to(this._destination));
         }
         if (ord !== 0) {
           this.debug('- connect', this._nodes[ord - 1], "to", node);
         }
+        if (ord !== 0) {
+          this._nodes[ord - 1].connect(this.to(node));
+        }
       }
       if (ord !== length && ord !== 0) {
-        this.safely_disconnect(this._nodes[ord - 1], this.from(this._nodes[ord]));
         this.debug("- disconnect", this._nodes[ord - 1], "from", this._nodes[ord]);
-        this._nodes[ord - 1].connect(this.to(node));
+        this.safely_disconnect(this._nodes[ord - 1], this.from(this._nodes[ord]));
         this.debug("- connect", this._nodes[ord - 1], "to", node);
-        node.connect(this.to(this._nodes[ord]));
+        this._nodes[ord - 1].connect(this.to(node));
         this.debug("- connect", node, "to", this._nodes[ord]);
+        node.connect(this.to(this._nodes[ord]));
       }
       this._nodes.splice(ord, 0, node);
       return this.debug("- spliced:", this._nodes);
@@ -424,7 +429,7 @@
     };
 
     MooogAudioNode.prototype.adsr = function(param, config) {
-      var _0, a, base, s, t, times;
+      var _0, a, base, ramp, s, t, times;
       if (typeof param === "string") {
         param = this[param];
       }
@@ -452,20 +457,30 @@
       times[0] || (times[0] = _0);
       times[1] || (times[1] = _0);
       times[2] || (times[2] = _0);
+      if (config.ramp_type == null) {
+        config.ramp_type = this._instance.config.default_ramp_type;
+      }
+      switch (config.ramp_type) {
+        case 'linear':
+          ramp = param.linearRampToValueAtTime.bind(param);
+          break;
+        case 'exponential':
+          ramp = param.exponentialRampToValueAtTime.bind(param);
+      }
       if (times.length === 3) {
         param.cancelScheduledValues(t);
         param.setValueAtTime(base, t);
-        param.exponentialRampToValueAtTime(a, t + times[0]);
+        ramp(a, t + times[0]);
         param.setValueAtTime(a, t + times[0] + times[1]);
-        return param.exponentialRampToValueAtTime(base, t + times[0] + times[1] + times[2]);
+        return ramp(base, t + times[0] + times[1] + times[2]);
       } else {
         times[3] || (times[3] = _0);
         param.cancelScheduledValues(t);
         param.setValueAtTime(base, t);
-        param.exponentialRampToValueAtTime(a, t + times[0]);
-        param.exponentialRampToValueAtTime(s, t + times[0] + d_time);
-        param.setValueAtTime(s, t + times[0] + d_time + times[2]);
-        return param.exponentialRampToValueAtTime(base, t + times[0] + d_time + times[2] + times[3]);
+        ramp(a, t + times[0]);
+        ramp(s, t + times[0] + times[1]);
+        param.setValueAtTime(s, t + times[0] + times[1] + times[2]);
+        return ramp(base, t + times[0] + times[1] + times[2] + times[3]);
       }
     };
 
@@ -740,9 +755,42 @@
       if (config == null) {
         config = {};
       }
+      this._sends = {};
+      this.debug('initializing track object');
       config.node_type = 'Track';
       Track.__super__.constructor.apply(this, arguments);
+      this.configure_from(config);
+      this._pan_stage = this._instance.context.createStereoPanner();
+      this._gain_stage = this._instance.context.createGain();
+      this._gain_stage.gain.value = this._instance.config.default_gain;
+      this._pan_stage.connect(this._gain_stage);
+      this._gain_stage.connect(this._destination);
+      this._destination = this._pan_stage;
+      this.gain = this._gain_stage.gain;
+      this.pan = this._gain_stage.gain;
+      this.zero_node_setup(config);
     }
+
+    Track.prototype.send = function(id, dest, pre, gain) {
+      var source;
+      if (pre == null) {
+        pre = this._instance.config.default_send_type;
+      }
+      if (gain == null) {
+        gain = this._instance.config.default_gain;
+      }
+      if (dest == null) {
+        return this._sends[id];
+      }
+      source = pre === 'pre' ? this._nodes[this._nodes.length - 1] : this._gain_stage;
+      gain = this._sends[id] ? this._sends[id] : new Gain(this._instance, {
+        connect_to_destination: false,
+        gain: gain
+      });
+      source.connect(this.to(gain));
+      gain.connect(this.to(dest));
+      return gain;
+    };
 
     return Track;
 
@@ -766,6 +814,7 @@
       this.config = {
         debug: false,
         default_gain: 0.5,
+        default_ramp_type: 'exponential',
         periodic_wave_length: 2048,
         fake_zero: 1 / 32768
       };
@@ -814,7 +863,8 @@
           this._nodes[id] = new Track(this, {
             id: id
           });
-          return this._nodes[id].add(node_list);
+          this._nodes[id].add(node_list);
+          return this._nodes[id];
         } else if (((ref = this._nodes) != null ? ref[id] : void 0) != null) {
           return this._nodes[id];
         } else {

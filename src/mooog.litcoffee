@@ -6,6 +6,8 @@ Config options:
   - debug: Output debugging messages to the console. *Default: false*
   - default_gain: `Gain` objects that are initiated will have their gain
 automatically set to this value. *Default: 0.5*
+  - default_ramp_type: `adsr` envelopes will be produced with this type of curve 
+*Default: 'linear'*
 
 
     class Mooog
@@ -30,6 +32,7 @@ object (`AudioContext` or `webkitAudioContext`)
         @config =
           debug: false
           default_gain: 0.5
+          default_ramp_type: 'exponential'
           periodic_wave_length: 2048
           fake_zero: 1/32768
         @init(@initConfig)
@@ -72,6 +75,7 @@ and gain stages.
             throw new Error("#{id} is already assigned to #{@_nodes[id]}") if @_nodes[id]?
             @_nodes[id] = new Track(this, { id:id })
             @_nodes[id].add node_list
+            return @_nodes[id]
           else if @_nodes?[id]?
             return @_nodes[id]
           else throw new Error("No Track found with id #{id}")

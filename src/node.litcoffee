@@ -98,7 +98,7 @@ Runs after the MooogAudioNode constructor by the inheriting classes. Exposes the
 configuration object.
       
       zero_node_setup: (config) ->
-        @expose_methods_of @_nodes[0]
+        @expose_methods_of @_nodes[0] if @_nodes[0]?
         for k, v of @zero_node_settings(config)
           @debug "zero node settings, #{k} = #{v}"
           @param k, v
@@ -131,6 +131,7 @@ This is a modified `typeof` to filter AudioContext API-specific object types
         return "AudioListener" if thing instanceof AudioListener
         return "MooogAudioNode" if thing instanceof MooogAudioNode
         return typeof(thing)
+
       
 ### MooogAudioNode.insert_node
 
@@ -138,6 +139,8 @@ This is a modified `typeof` to filter AudioContext API-specific object types
       insert_node: (node, ord) ->
         length = @_nodes.length
         ord = length unless ord?
+        
+        node.disconnect node._destination if node._destination?
                 
         if ord > length
           throw new Error("Invalid index given to insert_node: " + ord +
@@ -237,7 +240,7 @@ to connect to.
 
 ### MooogAudioNode.chain
 Like `MooogAudioNode.connect` with two important differences. First, it returns the 
-`MooogAudioNode` you are connecting to. Second, it automatically disconnects the callind
+`MooogAudioNode` you are connecting to. Second, it automatically disconnects the calling
 `MooogAudioNode` from the context's `AudioDestinationNode`. To use with `AudioParam`s, 
 use the name of the param as the second argument (and the base `MooogAudioNode` as the first).
 
@@ -250,7 +253,8 @@ use the name of the param as the second argument (and the base `MooogAudioNode` 
 
 
 ### MooogAudioNode.to, MooogAudioNode.from
-These functions are synonyms and exist to improve code readability.
+These functions are synonyms and exist to improve code readability in the `connect`
+and `disconnect` functions.
       
       to: (node) ->
         switch @__typeof node
@@ -417,22 +421,29 @@ used in place of actual zero, which will throw errors when passed to
         times[0] ||= _0
         times[1] ||= _0
         times[2] ||= _0
+        config.ramp_type ?= @_instance.config.default_ramp_type
+        #todo: allow ramp_type to be an array with different values for each stage
+        switch config.ramp_type
+          when 'linear' then ramp = param.linearRampToValueAtTime.bind param
+          when 'exponential' then ramp = param.exponentialRampToValueAtTime.bind param
+
+        
         if(times.length is 3)
           #[a_time, s_time, r_time] = times
           param.cancelScheduledValues t
           param.setValueAtTime base , t
-          param.exponentialRampToValueAtTime a, t + times[0]
+          ramp a, t + times[0]
           param.setValueAtTime a, t + times[0] + times[1]
-          param.exponentialRampToValueAtTime base , t + times[0] + times[1] + times[2]
+          ramp base , t + times[0] + times[1] + times[2]
         else
           times[3] ||= _0
           #[a_time, d_time, s_time, r_time] = times
           param.cancelScheduledValues t
           param.setValueAtTime base , t
-          param.exponentialRampToValueAtTime a, t + times[0]
-          param.exponentialRampToValueAtTime s, t + times[0] + d_time
-          param.setValueAtTime s, t + times[0] + d_time + times[2]
-          param.exponentialRampToValueAtTime base , t + times[0] + d_time + times[2] + times[3]
+          ramp a, t + times[0]
+          ramp s, t + times[0] + times[1]
+          param.setValueAtTime s, t + times[0] + times[1] + times[2]
+          ramp base , t + times[0] + times[1] + times[2] + times[3]
       
       
 
