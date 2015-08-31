@@ -31,11 +31,11 @@ via `gain` and `pan` methods exposed on the track object.
       
       
 ### Track.send
-Creates a send to another `Track` object. 
+Creates a send to another `Track` object.  
 `id`: String ID to assign to this send.  
-`destination`: The target `Track` object or ID thereof
-`pre`: Either 'pre' or 'post'. *Defaults to config value in the `Mooog` object.*
-`gain`: Initial gain value for the send. *Defaults to config value in the `Mooog` object.*
+`destination`: The target `Track` object or ID thereof  
+`pre`: Either 'pre' or 'post'. *Defaults to config value in the `Mooog` object.*  
+`gain`: Initial gain value for the send. *Defaults to config value in the `Mooog` object.*  
       
       send: (id,
         dest,

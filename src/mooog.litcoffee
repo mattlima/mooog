@@ -19,6 +19,10 @@ automatically set to this value. *Default: 0.5*
         'AudioBufferSource': AudioBufferSource
         'Convolver': Convolver
         'BiquadFilter': BiquadFilter
+        'Analyser': Analyser
+        'DynamicsCompressor': DynamicsCompressor
+        'Delay': Delay
+        'WaveShaper': WaveShaper
 
       
       constructor: (@initConfig = {}) ->
@@ -33,6 +37,7 @@ object (`AudioContext` or `webkitAudioContext`)
           debug: false
           default_gain: 0.5
           default_ramp_type: 'exponential'
+          default_send_type: 'post'
           periodic_wave_length: 2048
           fake_zero: 1/32768
         @init(@initConfig)

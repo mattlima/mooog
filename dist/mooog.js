@@ -1,5 +1,5 @@
 (function() {
-  var AudioBufferSource, BiquadFilter, Convolver, Gain, Mooog, MooogAudioNode, Oscillator, StereoPanner, Track,
+  var Analyser, AudioBufferSource, BiquadFilter, Convolver, Delay, DynamicsCompressor, Gain, Mooog, MooogAudioNode, Oscillator, StereoPanner, Track, WaveShaper,
     slice = [].slice,
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty;
@@ -127,35 +127,35 @@
         this.connect_incoming(node);
         this.disconnect_incoming(this._nodes[0]);
         if (length > 1) {
-          this.debug('- connect to ', this._nodes[0]);
           node.connect(this.to(this._nodes[0]));
+          this.debug('- node.connect to ', this._nodes[0]);
         }
       }
       if (ord === length) {
         if (ord !== 0) {
-          this.debug("- disconnect ", this._nodes[ord - 1], 'from', this._destination);
-        }
-        if (ord !== 0) {
           this.safely_disconnect(this._nodes[ord - 1], this.from(this._destination));
         }
-        if (this.config.connect_to_destination) {
-          this.debug('- connect', node, 'to', this._destination);
-          node.connect(this.to(this._destination));
-        }
         if (ord !== 0) {
-          this.debug('- connect', this._nodes[ord - 1], "to", node);
+          this.debug("- disconnect ", this._nodes[ord - 1], 'from', this._destination);
+        }
+        if (this.config.connect_to_destination) {
+          node.connect(this.to(this._destination));
+          this.debug('- connect', node, 'to', this._destination);
         }
         if (ord !== 0) {
           this._nodes[ord - 1].connect(this.to(node));
         }
+        if (ord !== 0) {
+          this.debug('- connect', this._nodes[ord - 1], "to", node);
+        }
       }
       if (ord !== length && ord !== 0) {
-        this.debug("- disconnect", this._nodes[ord - 1], "from", this._nodes[ord]);
         this.safely_disconnect(this._nodes[ord - 1], this.from(this._nodes[ord]));
-        this.debug("- connect", this._nodes[ord - 1], "to", node);
+        this.debug("- disconnect", this._nodes[ord - 1], "from", this._nodes[ord]);
         this._nodes[ord - 1].connect(this.to(node));
-        this.debug("- connect", node, "to", this._nodes[ord]);
+        this.debug("- connect", this._nodes[ord - 1], "to", node);
         node.connect(this.to(this._nodes[ord]));
+        this.debug("- connect", node, "to", this._nodes[ord]);
       }
       this._nodes.splice(ord, 0, node);
       return this.debug("- spliced:", this._nodes);
@@ -456,7 +456,12 @@
       t = this.context.currentTime;
       times[0] || (times[0] = _0);
       times[1] || (times[1] = _0);
-      times[2] || (times[2] = _0);
+      if (times.length > 2) {
+        times[2] || (times[2] = _0);
+      }
+      if (times.length > 3) {
+        times[3] || (times[3] = _0);
+      }
       if (config.ramp_type == null) {
         config.ramp_type = this._instance.config.default_ramp_type;
       }
@@ -467,14 +472,19 @@
         case 'exponential':
           ramp = param.exponentialRampToValueAtTime.bind(param);
       }
-      if (times.length === 3) {
+      this.debug("times", times);
+      if (times.length === 2) {
+        param.cancelScheduledValues(t);
+        param.setValueAtTime(base, t);
+        ramp(a, t + times[0]);
+        return ramp(s, t + times[0] + times[1]);
+      } else if (times.length === 3) {
         param.cancelScheduledValues(t);
         param.setValueAtTime(base, t);
         ramp(a, t + times[0]);
         param.setValueAtTime(a, t + times[0] + times[1]);
         return ramp(base, t + times[0] + times[1] + times[2]);
       } else {
-        times[3] || (times[3] = _0);
         param.cancelScheduledValues(t);
         param.setValueAtTime(base, t);
         ramp(a, t + times[0]);
@@ -495,6 +505,25 @@
     return MooogAudioNode;
 
   })();
+
+  Analyser = (function(superClass) {
+    extend(Analyser, superClass);
+
+    function Analyser(_instance, config) {
+      this._instance = _instance;
+      if (config == null) {
+        config = {};
+      }
+      config.node_type = 'Analyser';
+      Analyser.__super__.constructor.apply(this, arguments);
+      this.configure_from(config);
+      this.insert_node(this.context.createAnalyser(), 0);
+      this.zero_node_setup(config);
+    }
+
+    return Analyser;
+
+  })(MooogAudioNode);
 
   AudioBufferSource = (function(superClass) {
     extend(AudioBufferSource, superClass);
@@ -656,6 +685,51 @@
 
   })(MooogAudioNode);
 
+  Delay = (function(superClass) {
+    extend(Delay, superClass);
+
+    function Delay(_instance, config) {
+      this._instance = _instance;
+      if (config == null) {
+        config = {};
+      }
+      config.node_type = 'Delay';
+      Delay.__super__.constructor.apply(this, arguments);
+      this.configure_from(config);
+      this.insert_node(this.context.createDelay(), 0);
+      this._feedback_stage = new Gain(this._instance, {
+        connect_to_destination: false,
+        gain: 0.99
+      });
+      this._nodes[0].connect(this.to(this._feedback_stage));
+      this._feedback_stage.connect(this.to(this._nodes[0]));
+      this.feedback = this._feedback_stage.gain;
+      this.zero_node_setup(config);
+    }
+
+    return Delay;
+
+  })(MooogAudioNode);
+
+  DynamicsCompressor = (function(superClass) {
+    extend(DynamicsCompressor, superClass);
+
+    function DynamicsCompressor(_instance, config) {
+      this._instance = _instance;
+      if (config == null) {
+        config = {};
+      }
+      config.node_type = 'DynamicsCompressor';
+      DynamicsCompressor.__super__.constructor.apply(this, arguments);
+      this.configure_from(config);
+      this.insert_node(this.context.createDynamicsCompressor(), 0);
+      this.zero_node_setup(config);
+    }
+
+    return DynamicsCompressor;
+
+  })(MooogAudioNode);
+
   Gain = (function(superClass) {
     extend(Gain, superClass);
 
@@ -747,6 +821,25 @@
 
   })(MooogAudioNode);
 
+  WaveShaper = (function(superClass) {
+    extend(WaveShaper, superClass);
+
+    function WaveShaper(_instance, config) {
+      this._instance = _instance;
+      if (config == null) {
+        config = {};
+      }
+      config.node_type = 'WaveShaper';
+      WaveShaper.__super__.constructor.apply(this, arguments);
+      this.configure_from(config);
+      this.insert_node(this.context.createWaveShaper(), 0);
+      this.zero_node_setup(config);
+    }
+
+    return WaveShaper;
+
+  })(MooogAudioNode);
+
   Track = (function(superClass) {
     extend(Track, superClass);
 
@@ -803,7 +896,11 @@
       'Gain': Gain,
       'AudioBufferSource': AudioBufferSource,
       'Convolver': Convolver,
-      'BiquadFilter': BiquadFilter
+      'BiquadFilter': BiquadFilter,
+      'Analyser': Analyser,
+      'DynamicsCompressor': DynamicsCompressor,
+      'Delay': Delay,
+      'WaveShaper': WaveShaper
     };
 
     function Mooog(initConfig1) {
@@ -815,6 +912,7 @@
         debug: false,
         default_gain: 0.5,
         default_ramp_type: 'exponential',
+        default_send_type: 'post',
         periodic_wave_length: 2048,
         fake_zero: 1 / 32768
       };

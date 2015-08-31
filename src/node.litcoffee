@@ -334,7 +334,9 @@ jQuery-style getter/setter that also works on `AudioParam` properties.
 
 
 ### MooogAudioNode.get_set
-Handles the getting/setting for `MooogAudioNode.param`
+Handles the getting/setting for `MooogAudioNode.param`. Uses setValueAtTime
+when dealing with `AudioParam`s to make sure changes are made, and immediate.
+See [https://jsfiddle.net/5xqhwzwu/1/](https://jsfiddle.net/5xqhwzwu/)
 
       get_set: (key, val) ->
         return unless @[key]?
@@ -392,7 +394,7 @@ Sets up useful functions on `MooogAudioNode`s that have a `buffer` property
         
         
 ### MooogAudioNode.adsr
-Applies an ADSR envelope of value changes to an `AudioParam`.  
+Applies an ADSR, ASR, or ADS envelope of value changes to an `AudioParam`.  
 `param`: An `AudioParam` or a string representing the name of the property, assumed to be on `this`.  
 `config`: Object with the following properties (FAKE_ZERO is a very small number 
 used in place of actual zero, which will throw errors when passed to 
@@ -401,7 +403,10 @@ used in place of actual zero, which will throw errors when passed to
   - times: An array of time values representing the ending time of each of the 
   ADSR stages. The first is relative to the currentTime, and the others are relative
   to the previous value. The delay stage can be suppressed by passing an array of three 
-  elements, in which case the envelope will be an ASR and the `s` value will be ignored
+  elements, in which case the envelope will be an ASR and the `s` value will be ignored.
+  The release stage can be suppressed by passing an array of 2 elements, in which case the
+  envelope will be an ADS envelope (useful if you're responding to user input or don't
+  know the duration of the note.)
   - a: The final value of the parameter at the end of the attack stage. *Defaults to 1*
   - s: The value of the parameter at the end of the delay stage (or attack stage, 
   if delay is omitted), to be held until the beginning of the release stage. *Defaults to 1*
@@ -420,15 +425,23 @@ used in place of actual zero, which will throw errors when passed to
         t = @context.currentTime
         times[0] ||= _0
         times[1] ||= _0
-        times[2] ||= _0
+        times[2] ||= _0 if times.length > 2
+        times[3] ||= _0 if times.length > 3
         config.ramp_type ?= @_instance.config.default_ramp_type
         #todo: allow ramp_type to be an array with different values for each stage
         switch config.ramp_type
           when 'linear' then ramp = param.linearRampToValueAtTime.bind param
           when 'exponential' then ramp = param.exponentialRampToValueAtTime.bind param
-
         
-        if(times.length is 3)
+        @debug "times",times
+        
+        if(times.length is 2)
+          #[a_time, d_time] = times
+          param.cancelScheduledValues t
+          param.setValueAtTime base , t
+          ramp a, t + times[0]
+          ramp s, t + times[0] + times[1]
+        else if(times.length is 3)
           #[a_time, s_time, r_time] = times
           param.cancelScheduledValues t
           param.setValueAtTime base , t
@@ -436,7 +449,6 @@ used in place of actual zero, which will throw errors when passed to
           param.setValueAtTime a, t + times[0] + times[1]
           ramp base , t + times[0] + times[1] + times[2]
         else
-          times[3] ||= _0
           #[a_time, d_time, s_time, r_time] = times
           param.cancelScheduledValues t
           param.setValueAtTime base , t
@@ -445,6 +457,8 @@ used in place of actual zero, which will throw errors when passed to
           param.setValueAtTime s, t + times[0] + times[1] + times[2]
           ramp base , t + times[0] + times[1] + times[2] + times[3]
       
+      
+
       
 
 

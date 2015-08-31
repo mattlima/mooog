@@ -203,7 +203,7 @@ configuration object.</p>
 
         
           <div class='highlight'><pre>  <span class="hljs-attribute">zero_node_setup</span>: <span class="hljs-function"><span class="hljs-params">(config)</span> -&gt;</span>
-    <span class="hljs-property">@expose_methods_of</span> <span class="hljs-property">@_nodes</span>[<span class="hljs-number">0</span>]
+    <span class="hljs-property">@expose_methods_of</span> <span class="hljs-property">@_nodes</span>[<span class="hljs-number">0</span>] <span class="hljs-keyword">if</span> <span class="hljs-property">@_nodes</span>[<span class="hljs-number">0</span>]?
     <span class="hljs-keyword">for</span> k, v <span class="hljs-keyword">of</span> <span class="hljs-property">@zero_node_settings</span>(config)
       <span class="hljs-property">@debug</span> <span class="hljs-string">"zero node settings, <span class="hljs-subst">#{k}</span> = <span class="hljs-subst">#{v}</span>"</span>
       <span class="hljs-property">@param</span> k, v</pre></div>
@@ -251,6 +251,8 @@ configuration object.</p>
           <div class='highlight'><pre>  <span class="hljs-attribute">insert_node</span>: <span class="hljs-function"><span class="hljs-params">(node, ord)</span> -&gt;</span>
     length = <span class="hljs-property">@_nodes</span>.length
     ord = length <span class="hljs-keyword">unless</span> ord?
+    
+    node.disconnect node._destination <span class="hljs-keyword">if</span> node._destination?
             
     <span class="hljs-keyword">if</span> ord &gt; length
       <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> Error(<span class="hljs-string">"Invalid index given to insert_node: "</span> + ord +
@@ -293,8 +295,13 @@ configuration object.</p>
 <p>Shortcut for insert_node</p>
 
         
-          <div class='highlight'><pre>  <span class="hljs-attribute">add</span>: <span class="hljs-function"><span class="hljs-params">(node)</span> -&gt;</span>
-    <span class="hljs-property">@insert_node</span>(node)
+          <div class='highlight'><pre>  <span class="hljs-attribute">add</span>: <span class="hljs-function"><span class="hljs-params">(nodes)</span> -&gt;</span>
+    nodes = [nodes] <span class="hljs-keyword">unless</span> nodes <span class="hljs-keyword">instanceof</span> Array
+    <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> nodes
+      <span class="hljs-keyword">switch</span> <span class="hljs-property">@__typeof</span> i
+        <span class="hljs-keyword">when</span> <span class="hljs-string">"MooogAudioNode"</span> <span class="hljs-keyword">then</span> <span class="hljs-property">@insert_node</span>(i)
+        <span class="hljs-keyword">when</span> <span class="hljs-string">"object"</span> <span class="hljs-keyword">then</span> <span class="hljs-property">@insert_node</span>( <span class="hljs-property">@_instance</span>.node i )
+        <span class="hljs-keyword">else</span> <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> Error(<span class="hljs-string">"Unknown argument type (should be config object or MooogAudioNode)"</span>)
       
 
   <span class="hljs-attribute">connect_incoming</span>: <span class="hljs-function">-&gt;</span></pre></div>
@@ -352,7 +359,7 @@ to connect to.  </p>
         
         <h3 id="mooogaudionode-chain">MooogAudioNode.chain</h3>
 <p>Like <code>MooogAudioNode.connect</code> with two important differences. First, it returns the 
-<code>MooogAudioNode</code> you are connecting to. Second, it automatically disconnects the callind
+<code>MooogAudioNode</code> you are connecting to. Second, it automatically disconnects the calling
 <code>MooogAudioNode</code> from the context’s <code>AudioDestinationNode</code>. To use with <code>AudioParam</code>s, 
 use the name of the param as the second argument (and the base <code>MooogAudioNode</code> as the first).</p>
 
@@ -367,7 +374,8 @@ use the name of the param as the second argument (and the base <code>MooogAudioN
       
         
         <h3 id="mooogaudionode-to-mooogaudionode-from">MooogAudioNode.to, MooogAudioNode.from</h3>
-<p>These functions are synonyms and exist to improve code readability.</p>
+<p>These functions are synonyms and exist to improve code readability in the <code>connect</code>
+and <code>disconnect</code> functions.</p>
 
         
           <div class='highlight'><pre>  <span class="hljs-attribute">to</span>: <span class="hljs-function"><span class="hljs-params">(node)</span> -&gt;</span>
@@ -459,13 +467,16 @@ a node that’s not already connected.</p>
       
         
         <h3 id="mooogaudionode-get_set">MooogAudioNode.get_set</h3>
-<p>Handles the getting/setting for <code>MooogAudioNode.param</code></p>
+<p>Handles the getting/setting for <code>MooogAudioNode.param</code>. Uses setValueAtTime
+when dealing with <code>AudioParam</code>s to make sure changes are made, and immediate.
+See <a href="https://jsfiddle.net/5xqhwzwu/">https://jsfiddle.net/5xqhwzwu/</a></p>
 
         
           <div class='highlight'><pre>  <span class="hljs-attribute">get_set</span>: <span class="hljs-function"><span class="hljs-params">(key, val)</span> -&gt;</span>
     <span class="hljs-keyword">return</span> <span class="hljs-keyword">unless</span> @[key]?
     <span class="hljs-keyword">switch</span> <span class="hljs-property">@__typeof</span> @[key]
       <span class="hljs-keyword">when</span> <span class="hljs-string">"AudioParam"</span>
+        <span class="hljs-property">@debug</span> <span class="hljs-string">"AP, <span class="hljs-subst">#{val}</span>"</span>
         <span class="hljs-keyword">if</span> val?
           @[key].setValueAtTime val, <span class="hljs-property">@context</span>.currentTime
           <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>
@@ -553,6 +564,18 @@ if delay is omitted), to be held until the beginning of the release stage. <em>D
     times[<span class="hljs-number">0</span>] ||= _0
     times[<span class="hljs-number">1</span>] ||= _0
     times[<span class="hljs-number">2</span>] ||= _0
+    config.ramp_type ?= <span class="hljs-property">@_instance</span>.config.default_ramp_type</pre></div>
+        
+      
+        
+        <p>todo: allow ramp_type to be an array with different values for each stage</p>
+
+        
+          <div class='highlight'><pre>    <span class="hljs-keyword">switch</span> config.ramp_type
+      <span class="hljs-keyword">when</span> <span class="hljs-string">'linear'</span> <span class="hljs-keyword">then</span> ramp = param.linearRampToValueAtTime.bind param
+      <span class="hljs-keyword">when</span> <span class="hljs-string">'exponential'</span> <span class="hljs-keyword">then</span> ramp = param.exponentialRampToValueAtTime.bind param
+
+    
     <span class="hljs-keyword">if</span>(times.length <span class="hljs-keyword">is</span> <span class="hljs-number">3</span>)</pre></div>
         
       
@@ -562,9 +585,9 @@ if delay is omitted), to be held until the beginning of the release stage. <em>D
         
           <div class='highlight'><pre>      param.cancelScheduledValues t
       param.setValueAtTime base , t
-      param.exponentialRampToValueAtTime a, t + times[<span class="hljs-number">0</span>]
+      ramp a, t + times[<span class="hljs-number">0</span>]
       param.setValueAtTime a, t + times[<span class="hljs-number">0</span>] + times[<span class="hljs-number">1</span>]
-      param.exponentialRampToValueAtTime base , t + times[<span class="hljs-number">0</span>] + times[<span class="hljs-number">1</span>] + times[<span class="hljs-number">2</span>]
+      ramp base , t + times[<span class="hljs-number">0</span>] + times[<span class="hljs-number">1</span>] + times[<span class="hljs-number">2</span>]
     <span class="hljs-keyword">else</span>
       times[<span class="hljs-number">3</span>] ||= _0</pre></div>
         
@@ -575,10 +598,10 @@ if delay is omitted), to be held until the beginning of the release stage. <em>D
         
           <div class='highlight'><pre>      param.cancelScheduledValues t
       param.setValueAtTime base , t
-      param.exponentialRampToValueAtTime a, t + times[<span class="hljs-number">0</span>]
-      param.exponentialRampToValueAtTime s, t + times[<span class="hljs-number">0</span>] + d_time
-      param.setValueAtTime s, t + times[<span class="hljs-number">0</span>] + d_time + times[<span class="hljs-number">2</span>]
-      param.exponentialRampToValueAtTime base , t + times[<span class="hljs-number">0</span>] + d_time + times[<span class="hljs-number">2</span>] + times[<span class="hljs-number">3</span>]</pre></div>
+      ramp a, t + times[<span class="hljs-number">0</span>]
+      ramp s, t + times[<span class="hljs-number">0</span>] + times[<span class="hljs-number">1</span>]
+      param.setValueAtTime s, t + times[<span class="hljs-number">0</span>] + times[<span class="hljs-number">1</span>] + times[<span class="hljs-number">2</span>]
+      ramp base , t + times[<span class="hljs-number">0</span>] + times[<span class="hljs-number">1</span>] + times[<span class="hljs-number">2</span>] + times[<span class="hljs-number">3</span>]</pre></div>
         
       
         
@@ -588,6 +611,20 @@ if delay is omitted), to be held until the beginning of the release stage. <em>D
         
           <div class='highlight'><pre>  <span class="hljs-attribute">debug</span>: <span class="hljs-function"><span class="hljs-params">(a...)</span> -&gt;</span>
     <span class="hljs-built_in">console</span>.log(a...) <span class="hljs-keyword">if</span> <span class="hljs-property">@_instance</span>.config.debug</pre></div>
+        
+      
+        
+        <h2 id="analyser">Analyser</h2>
+<p>Wraps the AnalyserNode AudioContext object</p>
+
+        
+          <div class='highlight'><pre><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Analyser</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">MooogAudioNode</span></span>
+  <span class="hljs-attribute">constructor</span>: <span class="hljs-function"><span class="hljs-params">(<span class="hljs-property">@_instance</span>, config = {})</span> -&gt;</span>
+    config.node_type = <span class="hljs-string">'Analyser'</span>
+    <span class="hljs-keyword">super</span>
+    <span class="hljs-property">@configure_from</span> config
+    <span class="hljs-property">@insert_node</span> <span class="hljs-property">@context</span>.createAnalyser(), <span class="hljs-number">0</span>
+    <span class="hljs-property">@zero_node_setup</span> config</pre></div>
         
       
         
@@ -602,7 +639,7 @@ playback from 0</p>
   <span class="hljs-attribute">constructor</span>: <span class="hljs-function"><span class="hljs-params">(<span class="hljs-property">@_instance</span>, config = {})</span> -&gt;</span>
     config.node_type = <span class="hljs-string">'AudioBufferSource'</span>
     <span class="hljs-keyword">super</span>
-    <span class="hljs-property">@configure_from</span>(config)
+    <span class="hljs-property">@configure_from</span> config
     
     <span class="hljs-property">@insert_node</span> <span class="hljs-property">@context</span>.createBufferSource(), <span class="hljs-number">0</span>
     <span class="hljs-property">@define_buffer_source_properties</span>()
@@ -703,7 +740,7 @@ playback from 0</p>
   <span class="hljs-attribute">constructor</span>: <span class="hljs-function"><span class="hljs-params">(<span class="hljs-property">@_instance</span>, config = {})</span> -&gt;</span>
     config.node_type = <span class="hljs-string">'BiquadFilter'</span>
     <span class="hljs-keyword">super</span>
-    <span class="hljs-property">@configure_from</span>(config)
+    <span class="hljs-property">@configure_from</span> config
     <span class="hljs-property">@insert_node</span> <span class="hljs-property">@context</span>.createBiquadFilter(), <span class="hljs-number">0</span>
     <span class="hljs-property">@zero_node_setup</span> config</pre></div>
         
@@ -717,12 +754,46 @@ playback from 0</p>
   <span class="hljs-attribute">constructor</span>: <span class="hljs-function"><span class="hljs-params">(<span class="hljs-property">@_instance</span>, config = {})</span> -&gt;</span>
     config.node_type = <span class="hljs-string">'Convolver'</span>
     <span class="hljs-keyword">super</span>
-    <span class="hljs-property">@configure_from</span>(config)
+    <span class="hljs-property">@configure_from</span> config
     
     <span class="hljs-property">@insert_node</span> <span class="hljs-property">@context</span>.createConvolver(), <span class="hljs-number">0</span>
     <span class="hljs-property">@define_buffer_source_properties</span>()
     
     
+    <span class="hljs-property">@zero_node_setup</span> config</pre></div>
+        
+      
+        
+        <h2 id="delay">Delay</h2>
+<p>Wraps the DelayNode AudioContext object</p>
+
+        
+          <div class='highlight'><pre><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Delay</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">MooogAudioNode</span></span>
+  <span class="hljs-attribute">constructor</span>: <span class="hljs-function"><span class="hljs-params">(<span class="hljs-property">@_instance</span>, config = {})</span> -&gt;</span>
+    config.node_type = <span class="hljs-string">'Delay'</span>
+    <span class="hljs-keyword">super</span>
+    <span class="hljs-property">@configure_from</span> config
+    <span class="hljs-property">@insert_node</span> <span class="hljs-property">@context</span>.createDelay(), <span class="hljs-number">0</span>
+    
+    <span class="hljs-property">@_feedback_stage</span> = <span class="hljs-keyword">new</span> Gain( <span class="hljs-property">@_instance</span>, { <span class="hljs-attribute">connect_to_destination</span>: <span class="hljs-literal">false</span>, <span class="hljs-attribute">gain</span>: <span class="hljs-number">0.99</span> } )
+    <span class="hljs-property">@_nodes</span>[<span class="hljs-number">0</span>].connect <span class="hljs-property">@to</span> <span class="hljs-property">@_feedback_stage</span>
+    <span class="hljs-property">@_feedback_stage</span>.connect <span class="hljs-property">@to</span> <span class="hljs-property">@_nodes</span>[<span class="hljs-number">0</span>]
+    <span class="hljs-property">@feedback</span> = <span class="hljs-property">@_feedback_stage</span>.gain
+    
+    <span class="hljs-property">@zero_node_setup</span> config</pre></div>
+        
+      
+        
+        <h2 id="dynamicscompressor">DynamicsCompressor</h2>
+<p>Wraps the DynamicsCompressorNode AudioContext object</p>
+
+        
+          <div class='highlight'><pre><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">DynamicsCompressor</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">MooogAudioNode</span></span>
+  <span class="hljs-attribute">constructor</span>: <span class="hljs-function"><span class="hljs-params">(<span class="hljs-property">@_instance</span>, config = {})</span> -&gt;</span>
+    config.node_type = <span class="hljs-string">'DynamicsCompressor'</span>
+    <span class="hljs-keyword">super</span>
+    <span class="hljs-property">@configure_from</span> config
+    <span class="hljs-property">@insert_node</span> <span class="hljs-property">@context</span>.createDynamicsCompressor(), <span class="hljs-number">0</span>
     <span class="hljs-property">@zero_node_setup</span> config</pre></div>
         
       
@@ -735,7 +806,7 @@ playback from 0</p>
   <span class="hljs-attribute">constructor</span>: <span class="hljs-function"><span class="hljs-params">(<span class="hljs-property">@_instance</span>, config = {})</span> -&gt;</span>
     config.node_type = <span class="hljs-string">'Gain'</span>
     <span class="hljs-keyword">super</span>
-    <span class="hljs-property">@configure_from</span>(config)
+    <span class="hljs-property">@configure_from</span> config
     <span class="hljs-property">@insert_node</span> <span class="hljs-property">@context</span>.createGain(), <span class="hljs-number">0</span>
     <span class="hljs-property">@_nodes</span>[<span class="hljs-number">0</span>].gain.value = <span class="hljs-property">@_instance</span>.config.default_gain
     <span class="hljs-property">@zero_node_setup</span> config</pre></div>
@@ -750,7 +821,7 @@ playback from 0</p>
   <span class="hljs-attribute">constructor</span>: <span class="hljs-function"><span class="hljs-params">(<span class="hljs-property">@_instance</span>, config = {})</span> -&gt;</span>
     config.node_type = <span class="hljs-string">'Oscillator'</span>
     <span class="hljs-keyword">super</span>
-    <span class="hljs-property">@configure_from</span>(config)
+    <span class="hljs-property">@configure_from</span> config
     <span class="hljs-property">@insert_node</span> <span class="hljs-property">@context</span>.createOscillator(), <span class="hljs-number">0</span>
     <span class="hljs-property">@zero_node_setup</span> config
     
@@ -787,9 +858,78 @@ playback from 0</p>
   <span class="hljs-attribute">constructor</span>: <span class="hljs-function"><span class="hljs-params">(<span class="hljs-property">@_instance</span>, config = {})</span> -&gt;</span>
     config.node_type = <span class="hljs-string">'StereoPanner'</span>
     <span class="hljs-keyword">super</span>
-    <span class="hljs-property">@configure_from</span>(config)
+    <span class="hljs-property">@configure_from</span> config
     <span class="hljs-property">@insert_node</span> <span class="hljs-property">@context</span>.createStereoPanner(), <span class="hljs-number">0</span>
     <span class="hljs-property">@zero_node_setup</span> config</pre></div>
+        
+      
+        
+        <h2 id="waveshaper">WaveShaper</h2>
+<p>Wraps the WaveShaperNode AudioContext object</p>
+
+        
+          <div class='highlight'><pre><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">WaveShaper</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">MooogAudioNode</span></span>
+  <span class="hljs-attribute">constructor</span>: <span class="hljs-function"><span class="hljs-params">(<span class="hljs-property">@_instance</span>, config = {})</span> -&gt;</span>
+    config.node_type = <span class="hljs-string">'WaveShaper'</span>
+    <span class="hljs-keyword">super</span>
+    <span class="hljs-property">@configure_from</span> config
+    <span class="hljs-property">@insert_node</span> <span class="hljs-property">@context</span>.createWaveShaper(), <span class="hljs-number">0</span>
+    <span class="hljs-property">@zero_node_setup</span> config</pre></div>
+        
+      
+        
+        <h2 id="track">Track</h2>
+<p>A convenience function that creates a chain with the specified node(s)
+followed by a panner/gain stage. It can also create pre/post sends with their 
+own gain. The gain and pan <code>AudioParams</code> of those stages can be accessed
+via <code>gain</code> and <code>pan</code> methods exposed on the track object.</p>
+
+        
+          <div class='highlight'><pre><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Track</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">MooogAudioNode</span></span>
+
+
+  <span class="hljs-attribute">constructor</span>: <span class="hljs-function"><span class="hljs-params">(<span class="hljs-property">@_instance</span>, config = {})</span> -&gt;</span>
+    <span class="hljs-property">@_sends</span> = {}
+    <span class="hljs-property">@debug</span> <span class="hljs-string">'initializing track object'</span>
+    config.node_type = <span class="hljs-string">'Track'</span>
+    <span class="hljs-keyword">super</span>
+    <span class="hljs-property">@configure_from</span> config</pre></div>
+        
+      
+        
+        <p>todo: make sure we don’t need to use insert_node() for this
+todo: decide whether to make stereoPanner the default</p>
+
+        
+          <div class='highlight'><pre>    <span class="hljs-property">@_pan_stage</span> = <span class="hljs-property">@_instance</span>.context.createStereoPanner()
+    <span class="hljs-property">@_gain_stage</span> = <span class="hljs-property">@_instance</span>.context.createGain()
+    <span class="hljs-property">@_gain_stage</span>.gain.value = <span class="hljs-property">@_instance</span>.config.default_gain
+    <span class="hljs-property">@_pan_stage</span>.connect <span class="hljs-property">@_gain_stage</span>
+    <span class="hljs-property">@_gain_stage</span>.connect <span class="hljs-property">@_destination</span>
+    <span class="hljs-property">@_destination</span> = <span class="hljs-property">@_pan_stage</span>
+    <span class="hljs-property">@gain</span> = <span class="hljs-property">@_gain_stage</span>.gain
+    <span class="hljs-property">@pan</span> = <span class="hljs-property">@_gain_stage</span>.gain
+    
+    <span class="hljs-property">@zero_node_setup</span> config</pre></div>
+        
+      
+        
+        <h3 id="track-send">Track.send</h3>
+<p>Creates a send to another <code>Track</code> object.<br><code>id</code>: String ID to assign to this send.<br><code>destination</code>: The target <code>Track</code> object or ID thereof<br><code>pre</code>: Either ‘pre’ or ‘post’. <em>Defaults to config value in the <code>Mooog</code> object.</em><br><code>gain</code>: Initial gain value for the send. <em>Defaults to config value in the <code>Mooog</code> object.</em>  </p>
+
+        
+          <div class='highlight'><pre>  <span class="hljs-attribute">send</span>: (id,
+    dest,
+    pre = <span class="hljs-property">@_instance</span>.config.default_send_type,
+    gain = <span class="hljs-property">@_instance</span>.config.default_gain) -&gt;
+    <span class="hljs-keyword">return</span> <span class="hljs-property">@_sends</span>[id] <span class="hljs-keyword">unless</span> dest?
+    source = <span class="hljs-keyword">if</span> (pre <span class="hljs-keyword">is</span> <span class="hljs-string">'pre'</span>) <span class="hljs-keyword">then</span> <span class="hljs-property">@_nodes</span>[<span class="hljs-property">@_nodes</span>.length - <span class="hljs-number">1</span>] <span class="hljs-keyword">else</span> <span class="hljs-property">@_gain_stage</span>
+    gain = <span class="hljs-keyword">if</span> <span class="hljs-property">@_sends</span>[id] <span class="hljs-keyword">then</span> <span class="hljs-property">@_sends</span>[id] <span class="hljs-keyword">else</span> <span class="hljs-keyword">new</span> Gain(
+      <span class="hljs-property">@_instance</span>, { <span class="hljs-attribute">connect_to_destination</span>: <span class="hljs-literal">false</span>, <span class="hljs-attribute">gain</span>: gain }
+    )
+    source.connect <span class="hljs-property">@to</span> gain
+    gain.connect <span class="hljs-property">@to</span> dest
+    gain</pre></div>
         
       
         
@@ -800,6 +940,8 @@ as the Mooog global.<br>Config options:</p>
 <li>debug: Output debugging messages to the console. <em>Default: false</em></li>
 <li>default_gain: <code>Gain</code> objects that are initiated will have their gain
 automatically set to this value. <em>Default: 0.5</em></li>
+<li>default_ramp_type: <code>adsr</code> envelopes will be produced with this type of curve 
+<em>Default: ‘linear’</em></li>
 </ul>
 
         
@@ -812,6 +954,10 @@ automatically set to this value. <em>Default: 0.5</em></li>
     <span class="hljs-string">'AudioBufferSource'</span>: AudioBufferSource
     <span class="hljs-string">'Convolver'</span>: Convolver
     <span class="hljs-string">'BiquadFilter'</span>: BiquadFilter
+    <span class="hljs-string">'Analyser'</span>: Analyser
+    <span class="hljs-string">'DynamicsCompressor'</span>: DynamicsCompressor
+    <span class="hljs-string">'Delay'</span>: Delay
+    <span class="hljs-string">'WaveShaper'</span>: WaveShaper
 
   
   <span class="hljs-attribute">constructor</span>: <span class="hljs-function"><span class="hljs-params">(<span class="hljs-property">@initConfig</span> = {})</span> -&gt;</span></pre></div>
@@ -828,6 +974,8 @@ object (<code>AudioContext</code> or <code>webkitAudioContext</code>)</p>
     <span class="hljs-property">@config</span> =
       <span class="hljs-attribute">debug</span>: <span class="hljs-literal">false</span>
       <span class="hljs-attribute">default_gain</span>: <span class="hljs-number">0.5</span>
+      <span class="hljs-attribute">default_ramp_type</span>: <span class="hljs-string">'exponential'</span>
+      <span class="hljs-attribute">default_send_type</span>: <span class="hljs-string">'post'</span>
       <span class="hljs-attribute">periodic_wave_length</span>: <span class="hljs-number">2048</span>
       <span class="hljs-attribute">fake_zero</span>: <span class="hljs-number">1</span>/<span class="hljs-number">32768</span>
     <span class="hljs-property">@init</span>(<span class="hljs-property">@initConfig</span>)
@@ -859,20 +1007,35 @@ object (<code>AudioContext</code> or <code>webkitAudioContext</code>)</p>
         
       
         
-        <p>The track object holds a chain of AudioNodes. By default it includes panner
+        <h3 id="mooog-track">Mooog.track</h3>
+<p>Creates a Track object holds a chain of AudioNodes. By default it includes panner
 and gain stages.</p>
-<p>track: (id, params) -&gt;
- return @_tracks[id] if @_tracks?[id]?
- @_tracks[id] = new Track(id, this, params)</p>
+<p><code>id</code>: A unique identifier to assign to this Track
+<code>node_list</code>: One or more config objects or <code>MooogAudioNode</code> objects to add to the <code>Track</code></p>
 
         
-          <div class='highlight'><pre>
+          <div class='highlight'><pre>  <span class="hljs-attribute">track</span>: <span class="hljs-function"><span class="hljs-params">(id, node_list...)</span> -&gt;</span>
+    <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> Track(<span class="hljs-keyword">this</span>) <span class="hljs-keyword">unless</span> arguments.length
+    <span class="hljs-keyword">if</span> <span class="hljs-keyword">typeof</span> id <span class="hljs-keyword">is</span> <span class="hljs-string">'string'</span>
+      <span class="hljs-keyword">if</span> node_list.length
+        <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> Error(<span class="hljs-string">"<span class="hljs-subst">#{id}</span> is already assigned to <span class="hljs-subst">#{<span class="hljs-property">@_nodes</span>[id]}</span>"</span>) <span class="hljs-keyword">if</span> <span class="hljs-property">@_nodes</span>[id]?
+        <span class="hljs-property">@_nodes</span>[id] = <span class="hljs-keyword">new</span> Track(<span class="hljs-keyword">this</span>, { <span class="hljs-attribute">id</span>:id })
+        <span class="hljs-property">@_nodes</span>[id].add node_list
+        <span class="hljs-keyword">return</span> <span class="hljs-property">@_nodes</span>[id]
+      <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> <span class="hljs-property">@_nodes</span>?[id]?
+        <span class="hljs-keyword">return</span> <span class="hljs-property">@_nodes</span>[id]
+      <span class="hljs-keyword">else</span> <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> Error(<span class="hljs-string">"No Track found with id <span class="hljs-subst">#{id}</span>"</span>)
+    <span class="hljs-keyword">else</span>
+      <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> Error(<span class="hljs-string">"Track id must be a string"</span>)
+      
+
 
     
   <span class="hljs-attribute">node</span>: <span class="hljs-function"><span class="hljs-params">(id, node_list...)</span> -&gt;</span>
     <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> MooogAudioNode(<span class="hljs-keyword">this</span>) <span class="hljs-keyword">unless</span> arguments.length
     <span class="hljs-keyword">if</span> <span class="hljs-keyword">typeof</span> id <span class="hljs-keyword">is</span> <span class="hljs-string">'string'</span>
       <span class="hljs-keyword">if</span> node_list.length
+        <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> Error(<span class="hljs-string">"<span class="hljs-subst">#{id}</span> is already assigned to <span class="hljs-subst">#{<span class="hljs-property">@_nodes</span>[id]}</span>"</span>) <span class="hljs-keyword">if</span> <span class="hljs-property">@_nodes</span>[id]?
         <span class="hljs-property">@_nodes</span>[id] = <span class="hljs-keyword">new</span> MooogAudioNode(<span class="hljs-keyword">this</span>, id, node_list...)
       <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> <span class="hljs-property">@_nodes</span>?[id]?
         <span class="hljs-keyword">return</span> <span class="hljs-property">@_nodes</span>[id]
