@@ -39,6 +39,7 @@ object (`AudioContext` or `webkitAudioContext`)
           default_ramp_type: 'exponential'
           default_send_type: 'post'
           periodic_wave_length: 2048
+          curve_length: 65536
           fake_zero: 1/32768
         @init(@initConfig)
 
@@ -104,15 +105,9 @@ and gain stages.
           @_nodes[node.id] = node
       
       
-      #create_connection: (from, to) ->
-      #  @_connections[from]?[to] = true
-      #
-      #delete_connection: (from, to) ->
-      #  delete @_connections[from]?[to]
-      #
-      #next_node_id: ->
-      #  @_node_id_count += 1
-      #  "_node" + @_node_id_count
+### Mooog.freq
+Convenience function for converting MIDI notes to equal temperament Hz
+
 
       @freq: (n) ->
         440 * Math.pow(2,((n-69)/12))
@@ -158,7 +153,7 @@ and gain stages.
         real = new Float32Array(a)
         imag = new Float32Array(real.length)
         return @context.createPeriodicWave(real, imag)
-
+      
 
 
 
