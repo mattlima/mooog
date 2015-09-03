@@ -396,7 +396,7 @@ Sets up useful functions on `MooogAudioNode`s that have a `buffer` property
 ### MooogAudioNode.adsr
 Applies an ADSR, ASR, or ADS envelope of value changes to an `AudioParam`.  
 `param`: An `AudioParam` or a string representing the name of the property, assumed to be on `this`.  
-`config`: Object with the following properties (FAKE_ZERO is a very small number 
+`config`: Object with the following properties (fake_zero is a very small number 
 used in place of actual zero, which will throw errors when passed to 
 `exponentialRampToValueAtTime`).  
   - base: The value to start and end with. *Defaults to 'zero'*
@@ -433,7 +433,6 @@ used in place of actual zero, which will throw errors when passed to
           when 'linear' then ramp = param.linearRampToValueAtTime.bind param
           when 'exponential' then ramp = param.exponentialRampToValueAtTime.bind param
         
-        @debug "times",times
         
         if(times.length is 2)
           #[a_time, d_time] = times
