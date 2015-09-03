@@ -339,8 +339,8 @@ Parameters are set immediately unless the `at` property is set, which is a float
 number of seconds in the future at which the param should be set.  
 `ramp`: An enumerated string: 'none', 'linear', 'expo'. *Defaults to 'none'*  
 `at`: A float representing the number of seconds in the future or after
-the last scheduled change, depending on the next param *Defaults to 0*  
-`cancel`: whether to call `cancelScheduledValues` before setting the parameter(s) *Defaults to true*
+the last scheduled change, depending on the `cancel` parameter. *Defaults to 0*  
+`cancel`: whether to call `cancelScheduledValues` before setting the parameter(s). *Defaults to true*
   
       param: (key, val) ->
         if @__typeof(key) is 'object'

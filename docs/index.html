@@ -468,7 +468,7 @@ second property it’s used to set the value. </p>
 <p>When passed an object, the properties of the object are used to set values on <code>this</code>.
 Parameters are set immediately unless the <code>at</code> property is set, which is a float representing the
 number of seconds in the future at which the param should be set.<br><code>ramp</code>: An enumerated string: ‘none’, ‘linear’, ‘expo’. <em>Defaults to ‘none’</em><br><code>at</code>: A float representing the number of seconds in the future or after
-the last scheduled change, depending on the next param <em>Defaults to 0</em><br><code>cancel</code>: whether to call <code>cancelScheduledValues</code> before setting the parameter(s) <em>Defaults to true</em></p>
+the last scheduled change, depending on the <code>cancel</code> parameter. <em>Defaults to 0</em><br><code>cancel</code>: whether to call <code>cancelScheduledValues</code> before setting the parameter(s). <em>Defaults to true</em></p>
 
         
           <div class='highlight'><pre>  <span class="hljs-attribute">param</span>: <span class="hljs-function"><span class="hljs-params">(key, val)</span> -&gt;</span>
