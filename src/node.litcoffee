@@ -323,27 +323,55 @@ Replace the native `disconnect` function with a safe version, in case it is call
 
 
 ### MooogAudioNode.param
-jQuery-style getter/setter that also works on `AudioParam` properties.
+jQuery-style getter/setter that also works on `AudioParam` properties. Signatures:
+
+> param( key:string [, value:mixed])
+
+With two arguments, the first is taken as the property to get or set. If there's a 
+second property it's used to set the value. 
+
+> MooogAudioNode( { key: value [, key: value]... 
+[, ramp: rampType:string] [, at:float ] [, cancel:boolean]  } )
+
+
+When passed an object, the properties of the object are used to set values on `this`.
+Parameters are set immediately unless the `at` property is set, which is a float representing the
+number of seconds in the future at which the param should be set.  
+`ramp`: An enumerated string: 'none', 'linear', 'expo'. *Defaults to 'none'*  
+`at`: A float representing the number of seconds in the future or after
+the last scheduled change, depending on the next param *Defaults to 0*  
+`cancel`: whether to call `cancelScheduledValues` before setting the parameter(s) *Defaults to true*
   
       param: (key, val) ->
         if @__typeof(key) is 'object'
-          @get_set k, v for k, v of key
+          at = parseFloat(key.at) || 0
+          cancel = if typeof key.cancel isnt 'undefined' then key.cancel else true
+          @debug "keyramp", key.ramp
+          switch key.ramp
+            when 'linear' then rampfun = 'linearRampToValueAtTime'
+            when 'expo' then rampfun = 'exponentialRampToValueAtTime'
+            else rampfun = 'setValueAtTime'
+          @get_set k, v, rampfun, at, cancel for k, v of key
           return this
-        return @get_set key, val
+        return @get_set key, val, 'setValueAtTime', 0, true
 
 
 
 ### MooogAudioNode.get_set
 Handles the getting/setting for `MooogAudioNode.param`. Uses setValueAtTime
 when dealing with `AudioParam`s to make sure changes are made, and immediate.
-See [https://jsfiddle.net/5xqhwzwu/1/](https://jsfiddle.net/5xqhwzwu/)
+See [https://jsfiddle.net/5xqhwzwu/1/](https://jsfiddle.net/5xqhwzwu/). See the
+`param` definition for the arguments.
 
-      get_set: (key, val) ->
+      get_set: (key, val, rampfun, at, cancel) ->
         return unless @[key]?
+        @debug "rampfun #{rampfun} at #{at} cancel #{cancel}"
         switch @__typeof @[key]
           when "AudioParam"
             if val?
-              @[key].setValueAtTime val, @context.currentTime
+              @[key].cancelScheduledValues(@context.currentTime) if cancel
+              val = @_instance.config.fake_zero if val is 0
+              @[key][rampfun] val, @context.currentTime + at
               return this
             else
               @[key].value
@@ -356,6 +384,7 @@ See [https://jsfiddle.net/5xqhwzwu/1/](https://jsfiddle.net/5xqhwzwu/)
 
 ### MooogAudioNode.define_buffer_source_properties
 Sets up useful functions on `MooogAudioNode`s that have a `buffer` property 
+#Todo: emit loaded event
       
       define_buffer_source_properties: () ->
         @_buffer_source_file_url = ''
