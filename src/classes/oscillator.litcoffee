@@ -18,7 +18,7 @@ Wraps the OscillatorNode AudioContext object
           @_state
       
       start: () ->
-        return if @_state is 'playing'
+        return @ if @_state is 'playing'
         @_state = 'playing'
         if @_is_started
           @_nodes[1].gain.value = 1.0
@@ -28,7 +28,7 @@ Wraps the OscillatorNode AudioContext object
         @
       
       stop: () ->
-        return if @_state is 'stopped'
+        return @ if @_state is 'stopped'
         @_state = 'stopped'
         @_nodes[1].gain.value = 0
         @
