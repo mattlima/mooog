@@ -151,7 +151,7 @@ This is a modified `typeof` to filter AudioContext API-specific object types
           @connect_incoming node
           @disconnect_incoming @_nodes[0]
 
-          if length > 1
+          if length > 0
             node.connect @to @_nodes[0]
             @debug '- node.connect to ', @_nodes[0]
 
