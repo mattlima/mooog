@@ -44,6 +44,8 @@ object after initialization.
         @config_defaults =
           connect_to_destination: true
         @config = {}
+        @_connections = []
+        @_exposed_properties = {}
         
 Take care of first type signature (ID and string type)
 
@@ -98,7 +100,7 @@ Runs after the MooogAudioNode constructor by the inheriting classes. Exposes the
 configuration object.
       
       zero_node_setup: (config) ->
-        @expose_methods_of @_nodes[0] if @_nodes[0]?
+        @expose_properties_of @_nodes[0] if @_nodes[0]?
         for k, v of @zero_node_settings(config)
           @debug "zero node settings, #{k} = #{v}"
           @param k, v
@@ -176,7 +178,36 @@ This is a modified `typeof` to filter AudioContext API-specific object types
         
         @_nodes.splice ord, 0, node
         @debug "- spliced:", @_nodes
+        
 
+
+### MooogAudioNode.delete_node
+
+
+      delete_node: (ord) ->
+        #todo: use the @_connections list
+        return unless ord?
+        length = @_nodes.length
+        
+                
+        if ord > (length - 1)
+          throw new Error("Invalid index given to delete_node: " + ord +
+          " out of " + length)
+        @debug "delete of #{@} for position", ord
+
+        if ord isnt 0
+          @safely_disconnect @_nodes[ord - 1], (@from @_nodes[ord])
+          
+        if ord < (length - 1)
+          @safely_disconnect @_nodes[ord], (@from @_nodes[ord + 1])
+          
+        if ord is (length - 1)
+          @safely_disconnect @_nodes[ord], (@from @_destination)
+          
+        del = @_nodes.splice ord, 1
+        delete del[0]
+        @debug "remove node at index #{ord}"
+        
   
 ### MooogAudioNode.add
 Shortcut for insert_node
@@ -228,6 +259,8 @@ to connect to.
             target = node
           else throw new Error "Unknown node type passed to connect"
           
+        @_connections.push [node, output, input]
+        
         switch
           when typeof(output) is 'string'
             @_nodes[ @_nodes.length - 1 ].connect target[output], input
@@ -265,15 +298,16 @@ and `disconnect` functions.
       from: @.prototype.to
       
 
-### MooogAudioNode.expose_methods_of
-Exposes the properties of a wrapped `AudioNode` on `this`
+### MooogAudioNode.expose_properties_of
+Exposes the properties of a wrapped `AudioNode` on `this`. Will not overwrite properties
+of `this` unless they were created by a previous call to the function.
 
       
-      expose_methods_of: (node) ->
+      expose_properties_of: (node) ->
         @debug "exposing", node
         for key,val of node
-          if @[key]? then continue
-          #@debug "- checking #{key}: got", @__typeof val
+          if @[key]? and !@_exposed_properties[key] then continue
+          @_exposed_properties[key] = true
           switch @__typeof val
             when 'function'
               @[key] = val.bind node
@@ -340,7 +374,8 @@ number of seconds in the future at which the param should be set.
 `ramp`: An enumerated string: 'none', 'linear', 'expo'. *Defaults to 'none'*  
 `at`: A float representing the number of seconds in the future or after
 the last scheduled change, depending on the `cancel` parameter. *Defaults to 0*  
-`cancel`: whether to call `cancelScheduledValues` before setting the parameter(s). *Defaults to true*
+`cancel`: whether to call `cancelScheduledValues` before setting the parameter(s).
+*Defaults to true*
   
       param: (key, val) ->
         if @__typeof(key) is 'object'
