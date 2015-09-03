@@ -353,25 +353,45 @@
     };
 
     MooogAudioNode.prototype.param = function(key, val) {
-      var k, v;
+      var at, cancel, k, rampfun, v;
       if (this.__typeof(key) === 'object') {
+        at = parseFloat(key.at) || 0;
+        cancel = typeof key.cancel !== 'undefined' ? key.cancel : true;
+        this.debug("keyramp", key.ramp);
+        switch (key.ramp) {
+          case 'linear':
+            rampfun = 'linearRampToValueAtTime';
+            break;
+          case 'expo':
+            rampfun = 'exponentialRampToValueAtTime';
+            break;
+          default:
+            rampfun = 'setValueAtTime';
+        }
         for (k in key) {
           v = key[k];
-          this.get_set(k, v);
+          this.get_set(k, v, rampfun, at, cancel);
         }
         return this;
       }
-      return this.get_set(key, val);
+      return this.get_set(key, val, 'setValueAtTime', 0, true);
     };
 
-    MooogAudioNode.prototype.get_set = function(key, val) {
+    MooogAudioNode.prototype.get_set = function(key, val, rampfun, at, cancel) {
       if (this[key] == null) {
         return;
       }
+      this.debug("rampfun " + rampfun + " at " + at + " cancel " + cancel);
       switch (this.__typeof(this[key])) {
         case "AudioParam":
           if (val != null) {
-            this[key].setValueAtTime(val, this.context.currentTime);
+            if (cancel) {
+              this[key].cancelScheduledValues(this.context.currentTime);
+            }
+            if (val === 0) {
+              val = this._instance.config.fake_zero;
+            }
+            this[key][rampfun](val, this.context.currentTime + at);
             return this;
           } else {
             return this[key].value;
@@ -472,7 +492,6 @@
         case 'exponential':
           ramp = param.exponentialRampToValueAtTime.bind(param);
       }
-      this.debug("times", times);
       if (times.length === 2) {
         param.cancelScheduledValues(t);
         param.setValueAtTime(base, t);
@@ -699,7 +718,7 @@
       this.insert_node(this.context.createDelay(), 0);
       this._feedback_stage = new Gain(this._instance, {
         connect_to_destination: false,
-        gain: 0.99
+        gain: 0
       });
       this._nodes[0].connect(this.to(this._feedback_stage));
       this._feedback_stage.connect(this.to(this._nodes[0]));
@@ -821,25 +840,6 @@
 
   })(MooogAudioNode);
 
-  WaveShaper = (function(superClass) {
-    extend(WaveShaper, superClass);
-
-    function WaveShaper(_instance, config) {
-      this._instance = _instance;
-      if (config == null) {
-        config = {};
-      }
-      config.node_type = 'WaveShaper';
-      WaveShaper.__super__.constructor.apply(this, arguments);
-      this.configure_from(config);
-      this.insert_node(this.context.createWaveShaper(), 0);
-      this.zero_node_setup(config);
-    }
-
-    return WaveShaper;
-
-  })(MooogAudioNode);
-
   Track = (function(superClass) {
     extend(Track, superClass);
 
@@ -889,6 +889,95 @@
 
   })(MooogAudioNode);
 
+  WaveShaper = (function(superClass) {
+    extend(WaveShaper, superClass);
+
+    function WaveShaper(_instance, config) {
+      this._instance = _instance;
+      if (config == null) {
+        config = {};
+      }
+      config.node_type = 'WaveShaper';
+      WaveShaper.__super__.constructor.apply(this, arguments);
+      this.configure_from(config);
+      this.insert_node(this.context.createWaveShaper(), 0);
+      this.zero_node_setup(config);
+    }
+
+    WaveShaper.prototype.chebyshev = function(terms, last, current) {
+      var el, i, lasttemp, newcurrent;
+      if (last == null) {
+        last = [1];
+      }
+      if (current == null) {
+        current = [1, 0];
+      }
+      if (terms < 2) {
+        throw new Error("Terms must be 2 or more for chebyshev generator");
+      }
+      if (current.length === terms) {
+        return this.poly.apply(this, current);
+      } else {
+        lasttemp = last;
+        last = current;
+        current = current.map(function(x) {
+          return 2 * x;
+        });
+        current.push(0);
+        lasttemp.unshift(0, 0);
+        lasttemp = lasttemp.map(function(x) {
+          return -1 * x;
+        });
+        newcurrent = (function() {
+          var j, len, results;
+          results = [];
+          for (i = j = 0, len = current.length; j < len; i = ++j) {
+            el = current[i];
+            results.push(lasttemp[i] + current[i]);
+          }
+          return results;
+        })();
+        console.log(current, lasttemp, "new cur", newcurrent, this);
+        return this.chebyshev(terms, last, newcurrent);
+      }
+    };
+
+    WaveShaper.prototype.poly = function() {
+      var coeffs, curve, i, j, length, p, ref, step;
+      coeffs = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+      length = this._instance.config.curve_length;
+      step = 2 / (length - 1);
+      curve = new Float32Array(length);
+      p = function(x, coeffs) {
+        var a, accum, i, j, ref;
+        accum = 0;
+        for (i = j = 0, ref = coeffs.length - 1; 0 <= ref ? j <= ref : j >= ref; i = 0 <= ref ? ++j : --j) {
+          a = coeffs[i];
+          accum += a * Math.pow(x, coeffs.length - i - 1);
+        }
+        return accum;
+      };
+      for (i = j = 0, ref = length - 1; 0 <= ref ? j <= ref : j >= ref; i = 0 <= ref ? ++j : --j) {
+        curve[i] = p((i * step) - 1, coeffs);
+      }
+      return curve;
+    };
+
+    WaveShaper.prototype.tanh = function(n) {
+      var curve, i, j, length, ref, step;
+      length = this._instance.config.curve_length;
+      step = 2 / (length - 1);
+      curve = new Float32Array(length);
+      for (i = j = 0, ref = length - 1; 0 <= ref ? j <= ref : j >= ref; i = 0 <= ref ? ++j : --j) {
+        curve[i] = Math.tanh((Math.PI / 2) * n * ((i * step) - 1));
+      }
+      return curve;
+    };
+
+    return WaveShaper;
+
+  })(MooogAudioNode);
+
   Mooog = (function() {
     Mooog.LEGAL_NODES = {
       'Oscillator': Oscillator,
@@ -914,6 +1003,7 @@
         default_ramp_type: 'exponential',
         default_send_type: 'post',
         periodic_wave_length: 2048,
+        curve_length: 65536,
         fake_zero: 1 / 32768
       };
       this.init(this.initConfig);
