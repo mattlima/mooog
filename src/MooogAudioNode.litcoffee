@@ -137,7 +137,7 @@ This is a modified `typeof` to filter AudioContext API-specific object types
       
 ### MooogAudioNode.insert_node
 
-
+      #todo: deal with exposing node properties at ordinal 0 
       insert_node: (node, ord) ->
         length = @_nodes.length
         ord = length unless ord?

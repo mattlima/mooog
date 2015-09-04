@@ -55,7 +55,7 @@ improves.
 ### Features
 Mooog provides a `MooogAudioNode` object that can wrap one or more AudioNodes. 
 At a minumum, it exposes the methods of the wrapped Node (or the first in its internal
-chain, so you can talk to them just like the underlying AudioNode. 
+chain) so you can talk to them just like the underlying AudioNode. 
 Many of them offer additional functionality. There are also utilities like 
 an ADSR generator as well as functions to generate common waveshaping curves like Chebyshevs 
 and `tanh`.
@@ -159,6 +159,22 @@ M.node("my_previously_created_audio_buffer_source")
 a warning to the console if Mooog was initialized with `debug: true`. 
 
 ### Working with parameters
+
+#### The `param()` getter/setter
+AudioNode parameters are a mix of enumerated properties, strings, numbers, and `AudioParam` objects. Mooog 
+supports setting any parameter jQuery-style via the `param()` getter/setter function. 
+
+```javascript
+var osc = M.node('my_oscillator', 'Oscillator');
+osc.param('frequency'); // -> returns 440 
+osc.param('frequency', 800); // -> returns 800
+osc.param('frequency'); // -> returns 800
+```
+
+Like jQuery, multiple parameters can be set in the same param call:
+
+`osc.param( {frequency: 800, type: 'sawtooth'} );`
+
 
 
 
