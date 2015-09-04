@@ -10,7 +10,6 @@ For convenience, it's also compiled into a single file at /docs/mooog.html
 
 ## Development
 
-*   npm/docco
 *   npm/grunt
 
 

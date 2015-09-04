@@ -16,6 +16,8 @@
         connect_to_destination: true
       };
       this.config = {};
+      this._connections = [];
+      this._exposed_properties = {};
       if (this.__typeof(node_list[0]) === "string" && this.__typeof(node_list[1]) === "string" && (Mooog.LEGAL_NODES[node_list[1]] != null)) {
         return new Mooog.LEGAL_NODES[node_list[1]](this._instance, {
           id: node_list[0]
@@ -68,7 +70,7 @@
     MooogAudioNode.prototype.zero_node_setup = function(config) {
       var k, ref, results, v;
       if (this._nodes[0] != null) {
-        this.expose_methods_of(this._nodes[0]);
+        this.expose_properties_of(this._nodes[0]);
       }
       ref = this.zero_node_settings(config);
       results = [];
@@ -126,7 +128,7 @@
       if (ord === 0) {
         this.connect_incoming(node);
         this.disconnect_incoming(this._nodes[0]);
-        if (length > 1) {
+        if (length > 0) {
           node.connect(this.to(this._nodes[0]));
           this.debug('- node.connect to ', this._nodes[0]);
         }
@@ -159,6 +161,30 @@
       }
       this._nodes.splice(ord, 0, node);
       return this.debug("- spliced:", this._nodes);
+    };
+
+    MooogAudioNode.prototype.delete_node = function(ord) {
+      var del, length;
+      if (ord == null) {
+        return;
+      }
+      length = this._nodes.length;
+      if (ord > (length - 1)) {
+        throw new Error("Invalid index given to delete_node: " + ord + " out of " + length);
+      }
+      this.debug("delete of " + this + " for position", ord);
+      if (ord !== 0) {
+        this.safely_disconnect(this._nodes[ord - 1], this.from(this._nodes[ord]));
+      }
+      if (ord < (length - 1)) {
+        this.safely_disconnect(this._nodes[ord], this.from(this._nodes[ord + 1]));
+      }
+      if (ord === (length - 1)) {
+        this.safely_disconnect(this._nodes[ord], this.from(this._destination));
+      }
+      del = this._nodes.splice(ord, 1);
+      delete del[0];
+      return this.debug("remove node at index " + ord);
     };
 
     MooogAudioNode.prototype.add = function(nodes) {
@@ -216,6 +242,7 @@
         default:
           throw new Error("Unknown node type passed to connect");
       }
+      this._connections.push([node, output, input]);
       switch (false) {
         case typeof output !== 'string':
           this._nodes[this._nodes.length - 1].connect(target[output], input);
@@ -257,15 +284,16 @@
 
     MooogAudioNode.prototype.from = MooogAudioNode.prototype.to;
 
-    MooogAudioNode.prototype.expose_methods_of = function(node) {
+    MooogAudioNode.prototype.expose_properties_of = function(node) {
       var key, results, val;
       this.debug("exposing", node);
       results = [];
       for (key in node) {
         val = node[key];
-        if (this[key] != null) {
+        if ((this[key] != null) && !this._exposed_properties[key]) {
           continue;
         }
+        this._exposed_properties[key] = true;
         switch (this.__typeof(val)) {
           case 'function':
             results.push(this[key] = val.bind(node));
@@ -562,103 +590,58 @@
         gain: 1.0,
         connect_to_destination: this.config.connect_to_destination
       }));
-      this._is_started = false;
-      this._stop_timeout = false;
       this._state = 'stopped';
       this.define_readonly_property('state', (function(_this) {
         return function() {
           return _this._state;
         };
       })(this));
-      this._true_loop = this._nodes[0].loop;
-      this._nodes[0].loop = true;
-      this._true_loopStart = this._nodes[0].loopStart;
-      this._true_loopEnd = this._nodes[0].loopEnd;
-      Object.defineProperty(this, 'loop', {
-        get: function() {
-          return this._true_loop;
-        },
-        set: (function(_this) {
-          return function(val) {
-            _this._true_loop = val;
-            if (_this._state === 'playing') {
-              if (val) {
-                _this._nodes[0].loopEnd = _this._true_loopEnd;
-                return _this._nodes[0].loopStart = _this._true_loopStart;
-              } else {
-                _this._true_loopEnd = _this._nodes[0].loopEnd;
-                return _this._true_loopStart = _this._nodes[0].loopStart;
-              }
-            }
-          };
-        })(this),
-        enumerable: true,
-        configurable: true
-      });
-      Object.defineProperty(this, 'loopStart', {
-        get: function() {
-          return this._true_loopStart;
-        },
-        set: (function(_this) {
-          return function(val) {
-            _this._true_loopStart = val;
-            if (_this._true_loop && _this._state === 'playing') {
-              return _this._nodes[0].loopStart = _this._true_loopStart;
-            }
-          };
-        })(this),
-        enumerable: true,
-        configurable: true
-      });
-      Object.defineProperty(this, 'loopEnd', {
-        get: function() {
-          return this._true_loopEnd;
-        },
-        set: (function(_this) {
-          return function(val) {
-            _this._true_loopEnd = val;
-            if (_this._true_loop && _this._state === 'playing') {
-              return _this._nodes[0].loopEnd = _this._true_loopEnd;
-            }
-          };
-        })(this),
-        enumerable: true,
-        configurable: true
-      });
     }
 
     AudioBufferSource.prototype.start = function() {
       if (this._state === 'playing') {
-        return;
+        return this;
       }
       this._state = 'playing';
-      if (this._true_loop) {
-        this._nodes[0].loopEnd = this._true_loopEnd;
-        this._nodes[0].loopStart = this._true_loopStart;
-      } else {
-        this._nodes[0].loopEnd = this._nodes[0].buffer.duration;
-        this._nodes[0].loopStart = 0;
-        this._stop_timeout = setTimeout(this.stop.bind(this), (Math.round(this._nodes[0].buffer.duration * 1000)) - 19);
-      }
-      if (this._is_started) {
-        this._nodes[1].gain.value = 1.0;
-      } else {
-        this._nodes[0].start();
-        this._is_started = true;
-      }
-      return this;
+      this._nodes[1].param('gain', 1);
+      return this._nodes[0].start();
     };
 
     AudioBufferSource.prototype.stop = function() {
+      var new_source;
       if (this._state === 'stopped') {
-        return;
+        return this;
       }
       this._state = 'stopped';
-      clearTimeout(this._stop_timeout);
-      this._nodes[1].gain.value = 0;
-      this._nodes[0].loopStart = 0;
-      this._nodes[0].loopEnd = 0.005;
+      this._nodes[1].param('gain', 0);
+      new_source = this.context.createBufferSource();
+      this.clone_AudioNode_properties(this._nodes[0], new_source);
+      this.delete_node(0);
+      this.insert_node(new_source, 0);
+      this.expose_properties_of(this._nodes[0]);
       return this;
+    };
+
+    AudioBufferSource.prototype.clone_AudioNode_properties = function(source, dest) {
+      var k, results, v;
+      results = [];
+      for (k in source) {
+        v = source[k];
+        switch (this.__typeof(source[k])) {
+          case 'AudioBuffer':
+          case 'boolean':
+          case 'number':
+          case 'string':
+            results.push(dest[k] = v);
+            break;
+          case 'AudioParam':
+            results.push(dest[k].value = v.value);
+            break;
+          default:
+            results.push(void 0);
+        }
+      }
+      return results;
     };
 
     return AudioBufferSource;
@@ -796,7 +779,7 @@
 
     Oscillator.prototype.start = function() {
       if (this._state === 'playing') {
-        return;
+        return this;
       }
       this._state = 'playing';
       if (this._is_started) {
@@ -810,7 +793,7 @@
 
     Oscillator.prototype.stop = function() {
       if (this._state === 'stopped') {
-        return;
+        return this;
       }
       this._state = 'stopped';
       this._nodes[1].gain.value = 0;
