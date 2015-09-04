@@ -76,7 +76,7 @@ It takes an optional configuration object with the following properties:
 - `default_gain`: `Gain` objects that are initiated will have their gain automatically set to this value. *Default: 0.5*
 - `default_ramp_type`: `adsr` envelopes will be produced using this type of curve. *Default: 'exponential'*
 - `default_send_type`: For sends from `Track` objects. *Default: 'post'*
-- `periodic_wave_length`: The `PeriodicWave` generator functions produce buffers of this length. *Default: 2048*
+- `periodic_wave_length`: The `PeriodicWave` generator functions calculate up to this many partials. *Default: 2048*
 - `curve_length`: The `WaveShaper` curve generator functions produce `Float32Array`s of this length. *Default: 65536*
 - `fake_zero`: This number is substituted for zero to prevent errors when zero is passed to an exponential ramp function. *Default: 1 / 65536*
           
@@ -93,7 +93,7 @@ var my_oscillator = M.node( {
     node_type: "Oscillator"
 } );
 ```
-Here we've assigned the Node reference to a variable, but we can also reference an initialized node using its
+Here we've assigned the node reference to a variable, but we can also reference an initialized node using its
 id as a single argument:
 
 `M.node('my_new_node_string_id');`
@@ -141,9 +141,9 @@ M.node("my_previously_created_audio_buffer_source")
     .connect( M.node({ id: "my_long_delay", node_type: "Delay", delayTime: 1.5 }) );
 ```
 
-If you want to link Nodes in series, you can use `chain()` instead of `connect()`. 
+If you want to link nodes in series, you can use `chain()` instead of `connect()`. 
 
-> You can also easily initialize chains of Nodes in a single Track object. See below.
+> You can also easily initialize chains of nodes in a single Track object. See below.
 
 `chain` returns the destination node, not the source node. It also automatically disconnects the source 
 from the context's `AudioDestinationNode`. To `chain` an `AudioParam`, use the name of the param as the 
@@ -158,18 +158,90 @@ M.node("my_previously_created_audio_buffer_source")
 `disconnect()` works like the native function but won't throw an error if the connection doesn't exist. It will output
 a warning to the console if Mooog was initialized with `debug: true`. 
 
+### Working with parameters
 
-## Node-specific details
+
+
+### The Track Object
+
+Mooog includes a `Track` object designed to make working with lots of nodes a little easier. You set up and refer to
+the Track with a unique string identifier (just like a node), and populate its internal chain of nodes with one or
+more additional arguments to the creator function: 
+
+```javascript
+M.track( 'my_track', node [, node...] );
+```
+Each `node` argument can be a node definition object of the type you'd pass to the `Mooog.node()` function or an existing
+node. The Track object routes the last node in its internal chain through a pan/gain stage. Like all nodes, the Track exposes
+the native methods/properties of the first node in its internal chain, but it also exposes the `gain` and `pan` AudioParams of 
+the nodes in the pan/gain stage directly. 
+
+Tracks can be used interchangeably with nodes as arguments to functions like `connect()` and `chain()`. 
+
+Tracks have a `send()` function analagous to mixing board sends. Once created, the send (which is a `Gain` node) is referenced by string id, just like Tracks and other nodes. 
+
+```javascript
+/* create the track */
+M.track("my_track", M.node({id:"sin", node_type:"Oscillator", type:"sawtooth"}), { id:"fil",node_type:"BiquadFilter" } );
+
+/* Set up a reverb effect track*/
+rev = M.track('reverb', { id:"cv", node_type:"Convolver", buffer_source_file:"/some-impulse-response.wav" });
+
+/* Create the send */
+M.track('my_track').send('rev_send', rev, 'post');
+
+/* Come back later and change the gain */
+M.track('my_track').send('rev_send').param('gain', 0.25)
+```
+
+Creates a send to another `Track` object.  
+`id`: String ID to assign to this send.  
+`destination`: The target `Track` object or ID thereof  
+`pre`: Either 'pre' or 'post'. *Defaults to config value in the `Mooog` object.*  
+`gain`: Initial gain value for the send. *Defaults to config value in the `Mooog` object.*  
+
+
+## Utilities and Node-specific details
+
+### Mooog.freq()
+
+A convenience function for converting MIDI notes to equal temperament Hz
+
+### PeriodicWave constructors
+
+The native versions of the native (Sine, Sawtooth, Triangle, Square) waveforms 
+have much greater perceived loudness than custom PeriodicWaves so if your signal path
+includes both it may be easier to mix them if you use generated versions of the native waveforms: 
+ 
+####Mooog.sawtoothPeriodicWave(n)
+
+Calculates and returns a sawtooth `PeriodicWave` up to the nth partial.
+ 
+####Mooog.squarePeriodicWave(n)
+
+Calculates and returns a square `PeriodicWave` up to the nth partial.
+ 
+####Mooog.trianglePeriodicWave(n)
+
+Calculates and returns a triangle `PeriodicWave` up to the nth partial.
+ 
+####Mooog.sinePeriodicWave()
+
+Returns a sine `PeriodicWave`.
+
+
+
 
 ### Todo:
 
 - Optionally use periodic waves for basic oscillator types to minimize volume differences
+- Vary duty cycle on period wave generator
 
 ### Patches
-  - Allows `Oscillator`, `AudioBufferSource` nodes to be `stop()`ed and 
-  `start()`ed again without throwing errors.
-  - Changes to `AudioParam` values via `.param()` are made using setValueAtTime(0)
-  to ensure values are set instantly
+- Allows `Oscillator`, `AudioBufferSource` nodes to be `stop()`ed and 
+`start()`ed again without throwing errors.
+- Changes to `AudioParam` values via `.param()` are made using setValueAtTime(0)
+to ensure values are set instantly
 
 
 

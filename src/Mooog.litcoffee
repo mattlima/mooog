@@ -63,7 +63,6 @@ object (`AudioContext` or `webkitAudioContext`)
 Creates a Track object holds a chain of AudioNodes. By default it includes panner
 and gain stages.
 
-
 `id`: A unique identifier to assign to this Track
 `node_list`: One or more config objects or `MooogAudioNode` objects to add to the `Track`
 
