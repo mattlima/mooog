@@ -25,7 +25,6 @@ module.exports = (grunt, options) ->
         files: ['src/**/*.litcoffee','src/**/*.coffee', '!src/index.litcoffee']
         tasks: ['build']
 
-
     clean:
       dist:
         ['dist/*']
@@ -39,20 +38,11 @@ module.exports = (grunt, options) ->
         files:
           "dist/mooog.js": "src/index.litcoffee"
 
-
-    docco:
-      debug:
-        src: ['src/index.litcoffee']
-        options:
-          output: 'docs/'
-          css: 'docco.css'
-          layout: 'linear'
-
     concat:
       options:
         separator: '\n'
       dist:
-        src: ['src/Mooog-doc.litcoffee', 'src/MooogAudioNode.litcoffee',  'src/nodes/*.litcoffee', 'src/Mooog.litcoffee'],
+        src: ['src/MooogAudioNode.litcoffee',  'src/nodes/*.litcoffee', 'src/Mooog.litcoffee'],
         dest: 'src/index.litcoffee',
 
 
@@ -88,14 +78,12 @@ module.exports = (grunt, options) ->
   grunt.registerTask 'build', [
     'coffeelint'
     'concat'
-#     'clean:dist'
     'coffee'
     'clean:temp'
   ]
   # build, docs
   grunt.registerTask 'prod', [
     'concat'
-    'docco'
     'clean:dist'
     'coffee'
     'clean:temp'
