@@ -2,12 +2,6 @@
 
 Wraps the AudioContext object and exposes the Track object. Exposes the API
 as the Mooog global.  
-Config options:
-  - debug: Output debugging messages to the console. *Default: false*
-  - default_gain: `Gain` objects that are initiated will have their gain
-automatically set to this value. *Default: 0.5*
-  - default_ramp_type: `adsr` envelopes will be produced with this type of curve 
-*Default: 'linear'*
 
 
     class Mooog

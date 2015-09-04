@@ -23,10 +23,12 @@ or an object with initialization params (see below)
 `node_definition`: An object used to create and configure the new Node. 
 
 Required properties:
-  - `id`: Unique string identifier
   - `node_type`: String indicating the type of Node (Oscillator, Gain, etc.)
   
+
+  
 Optional properties for all nodes
+  - `id`: Unique string identifier, will be created programatically if not given.
   - `connect_to_destination`: Boolean indicating whether the last in this node's 
 `_nodes` array is automatically connected to the `AudioDestinationNode`. *default: true*
 
