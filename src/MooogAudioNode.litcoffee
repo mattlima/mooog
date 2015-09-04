@@ -25,8 +25,6 @@ or an object with initialization params (see below)
 Required properties:
   - `node_type`: String indicating the type of Node (Oscillator, Gain, etc.)
   
-
-  
 Optional properties for all nodes
   - `id`: Unique string identifier, will be created programatically if not given.
   - `connect_to_destination`: Boolean indicating whether the last in this node's 

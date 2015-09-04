@@ -34,7 +34,7 @@ object (`AudioContext` or `webkitAudioContext`)
           default_send_type: 'post'
           periodic_wave_length: 2048
           curve_length: 65536
-          fake_zero: 1/32768
+          fake_zero: 1/65536
         @init(@initConfig)
 
         @_nodes = {}

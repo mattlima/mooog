@@ -1,7 +1,8 @@
 # Mooog
 
-Chainable AudioNode API
+##Chainable AudioNode API
 
+Version 0.0.1a
 
 ### What is Mooog?
 
@@ -136,8 +137,8 @@ to accomplish fan-out more easily:
 
 ```javascript
 M.node("my_previously_created_audio_buffer_source")
-    .connect( M.node({ id: "my_short_delay", node_type: "Delay", delayTime: 0.2 ) )
-    .connect( M.node({ id: "my_long_delay", node_type: "Delay", delayTime: 1.5 ) );
+    .connect( M.node({ id: "my_short_delay", node_type: "Delay", delayTime: 0.2 }) )
+    .connect( M.node({ id: "my_long_delay", node_type: "Delay", delayTime: 1.5 }) );
 ```
 
 If you want to link Nodes in series, you can use `chain()` instead of `connect()`. 
