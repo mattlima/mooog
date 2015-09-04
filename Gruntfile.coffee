@@ -52,7 +52,7 @@ module.exports = (grunt, options) ->
       options:
         separator: '\n'
       dist:
-        src: ['src/Mooog-doc.litcoffee', 'src/MooogAudioNode.litcoffee',  'src/classes/*.litcoffee', 'src/Mooog.litcoffee'],
+        src: ['src/Mooog-doc.litcoffee', 'src/MooogAudioNode.litcoffee',  'src/nodes/*.litcoffee', 'src/Mooog.litcoffee'],
         dest: 'src/index.litcoffee',
 
 
