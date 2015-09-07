@@ -162,7 +162,7 @@ a warning to the console if Mooog was initialized with `debug: true`.
 
 #### The `param()` getter/setter
 AudioNode parameters are a mix of enumerated properties, strings, numbers, and `AudioParam` objects. Mooog 
-supports setting any parameter jQuery-style via the `param()` getter/setter function. 
+supports setting any of these jQuery-style via the `param()` getter/setter function. 
 
 ```javascript
 var osc = M.node('my_oscillator', 'Oscillator');
@@ -175,6 +175,16 @@ Like jQuery, multiple parameters can be set in the same param call:
 
 `osc.param( {frequency: 800, type: 'sawtooth'} );`
 
+Internally, `param()` actually calls `AudioParam.cancelScheduledValues()` and then uses `AudioParam.setValueAtTime(value, currentTime)` by default in order to ensure consistent behavior.
+Put another way, using `param()` will **always** have the desired effect regardless of whether
+other value changes have been scheduled on that parameter.  
+
+#### Parameters in time
+The `AudioParam` API provides 5 different methods for scheduling parameter changes. `param()` can 
+be used to call any of them depending on the arguments submitted: 
+
+
+#### ADSR envelopes
 
 
 
@@ -226,7 +236,7 @@ A convenience function for converting MIDI notes to equal temperament Hz
 ### PeriodicWave constructors
 
 The native versions of the native (Sine, Sawtooth, Triangle, Square) waveforms 
-have much greater perceived loudness than custom PeriodicWaves so if your signal path
+are louder than equivalent waveforms created with `createPeriodicWave` so if your signal path
 includes both it may be easier to mix them if you use generated versions of the native waveforms: 
  
 ####Mooog.sawtoothPeriodicWave(n)

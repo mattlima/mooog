@@ -381,35 +381,44 @@
     };
 
     MooogAudioNode.prototype.param = function(key, val) {
-      var at, cancel, k, rampfun, v;
+      var at, cancel, duration, extra, k, rampfun, ref, ref1, ref2, ref3, ref4, timeConstant, v;
       if (this.__typeof(key) === 'object') {
         at = parseFloat(key.at) || 0;
+        timeConstant = key.timeConstant != null ? parseFloat(key.timeConstant) : false;
+        duration = key.duration ? parseFloat(key.duration) : false;
         cancel = typeof key.cancel !== 'undefined' ? key.cancel : true;
         this.debug("keyramp", key.ramp);
         switch (key.ramp) {
-          case 'linear':
-            rampfun = 'linearRampToValueAtTime';
+          case "linear":
+            ref = ["linearRampToValueAtTime", false], rampfun = ref[0], extra = ref[1];
             break;
-          case 'expo':
-            rampfun = 'exponentialRampToValueAtTime';
+          case "curve":
+            ref1 = ["setValueCurveAtTime", duration], rampfun = ref1[0], extra = ref1[1];
+            break;
+          case "expo":
+            if (timeConstant) {
+              ref2 = ["setTargetAtTime", timeConstant], rampfun = ref2[0], extra = ref2[1];
+            } else {
+              ref3 = ["exponentialRampToValueAtTime", false], rampfun = ref3[0], extra = ref3[1];
+            }
             break;
           default:
-            rampfun = 'setValueAtTime';
+            ref4 = ["setValueAtTime", false], rampfun = ref4[0], extra = ref4[1];
         }
         for (k in key) {
           v = key[k];
-          this.get_set(k, v, rampfun, at, cancel);
+          this.get_set(k, v, rampfun, at, cancel, extra);
         }
         return this;
       }
       return this.get_set(key, val, 'setValueAtTime', 0, true);
     };
 
-    MooogAudioNode.prototype.get_set = function(key, val, rampfun, at, cancel) {
+    MooogAudioNode.prototype.get_set = function(key, val, rampfun, at, cancel, extra) {
+      this.debug("ramp " + key + " to " + val + " via " + rampfun + " at " + at + " cancel " + cancel + ", extra " + extra);
       if (this[key] == null) {
         return;
       }
-      this.debug("rampfun " + rampfun + " at " + at + " cancel " + cancel);
       switch (this.__typeof(this[key])) {
         case "AudioParam":
           if (val != null) {
@@ -419,7 +428,21 @@
             if (val === 0) {
               val = this._instance.config.fake_zero;
             }
-            this[key][rampfun](val, this.context.currentTime + at);
+            if (val instanceof Array) {
+              val = new Float32Array(val);
+            }
+            switch (rampfun) {
+              case "linearRampToValueAtTime":
+              case "exponentialRampToValueAtTime":
+              case "setValueAtTime":
+                this[key][rampfun](val, this.context.currentTime + at);
+                break;
+              case "setValueCurveAtTime":
+                this[key][rampfun](val, this.context.currentTime + at, extra);
+                break;
+              case "setTargetAtTime":
+                this[key][rampfun](val, this.context.currentTime + at, extra);
+            }
             return this;
           } else {
             return this[key].value;
@@ -987,7 +1010,7 @@
         default_send_type: 'post',
         periodic_wave_length: 2048,
         curve_length: 65536,
-        fake_zero: 1 / 32768
+        fake_zero: 1 / 65536
       };
       this.init(this.initConfig);
       this._nodes = {};

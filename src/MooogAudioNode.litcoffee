@@ -137,7 +137,7 @@ This is a modified `typeof` to filter AudioContext API-specific object types
       
 ### MooogAudioNode.insert_node
 
-      #todo: deal with exposing node properties at ordinal 0 
+      #todo: deal with exposing node properties at ordinal 0
       insert_node: (node, ord) ->
         length = @_nodes.length
         ord = length unless ord?
@@ -365,28 +365,45 @@ With two arguments, the first is taken as the property to get or set. If there's
 second property it's used to set the value. 
 
 > MooogAudioNode( { key: value [, key: value]... 
-[, ramp: rampType:string] [, at:float ] [, cancel:boolean]  } )
+[, ramp: rampType:mixed] [, at:float ] [, duration:float] [, timeConstant:float], [, cancel:boolean]  } )
 
 
 When passed an object, the properties of the object are used to set values on `this`.
-Parameters are set immediately unless the `at` property is set, which is a float representing the
-number of seconds in the future at which the param should be set.  
-`ramp`: An enumerated string: 'none', 'linear', 'expo'. *Defaults to 'none'*  
-`at`: A float representing the number of seconds in the future or after
+`AudioParam` parameters are set immediately by default using `cancelScheduledValues` and 
+`setValueAtTime`. This behavior can be changed by setting additional properties on the object. 
+- To use `linearRampToValueAtTime`, `exponentialRampToValueAtTime`, the `ramp` property 
+can be used in conjunction with the `at` property which desribes the time at which to make 
+the change:  
+`ramp`: An enumerated string: 'none', 'linear', 'expo', 'curve'.  *Defaults to 'none'*
+`at`: A float representing a number of seconds in the future or after
 the last scheduled change, depending on the `cancel` parameter. *Defaults to 0*  
-`cancel`: whether to call `cancelScheduledValues` before setting the parameter(s).
+`cancel`: whether to call `cancelScheduledValues` before setting the parameter(s).  
+- To use `setValueCurveAtTime`, `ramp` should be set to `curve` and the `duration` property 
+must be set. Value arrays are automatically coerced to Float32Array types.
+`duration`: The length of time to fill with the value changes in the arrays.  
+- To use `setTargetAtTime` instead of `exponentialRampToValueAtTime`, set `ramp` to `expo`
+but supply a `timeConstant`. 
+
+
 *Defaults to true*
   
       param: (key, val) ->
         if @__typeof(key) is 'object'
           at = parseFloat(key.at) || 0
+          timeConstant = if key.timeConstant? then parseFloat(key.timeConstant) else false
+          duration = if key.duration then parseFloat(key.duration) else false
           cancel = if typeof key.cancel isnt 'undefined' then key.cancel else true
           @debug "keyramp", key.ramp
           switch key.ramp
-            when 'linear' then rampfun = 'linearRampToValueAtTime'
-            when 'expo' then rampfun = 'exponentialRampToValueAtTime'
-            else rampfun = 'setValueAtTime'
-          @get_set k, v, rampfun, at, cancel for k, v of key
+            when "linear" then [rampfun, extra] = ["linearRampToValueAtTime", false]
+            when "curve" then [rampfun, extra] = ["setValueCurveAtTime", duration]
+            when "expo"
+              if timeConstant
+                [rampfun, extra] = ["setTargetAtTime", timeConstant]
+              else
+                [rampfun, extra] = ["exponentialRampToValueAtTime", false]
+            else [rampfun, extra] = ["setValueAtTime", false]
+          @get_set k, v, rampfun, at, cancel, extra for k, v of key
           return this
         return @get_set key, val, 'setValueAtTime', 0, true
 
@@ -398,15 +415,22 @@ when dealing with `AudioParam`s to make sure changes are made, and immediate.
 See [https://jsfiddle.net/5xqhwzwu/1/](https://jsfiddle.net/5xqhwzwu/). See the
 `param` definition for the arguments.
 
-      get_set: (key, val, rampfun, at, cancel) ->
+      get_set: (key, val, rampfun, at, cancel, extra) ->
+        @debug "ramp #{key} to #{val} via #{rampfun} at #{at} cancel #{cancel}, extra #{extra}"
         return unless @[key]?
-        @debug "rampfun #{rampfun} at #{at} cancel #{cancel}"
         switch @__typeof @[key]
           when "AudioParam"
             if val?
               @[key].cancelScheduledValues(@context.currentTime) if cancel
               val = @_instance.config.fake_zero if val is 0
-              @[key][rampfun] val, @context.currentTime + at
+              val = new Float32Array val if val instanceof Array
+              switch rampfun
+                when "linearRampToValueAtTime", "exponentialRampToValueAtTime", "setValueAtTime"
+                  @[key][rampfun] val, @context.currentTime + at
+                when "setValueCurveAtTime"
+                  @[key][rampfun] val, @context.currentTime + at, extra
+                when "setTargetAtTime"
+                  @[key][rampfun] val, @context.currentTime + at, extra
               return this
             else
               @[key].value
