@@ -183,8 +183,9 @@ other value changes have been scheduled on that parameter.
 The `AudioParam` API provides 5 different methods for scheduling parameter changes. `param()` can 
 be used to call any of them by adding properties to the object submitted. Here are examples using
 an oscillator's `frequency` parameter:
-- Set `frequency` to 800 immediately. (Use `setValueAtTime`)
+- Set `frequency` to 800 immediately. (Use `setValueAtTime`)  
 `osc.param( {frequency: 800} );`
+
 - Set `frequency` to 800, 4 seconds from now. (Use `setValueAtTime`)  
 `osc.param( {frequency: 800, at: 4} );`
 - Set `frequency` to 200, 4 seconds after the previous parameter change.
