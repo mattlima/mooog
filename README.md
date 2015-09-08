@@ -65,6 +65,11 @@ create panner and gain nodes at the end of its internal chain that can be contro
 from a single place and easily create sends to other `Track`s. Like the base 
 `MooogAudioNode`, it automatically routes the end of its internal chain to the destinationNode.
 
+### Donations
+
+If you're feeling generous, you can throw me some dosh [here.](https://www.paypal.me/MattLima)
+
+
 ## Getting started
 
 ### Initializing Mooog
@@ -225,8 +230,7 @@ ADSR stages. The first is relative to the currentTime, and the others are relati
 to the previous value. The delay stage can be suppressed by passing an array of three 
 elements, in which case the envelope will be an ASR and the `s` value will be ignored.
 The release stage can be suppressed by passing an array of 2 elements, in which case the
-envelope will be an ADS envelope (useful if you're responding to user input or don't
-know the duration of the note.)
+envelope will be an ADS envelope (useful if you're responding to user input or the duration of the note cannot be predetermined.)
 - a: The final value of the parameter at the end of the attack stage. *Defaults to 1*
 - s: The value of the parameter at the end of the delay stage (or attack stage, 
 if delay is omitted), to be held until the beginning of the release stage. *Defaults to 1*
@@ -266,7 +270,7 @@ rev = M.track('reverb', { id:"cv", node_type:"Convolver", buffer_source_file:"/s
 M.track('my_track').send('rev_send', rev, 'post');
 
 /* Come back later and change the gain */
-M.track('my_track').send('rev_send').param('gain', 0.25)
+M.track('my_track').send('rev_send').param('gain', 0.25);
 ```
 
 Creates a send to another `Track` object.  
@@ -276,7 +280,7 @@ Creates a send to another `Track` object.
 `gain`: Initial gain value for the send. *Defaults to config value in the `Mooog` object.*  
 
 
-## Utilities and Node-specific details
+## Utilities
 
 ### Mooog.freq()
 
@@ -304,24 +308,57 @@ Calculates and returns a triangle `PeriodicWave` up to the nth partial.
 
 Returns a sine `PeriodicWave`.
 
+## Additional Node-specific details
 
+### AudioBufferSource
+- Exposes a `state` property that is either 'stopped' or 'playing'
+- Includes a config object property `buffer_source_file` indicating the URL of an audio asset from
+which to create an AudioBuffer and then set the `buffer` of the underlying `AudioNode`
+- Automatically regenerates the `buffer` when the `stop()` method is used so you can repeatedly `stop` 
+and `start` without initializing a new Node.
 
+### Convolver
+- Includes a config object property `buffer_source_file` indicating the URL of an audio asset (impulse
+response) from which to create an AudioBuffer and then set the `buffer` of the underlying `AudioNode`
 
-### Todo:
+### Delay
+- Exposes a `feedback` property that maps to the `Gain` of a feedback stage. Defaults to zero,
+and can be set on initialization: `Mooog.node( { node_type: 'Delay', feedback: 0.2 } )`
+
+### Gain
+- Saturation can easily occur in signal chains with multiple paths when they are summed at the output.
+To alleviate this effectm the `Gain` object is initiliazed with `gain` set to 0.5 instead of 1.0. You can 
+change this default with the `default_gain` Mooog config option.
+
+### Oscillator
+- Exposes a `state` property that is either 'stopped' or 'playing'
+- Sets an internal `gain` so you can repeatedly `stop` and `start` without initializing a new Node.
+
+### WaveShaper
+Includes utility functions [tanh](http://mymbs.mbs.net/~pfisher/FOV2-0010016C/FOV2-0010016E/FOV2-001001A3/tutorials/ezine1/distortion.html) for hyperbolic tangent and [chebyshev](http://music.columbia.edu/cmc/MusicAndComputers/chapter4/04_06.php) for Chebyshev polynomials, generating Float32Array distortion curves. `tanh` takes a single argument representing the coefficient (higher coefficients equal more aggressive shaping). `chebyshev` takes a single argument indicating the number of terms to generate (the exponent of the first term). 
+```javascript
+/* create the waveshaper */
+var shaper = M.node("my_waveshaper", M.node({ node_type:"WaveShaper" });
+
+/* Use a tanh waveshaping curve */
+shaper.curve = shaper.tanh(2); 
+
+/* Use a 5th-order Chebyshev polynomial waveshaper */
+shaper.curve = shaper.chebyshev(5); 
+```
+
+## Todo:
 
 - Optionally use periodic waves for basic oscillator types to minimize volume differences
 - Vary duty cycle on period wave generator
+- Refactor initialization to combine `configure_from` and `zero_node_setup`
 
-### Patches
-- Allows `Oscillator`, `AudioBufferSource` nodes to be `stop()`ed and 
-`start()`ed again without throwing errors.
-- Changes to `AudioParam` values via `.param()` are made using setValueAtTime(0)
-to ensure values are set instantly
+## Contributing:
 
+[CONTRIBUTING.md](https://github.com/mattlima/mooog/blob/master/CONTRIBUTING.md)
 
 
 
 
-[Make a donation](https://www.paypal.me/MattLima)
 
 

@@ -382,10 +382,7 @@ the last scheduled change, depending on the `cancel` parameter. *Defaults to 0*
 must be set. Value arrays are automatically coerced to Float32Array types.
 `duration`: The length of time to fill with the value changes in the arrays.  
 - To use `setTargetAtTime` instead of `exponentialRampToValueAtTime`, set `ramp` to `expo`
-but supply a `timeConstant`. 
-
-
-*Defaults to true*
+but supply a `timeConstant`. *Defaults to true*
   
       param: (key, val) ->
         if @__typeof(key) is 'object'
