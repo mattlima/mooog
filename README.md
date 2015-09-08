@@ -181,8 +181,29 @@ other value changes have been scheduled on that parameter.
 
 #### Parameters in time
 The `AudioParam` API provides 5 different methods for scheduling parameter changes. `param()` can 
-be used to call any of them depending on the arguments submitted: 
+be used to call any of them by adding properties to the object submitted. Here are examples using
+an oscillator's `frequency` parameter:
+- Set `frequency` to 800 immediately. (Use `setValueAtTime`)
+`osc.param( {frequency: 800} );`
+- Set `frequency` to 800, 4 seconds from now. (Use `setValueAtTime`)  
+`osc.param( {frequency: 800, at: 4} );`
+- Set `frequency` to 200, 4 seconds after the previous parameter change.
+(Use `setValueAtTime` without first calling `cancelScheduledValues`)  
+`osc.param( {frequency: 800, at: 4, cancel: false} );`
+- Ramp `frequency` from current value linearly, to 800, arriving 4 seconds from now.
+(Use `linearRampToValueAtTime`)  
+`osc.param( {frequency: 800, at: 4, ramp: 'linear'} );`
+- Ramp `frequency` from current value exponentially, to 800, arriving 4 seconds from now.
+(Use `exponentialRampToValueAtTime`)  
+`osc.param( {frequency: 800, at: 4, ramp: 'expo'} );`
+- Set `frequency` to asymptotically approach 800, beginning 4 seconds from now. 
+(Use `setTargetAtTime`)  
+`osc.param( {frequency: 800, at: 4, ramp: 'expo', timeConstant: 1.5} );`
+- Set `frequency` to values 300, 550, 900, 800 over a period of 2 seconds. 
+(Use `setValueCurveAtTime`)  
+`osc.param( {frequency: [300, 550, 900, 800], duration: 2, ramp: 'curve'} );`
 
+The `cancel` and `at` parameters can be used with any of the `ramp` types. 
 
 #### ADSR envelopes
 
