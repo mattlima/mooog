@@ -183,23 +183,29 @@ other value changes have been scheduled on that parameter.
 The `AudioParam` API provides 5 different methods for scheduling parameter changes. `param()` can 
 be used to call any of them by adding properties to the object submitted. Here are examples using
 an oscillator's `frequency` parameter:
+
 - Set `frequency` to 800 immediately. (Use `setValueAtTime`)  
 `osc.param( {frequency: 800} );`
 
 - Set `frequency` to 800, 4 seconds from now. (Use `setValueAtTime`)  
 `osc.param( {frequency: 800, at: 4} );`
+
 - Set `frequency` to 200, 4 seconds after the previous parameter change.
 (Use `setValueAtTime` without first calling `cancelScheduledValues`)  
 `osc.param( {frequency: 800, at: 4, cancel: false} );`
+
 - Ramp `frequency` from current value linearly, to 800, arriving 4 seconds from now.
 (Use `linearRampToValueAtTime`)  
 `osc.param( {frequency: 800, at: 4, ramp: 'linear'} );`
+
 - Ramp `frequency` from current value exponentially, to 800, arriving 4 seconds from now.
 (Use `exponentialRampToValueAtTime`)  
 `osc.param( {frequency: 800, at: 4, ramp: 'expo'} );`
+
 - Set `frequency` to asymptotically approach 800, beginning 4 seconds from now. 
 (Use `setTargetAtTime`)  
 `osc.param( {frequency: 800, at: 4, ramp: 'expo', timeConstant: 1.5} );`
+
 - Set `frequency` to values 300, 550, 900, 800 over a period of 2 seconds. 
 (Use `setValueCurveAtTime`)  
 `osc.param( {frequency: [300, 550, 900, 800], duration: 2, ramp: 'curve'} );`
@@ -207,7 +213,28 @@ an oscillator's `frequency` parameter:
 The `cancel` and `at` parameters can be used with any of the `ramp` types. 
 
 #### ADSR envelopes
+For convenience, you can create ADSR, ASR, or ADS envelopes with the `adsr` method of any Node:
 
+> `MooogAudioNode.adsr( param: mixed, config: object )` 
+
+`param`: An `AudioParam` or the string name of the `AudioParam`, assumed to be on `this`.  
+`config`: Object with the following properties: 
+- base: The value to start and end with. *Defaults to 'zero'*
+- times: An array of time values representing the ending time of each of the 
+ADSR stages. The first is relative to the currentTime, and the others are relative
+to the previous value. The delay stage can be suppressed by passing an array of three 
+elements, in which case the envelope will be an ASR and the `s` value will be ignored.
+The release stage can be suppressed by passing an array of 2 elements, in which case the
+envelope will be an ADS envelope (useful if you're responding to user input or don't
+know the duration of the note.)
+- a: The final value of the parameter at the end of the attack stage. *Defaults to 1*
+- s: The value of the parameter at the end of the delay stage (or attack stage, 
+if delay is omitted), to be held until the beginning of the release stage. *Defaults to 1*
+
+A very small number `fake_zero` is used in place of actual zero if given as the `base`, `a`, or `s`
+property so that the exponential ramping function doesn't throw an error. `fake_zero` defaults to
+1/65536 but can be configured when Mooog is initialized. 
+  
 
 
 ### The Track Object
