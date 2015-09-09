@@ -23,7 +23,11 @@
     "Gruntfile*",
     "package.json",
     "Rakefile",
+    "README.md",
+    "CONTRIBUTING.md",
+    "config.rb",
     "server.rb",
+    "source",
     "spec",
     "src"
   ],

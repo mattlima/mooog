@@ -1,0 +1,86 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script src="/examples/scratch/js/jquery.min.js"></script>
+    <style>
+        .square-button{
+            height:250px;
+            width:250px;
+            display:inline-block;
+            border:thin solid #CCC;
+            background: #DDD;
+            float:left;
+            margin:3px;
+        }
+    </style>
+    <title></title>
+  </head>
+
+  <body>
+        <script src="/dist/mooog.js"></script>
+        <div class="welcome">
+          <h1>Using the <code>Track</code> object</h1>
+
+
+
+
+        </div><!-- .welcome -->
+
+
+
+
+
+
+<button class="square-button tone-button scale1" >scale 1</button>
+<!--
+<button class="square-button tone-button fak" >Fake Saw</button>
+<button class="square-button tone-button sin" >Sin</button>
+<button class="square-button tone-button fs" >Fake Sin</button>
+-->
+
+
+
+
+
+<script>
+
+
+
+(function(){
+    M = new Mooog({debug:true});
+    track = M.track('my_track', M.node({id:'sin', node_type:'Oscillator', type:'sawtooth'}), { id:'osc_gain',node_type:'Gain' },  { id:'fil',node_type:'BiquadFilter' } )
+    rev = M.node({ id:"cv",node_type:"Convolver", buffer_source_file:"/src/impulse-responses/st-andrews-church-ortf-shaped.wav" })
+    track.send('rev_send', rev, 'post', 0.5)
+
+/*
+    M.node('out_gain')
+      .chain( M.node('fil','BiquadFilter') )
+      .connect( M.node({ id:"cv",node_type:"Convolver", buffer_source_file:"/src/impulse-responses/st-andrews-church-ortf-shaped.wav" }) )
+      .chain( M.node('sp','StereoPanner') )
+*/
+
+
+
+
+
+
+    $(document)
+    .on('mousedown','.scale1',function(){
+        M.node('osc_gain').adsr( 'gain' , { ramp_type:'linear', base: 0, a: 1, s: 0.9, times: [ 0.1, 0.2, 10, 2 ] });
+        M.node('sin').start();
+        M.node('fil').adsr( 'frequency' , { base: 0, a: 24000, times: [ 0.1, 0, 5 ] });
+
+    })
+    .on('mouseup','.scale1',function(){
+        M.node('sin').stop();
+    })
+
+})(window)
+
+
+
+
+  </script>
+  </body>
+</html>

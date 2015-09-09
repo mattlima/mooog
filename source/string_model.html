@@ -1,0 +1,196 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script src="/examples/scratch/js/jquery.min.js"></script>
+		<script src="js/Chart.js"></script>
+		<script src="js/nouislider.min.js"></script>
+		<link rel="stylesheet" href="css/nouislider.min.css">
+    <style>
+        .square-button{
+            height:150px;
+            width:150px;
+            display:inline-block;
+            border:thin solid #CCC;
+            background: #DDD;
+            float:left;
+            margin:3px;
+        }
+        fieldset.slider{
+          width:40px;
+          height:300px;
+          font-size:10px;
+          float:left;
+        }
+        fieldset.slider > div{
+          height:93%;
+          margin:0 auto;
+        }
+    </style>
+    <title></title>
+  </head>
+
+  <body>
+        <script src="/dist/mooog.js"></script>
+        <div class="welcome">
+          <h1>String modelling with Karplus-Strong</h1>
+
+
+          <fieldset class="slider"><legend>Track amplitude</legend>
+            <div id="ampslider"></div>
+          </fieldset>
+
+<!--
+      		<div style="width:50%;float:left;">
+      			<div>
+      				<canvas id="canvas" height="400" width="600"></canvas>
+      			</div>
+      		</div>
+-->
+
+
+        </div><!-- .welcome -->
+
+
+
+
+<button class="square-button tone-button start" >play</button>
+<!--
+<button class="square-button tone-button scale1" >no shaping</button>
+<button class="square-button tone-button scale2" >Chebyshev 8 </button>
+<button class="square-button tone-button scale3" >Chebyshev 16 </button>
+<button class="square-button tone-button scale4" >Chebyshev 32 </button>
+<button class="square-button tone-button scale5" >ArcTan 2</button>
+<button class="square-button tone-button scale6" >ArcTan 4</button>
+<button class="square-button tone-button scale7" >ArcTan 8</button>
+-->
+
+
+
+
+
+<script>
+
+
+
+(function(){
+    M = new Mooog({debug:true, curve_length:64});
+
+    track = M.track('my_track', M.node({id:'osc', node_type:'AudioBufferSource' }), { id:'osc_gain',node_type:'Gain' }, { id:'fil',node_type:'WaveShaper' }  )
+    M.node('fil').curve = M.node('fil').chebyshev(8)
+//     track = M.track('my_track', M.node({id:'sin', node_type:'Oscillator',type:"sawtooth" }), { id:'osc_gain',node_type:'Gain' },  { id:'fil',node_type:'WaveShaper' } )
+    rev = M.node({ id:"cv",node_type:"Convolver", buffer_source_file:"/examples/impulse-responses/st-andrews-church-ortf-shaped.wav" })
+    delay = M.track('dels', { id:"del",node_type:"Delay", delayTime: 0.001, feedback: 0.99 }, { id:"del2",node_type:"Delay", delayTime: 0.005, feedback: 0.99 } )
+
+    M.node({id:'lfo',node_type:'Oscillator',frequency:2}).chain( M.node({id:'lfo_gain',node_type:'Gain',gain: 0.0001 }) ).chain( M.node('del2'), 'delayTime' );
+
+    M.node('lfo').start();
+
+    bufflength = 200;
+    b = M.context.createBuffer(2, bufflength, 44100);
+    e = new Float32Array(bufflength);
+    for(i=0;i<e.length;i++){
+      e[i] = 2 * Math.random() - 1;
+    }
+    b.copyToChannel(e, 0);
+    b.copyToChannel(e, 1);
+
+    M.node('osc').buffer = b;
+
+    track.send('rev_send', rev, 'post', 0.5)
+    track.send('del_send', delay, 'post', 0.2)
+
+
+
+
+    regraph = function(data){
+        var LA = new Array(data.length);
+
+        var lineChartData = {
+        			labels : LA,
+        			datasets : [
+        				{
+        					label: "My First dataset",
+        					fillColor : "rgba(220,220,220,0.2)",
+        					strokeColor : "rgba(220,220,220,1)",
+        					pointColor : "rgba(220,220,220,1)",
+        					pointStrokeColor : "#fff",
+        					pointHighlightFill : "#fff",
+        					pointHighlightStroke : "rgba(220,220,220,1)",
+        					data : data
+        				}
+        			]
+
+        		}
+        var ctx = document.getElementById("canvas").getContext("2d");
+    		new Chart(ctx).Line(lineChartData, {
+    			responsive: true
+    		});
+
+    }
+
+
+    $(document)
+    .on('mousedown','.start',function(){
+        M.node('osc').start()
+    })
+    .on('mouseup','.start',function(){
+        M.node('osc').stop()
+    })/*
+
+    .on('mousedown','.scale1',function(){
+        M.node('fil').curve = null
+    })
+    .on('mousedown','.scale2',function(){
+        curve = M.node('fil').chebyshev(8)
+        M.node('fil').curve = curve;
+        regraph(curve);
+    })
+    .on('mousedown','.scale3',function(){
+        curve = M.node('fil').chebyshev(16)
+        M.node('fil').curve = curve;
+        regraph(curve);
+    })
+    .on('mousedown','.scale4',function(){
+        curve = M.node('fil').chebyshev(32)
+        M.node('fil').curve = curve;
+        regraph(curve);
+    })
+    .on('mousedown','.scale5',function(){
+        curve = M.node('fil').tanh(2)
+        M.node('fil').curve = curve;
+        regraph(curve);
+    })
+    .on('mousedown','.scale6',function(){
+        curve = M.node('fil').tanh(4)
+        M.node('fil').curve = curve;
+        regraph(curve);
+    })
+    .on('mousedown','.scale7',function(){
+        curve = M.node('fil').tanh(8)
+        M.node('fil').curve = curve;
+        regraph(curve);
+    })
+*/
+
+
+    .ready(function(){
+
+      noUiSlider.create(
+        document.getElementById('ampslider'),
+        {orientation: 'vertical', start:0.5, step: 0.1, range: {'min':0,'max':2}, direction: 'rtl'}
+      );
+      document.getElementById('ampslider').noUiSlider.on('update', function(e){ M.node('osc_gain').param('gain', parseFloat(e)) });
+
+    })
+
+
+
+})(window)
+
+
+
+
+  </script>
+  </body>
+</html>
