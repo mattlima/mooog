@@ -365,7 +365,7 @@ With two arguments, the first is taken as the property to get or set. If there's
 second property it's used to set the value. 
 
 > MooogAudioNode( { key: value [, key: value]... [, ramp: rampType:mixed]
-[, at:float ] [, duration:float] [, timeConstant:float], [, cancel:boolean]  } )
+[,&nbsp;at:float ] [,&nbsp;duration:float] [,&nbsp;timeConstant:float], [, cancel:boolean]  } )
 
 
 When passed an object, the properties of the object are used to set values on `this`.
