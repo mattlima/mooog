@@ -1,5 +1,6 @@
-PATH
-  remote: ~/Documents/github/middleman-gh-pages
+GIT
+  remote: git@github.com:mattlima/middleman-gh-pages.git
+  revision: edbceb826328857b00dc79caeaf875137a3fc488
   specs:
     middleman-gh-pages (0.0.3)
       rake (> 0.9.3)
@@ -138,7 +139,7 @@ PLATFORMS
 
 DEPENDENCIES
   middleman (~> 3.3.12)
-  middleman-gh-pages (= 0.0.3)!
+  middleman-gh-pages!
   middleman-livereload (~> 3.1.0)
   pry (= 0.10.1)
   tzinfo-data

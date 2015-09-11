@@ -15,4 +15,4 @@ gem "tzinfo-data", platforms: [:mswin, :mingw, :jruby]
 
 gem "pry", "0.10.1"
 
-gem 'middleman-gh-pages', '0.0.3', :path => '~/Documents/github/middleman-gh-pages'
+gem 'middleman-gh-pages', :git => 'git@github.com:mattlima/middleman-gh-pages.git'
