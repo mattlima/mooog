@@ -6,7 +6,7 @@ M.node( { id: "osc2", node_type: "Oscillator", type: "sawtooth" } )
         M.node( { id: "filter", node_type: "BiquadFilter", frequency: 400 } )
     )
     .chain(
-        M.node( { id: "pre-reverb", node_type: "Gain", gain: 0.4 } )
+        M.node( { id: "pre-reverb", node_type: "Gain", gain: 0.6 } )
     )
     .chain(
         M.node( { id: "reverb", node_type: "Convolver", buffer_source_file: "sound/impulse-responses/st-andrews-church-ortf-shaped.mp3" } )
