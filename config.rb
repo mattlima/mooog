@@ -35,7 +35,7 @@ end
 c = 0
 data.examples.each do |example|
   c += 1
-  proxy example.url, "/#{example.file}.html", locals: example.merge( { ordinal: c } ).symbolize_keys
+  proxy "#{example.url}.html", "/#{example.file}.html", locals: example.merge( { ordinal: c } ).symbolize_keys
 end
 
 ###
@@ -55,7 +55,7 @@ helpers do
   def toc_link(target)
     data.examples.each do |example|
       if( example.url == target || example.name == target )
-        return "/#{example.url}"
+        return "/#{example.url}.html"
       end
     end
     false

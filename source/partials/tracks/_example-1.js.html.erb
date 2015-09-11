@@ -1,0 +1,21 @@
+<% if locals[:new_mooog] %>
+M = new Mooog();
+<% end %>
+M.node( { id: "osc", node_type: "Oscillator", type: "triangle" } )
+    .connect(
+        M.node( { id: "short_delay", node_type: "Delay", delayTime: 0.25 } )
+    )
+    .connect(
+        M.node( { id: "long_delay", node_type: "Delay", delayTime: 0.75 } )
+    )
+
+$(document)
+    .on("mousedown", ".trigger1", function(){
+        M.node("osc").start();
+    })
+    .on("mouseup", ".trigger1", function(){
+        M.node("osc").stop();
+    })
+
+
+

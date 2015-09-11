@@ -1,0 +1,21 @@
+<% if locals[:new_mooog] %>
+M = new Mooog();
+<% end %>
+M.node( { id: "osc2", node_type: "Oscillator", type: "sawtooth" } )
+    .chain(
+        M.node( { id: "filter", node_type: "BiquadFilter", frequency: 400 } )
+    )
+    .chain(
+        M.node( { id: "pre-reverb", node_type: "Gain", gain: 0.4 } )
+    )
+    .chain(
+        M.node( { id: "reverb", node_type: "Convolver", buffer_source_file: "sound/impulse-responses/st-andrews-church-ortf-shaped.mp3" } )
+    )
+
+$(document)
+    .on("mousedown", ".trigger2", function(){
+        M.node("osc2").start();
+    })
+    .on("mouseup", ".trigger2", function(){
+        M.node("osc2").stop();
+    })
