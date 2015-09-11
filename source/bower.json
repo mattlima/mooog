@@ -1,0 +1,14 @@
+{
+  "name": "Mooog examples",
+  "version": "0.0.0",
+  "homepage": "https://github.com/mattlima/mooog",
+  "authors": [
+    "Matt Lima <matt@3-tone.com>"
+  ],
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "foundation": "~5.5.2",
+    "mooog": "https://github.com/mattlima/mooog.git"
+  }
+}

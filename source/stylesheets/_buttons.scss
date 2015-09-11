@@ -1,0 +1,11 @@
+.button, button{
+  @include aller();
+
+  border: 1px solid $primary-color-dark;
+  background-color: $primary-color-light;
+  color: $primary-color-dark;
+  padding: 0.6rem 0.8rem;
+  transition: background-color, color 150ms ease-out;
+  @include hover-dark();
+
+}

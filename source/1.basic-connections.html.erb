@@ -1,0 +1,80 @@
+<div class="row">
+    <div class="small-12 columns">
+
+        <h3>Fan-out with connect()</h3>
+
+        <div class="panel sound radius">
+
+            <div class="row">
+                <div class="small-2 columns">
+                    <button class="radius expand trigger1" >osc.start()</button>
+                </div>
+
+                <div class="small-10 columns">
+                    <%= partial "partials/range_slider", locals: { label: "#short_delay.delayTime", units: "secs", start_val: 0.25, node_target: "short_delay", range: [0.05, 2.0], step: 0.05, param_target: "delayTime", jsid: "slider1" } %>
+
+                    <%= partial "partials/range_slider", locals: { label: "#long_delay.delayTime", units: "secs", start_val: 1.25, node_target: "long_delay", range: [0.05, 2.0], step: 0.05, param_target: "delayTime", jsid: "slider2" } %>
+
+
+
+                </div>
+            </div>
+
+
+
+        </div>
+
+        <p>The <code>connect</code> method returns the source node, which is useful for fanout. It retains the existing connection of the source node to the <code>AudioDestination</code>, so in this example you'll hear the oscillator as well as the delays.
+        </p>
+
+        <pre><code><%= partial 'partials/basic-connections/example-1.js', locals: { new_mooog: true }  %></code></pre>
+
+
+
+
+
+        <h3>Series connections with chain()</h3>
+
+        <div class="panel sound radius">
+
+            <div class="row">
+                <div class="small-2 columns">
+                    <button class="radius expand trigger2" >osc.start()</button>
+                </div>
+
+                <div class="small-10 columns">
+                    <%= partial "partials/range_slider", locals: { label: "#filter.frequency", units: "Hz", start_val: 400, node_target: "filter", range: [400, 4000], step: 25, param_target: "frequency", jsid: "slider3" } %>
+
+                    <%= partial "partials/range_slider", locals: { label: "#pre-reverb.gain", units: "", start_val: 0.4, node_target: "pre-reverb", range: [0, 1.0], step: 0.05, param_target: "gain", jsid: "slider4" } %>
+
+
+
+                </div>
+            </div>
+
+
+
+        </div>
+
+        <p>The <code>chain</code> method returns the destination node and automatically disconnects the source from the <code>AudioDestination</code>, which is useful for effects chains. In this example we also use the <code>buffer_source_file</code> parameter of the Convolver to quickly load an impulse response file. The use of <code>chain()</code> to the Convolver means we don't (and can't) hear any dry signal without making additional connections from the previous node. In most cases using the <%= link_to "Track", toc_link('tracks') %> object's <code>send</code> would be preferable since it gives us more flexibility.
+        </p>
+
+        <pre><code><%= partial 'partials/basic-connections/example-2.js', locals: { new_mooog: true }  %></code></pre>
+
+
+
+
+
+
+
+
+
+        <script>
+<%= partial 'partials/basic-connections/example-1.js', locals: { new_mooog: true }  %>
+<%= partial 'partials/basic-connections/example-2.js', locals: { new_mooog: false }  %>
+        </script>
+
+
+
+    </div>
+</div>

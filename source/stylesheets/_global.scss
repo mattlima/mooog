@@ -1,0 +1,45 @@
+a{
+  color:$primary-color-dark;
+  @include aller-bold();
+}
+
+ol.toc{
+  font-size:20px;
+  margin-left:2rem;
+}
+
+span.supertitle{
+	margin-top:10px;
+}
+
+.panel.sound{
+  background-color: #F6F6F6;
+}
+
+.label{
+  background-color: $primary-color-dark;
+  color: white;
+  @include novecento();
+}
+
+.range-slider.round{
+  margin-bottom:2rem;
+
+  .range-slider-handle{
+    background-color: $primary-color-medium;
+    border:1px solid $primary-color-dark;
+    @include hover-dark();
+  }
+  label{
+    position: absolute;
+    top: -21px;
+    left: 0;
+    font-size: 13px;
+    @include aller-bold();
+    color: $primary-color-dark;
+    span{
+      display:inline-block;
+      margin-left:10px;
+    }
+  }
+}

@@ -26,3 +26,7 @@ node_modules
 
 jasmine_examples
 server.rb
+
+bower_components
+
+*.wav

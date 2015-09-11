@@ -1,1 +1,11 @@
-//= require_tree .
+// require_tree .
+//= require modernizr/modernizr
+//= require jquery/dist/jquery
+//= require foundation/js/foundation/foundation
+//= require foundation/js/foundation/foundation.equalizer
+//= require foundation/js/foundation/foundation.offcanvas
+//= require foundation/js/foundation/foundation.alert
+//= require foundation/js/foundation/foundation.tooltip
+//= require foundation/js/foundation/foundation.slider
+//= require foundation/js/foundation/foundation.topbar
+//= require mooog/dist/mooog

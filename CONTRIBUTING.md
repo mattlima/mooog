@@ -8,6 +8,8 @@ I welcome feedback, bug reports, and code contributions.
 
 Mooog is written in literate coffeescript, so the developer-oriented documentation is inline. 
 
+The examples directory is built with [https://middlemanapp.com/](middleman). 
+
 
 ## Bug reports
 

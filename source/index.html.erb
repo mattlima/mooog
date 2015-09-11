@@ -1,10 +1,18 @@
 ---
-title: Welcome to Middleman
+title: Table of Contents
+layout: toc
 ---
+<div class="row">
+    <div class="small-12 columns">
 
-<div class="welcome">
-  <h1>Middleman is Watching</h1>
-  <p class="doc">
-    <%= link_to "Read Online Documentation", "http://middlemanapp.com/" %>
-  </p><!-- .doc -->
-</div><!-- .welcome -->
+
+
+      <ol class="toc">
+    <% data.examples.each do |example| %>
+
+        <li><%= link_to example.name, example.url %></li>
+
+    <% end %>
+      </ol>
+    </div>
+</div>

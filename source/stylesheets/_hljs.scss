@@ -1,0 +1,94 @@
+/* Atelier-Seaside Comment */
+.hljs-comment {
+  color: #687d68;
+}
+
+/* Atelier-Seaside Red */
+.hljs-variable,
+.hljs-attribute,
+.hljs-tag,
+.hljs-regexp,
+.hljs-name,
+.ruby .hljs-constant,
+.xml .hljs-tag .hljs-title,
+.xml .hljs-pi,
+.xml .hljs-doctype,
+.html .hljs-doctype,
+.css .hljs-id,
+.css .hljs-class,
+.css .hljs-pseudo {
+  color: $hljs-variable;
+}
+
+/* Atelier-Seaside Orange */
+.hljs-number,
+.hljs-preprocessor,
+.hljs-built_in,
+.hljs-literal,
+.hljs-params,
+.hljs-constant {
+  color: $hljs-number;
+}
+
+/* Atelier-Seaside Yellow */
+.ruby .hljs-class .hljs-title,
+.css .hljs-rule .hljs-attribute {
+  color: $hljs-class;
+}
+
+/* Atelier-Seaside Green */
+.hljs-string,
+.hljs-value,
+.hljs-inheritance,
+.hljs-header,
+.ruby .hljs-symbol,
+.xml .hljs-cdata {
+  color: $hljs-string;
+}
+
+/* Atelier-Seaside Aqua */
+.hljs-title,
+.css .hljs-hexcolor {
+  color: $hljs-title;
+}
+
+/* Atelier-Seaside Blue */
+.hljs-function,
+.python .hljs-decorator,
+.python .hljs-title,
+.ruby .hljs-function .hljs-title,
+.ruby .hljs-title .hljs-keyword,
+.perl .hljs-sub,
+.javascript .hljs-title,
+.coffeescript .hljs-title {
+  color: $hljs-function;
+}
+
+/* Atelier-Seaside Purple */
+.hljs-keyword,
+.javascript .hljs-function {
+  color: $hljs-keyword;
+}
+
+.hljs {
+  display: block;
+  overflow-x: auto;
+  background: $hljs-background;
+  color: $hljs-color;
+  padding: 1em;
+  -webkit-text-size-adjust: none;
+}
+
+.coffeescript .javascript,
+.javascript .xml,
+.tex .hljs-formula,
+.xml .javascript,
+.xml .vbscript,
+.xml .css,
+.xml .hljs-cdata {
+  opacity: 0.5;
+}
+
+pre code{
+  margin: 20px 0;
+}

@@ -1,0 +1,7 @@
+<div id="<%= locals[:jsid] %>" class="range-slider round" data-slider="<%= locals[:start_val] %>" data-mooog-node-target="<%= locals[:node_target] %>" data-mooog-param-target="<%= locals[:param_target] %>" data-options="display_selector: #<%= locals[:jsid] %>-val;start:<%= locals[:range][0] %>;end:<%= locals[:range][1] %>;step:<%= locals[:step] %>;">
+  <label><%= locals[:label] %>:<span id="<%= locals[:jsid] %>-val"><%= locals[:start_val] %></span> <%= locals[:units] %></label>
+  <span class="range-slider-handle" role="slider" tabindex="0"></span>
+  <span class="range-slider-active-segment"></span>
+  <input type="hidden">
+</div>
+

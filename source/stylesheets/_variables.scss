@@ -1,0 +1,22 @@
+
+$primary-color-dark: #29a329;
+$primary-color-medium: #b0d0b0;
+$primary-color-light: #e4ebe4;
+
+
+$hljs-background: #f4fbf4;
+$hljs-color: #5e6e5e;
+$hljs-variable: #e6193c;
+$hljs-number: #87711d;
+$hljs-class:#98981b;
+$hljs-string: $primary-color-dark;
+$hljs-title: #1999b3;
+$hljs-function: #3d62f5;
+$hljs-keyword: #ad2bee;
+
+
+@mixin hover-dark(){
+  &:hover, &:focus{
+      background-color: $primary-color-dark;
+  }
+}

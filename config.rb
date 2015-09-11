@@ -1,11 +1,15 @@
+require 'pry'
 ###
 # Compass
 ###
 
-# Change Compass configuration
-# compass_config do |config|
-#   config.output_style = :compact
-# end
+# config.rb
+compass_config do |config|
+  # Require any additional compass plugins here.
+  config.add_import_path "bower_components/foundation/scss"
+
+  config.output_style = :compact
+end
 
 ###
 # Page options, layouts, aliases and proxies
@@ -28,6 +32,12 @@
 # proxy "/this-page-has-no-template.html", "/template-file.html", :locals => {
 #  :which_fake_page => "Rendering a fake page with a local variable" }
 
+c = 0
+data.examples.each do |example|
+  c += 1
+  proxy example.url, "/#{example.file}.html", locals: example.merge( { ordinal: c } ).symbolize_keys
+end
+
 ###
 # Helpers
 ###
@@ -36,16 +46,21 @@
 # activate :automatic_image_sizes
 
 # Reload the browser automatically whenever files change
-# configure :development do
-#   activate :livereload
-# end
+configure :development do
+  activate :livereload
+end
 
 # Methods defined in the helpers block are available in templates
-# helpers do
-#   def some_helper
-#     "Helping"
-#   end
-# end
+helpers do
+  def toc_link(target)
+    data.examples.each do |example|
+      if( example.url == target || example.name == target )
+        return "/#{example.url}"
+      end
+    end
+    false
+  end
+end
 
 set :css_dir, 'stylesheets'
 
@@ -56,19 +71,28 @@ set :images_dir, 'images'
 # Build-specific configuration
 configure :build do
   # For example, change the Compass output style for deployment
-  # activate :minify_css
+  activate :minify_css
+
+  ignore 'bower_components/*'
+  ignore '*.md'
+  ignore 'bower.json'
 
   set :build_dir, 'examples'
 
   # Minify Javascript on build
-  # activate :minify_javascript
+  #activate :minify_javascript
 
   # Enable cache buster
   # activate :asset_hash
 
   # Use relative URLs
-  # activate :relative_assets
+  activate :relative_assets
 
   # Or use a different image path
   # set :http_prefix, "/Content/images/"
+end
+
+after_configuration do
+  @bower_config = JSON.parse(IO.read("#{root}/.bowerrc"))
+  sprockets.append_path File.join "#{root}", @bower_config["directory"]
 end

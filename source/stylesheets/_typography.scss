@@ -1,0 +1,61 @@
+
+/*--------------------- Typography ----------------------------*/
+
+@font-face {
+    font-family: 'aller-light';
+    src: url('../fonts/aller-light.eot');
+    src: url('../fonts/aller-light.eot?#iefix') format('embedded-opentype'),
+         url('../fonts/aller-light.woff') format('woff'),
+         url('../fonts/aller-light.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'aller-bold';
+    src: url('../fonts/aller-bold.eot');
+    src: url('../fonts/aller-bold.eot?#iefix') format('embedded-opentype'),
+         url('../fonts/aller-bold.woff') format('woff'),
+         url('../fonts/aller-bold.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'novecento-bold';
+    src: url('../fonts/novecento-bold.eot');
+    src: url('../fonts/novecento-bold.eot?#iefix') format('embedded-opentype'),
+         url('../fonts/novecento-bold.woff') format('woff'),
+         url('../fonts/novecento-bold.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@mixin novecento(){
+  font-family: 'novecento-bold', sans-serif;
+}
+
+@mixin aller(){
+  font-family: 'aller-light', sans-serif;
+}
+
+@mixin aller-bold(){
+  font-family: 'aller-bold', sans-serif;
+}
+
+
+html, body{
+  font-family: 'aller-light', sans-serif;
+  font-size:95%;
+}
+
+strong{
+  font-family: 'aller-bold', sans-serif;
+}
+
+h1,h2{
+  @include novecento();
+}
+h3,h4,h5,h6{
+  @include aller-bold();
+}
