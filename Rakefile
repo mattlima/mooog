@@ -1,2 +1,1 @@
-require 'jasmine'
-load 'jasmine/tasks/jasmine.rake'
+require 'middleman-gh-pages'
