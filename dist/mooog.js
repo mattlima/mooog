@@ -2,7 +2,8 @@
   var Analyser, AudioBufferSource, BiquadFilter, Convolver, Delay, DynamicsCompressor, Gain, Mooog, MooogAudioNode, Oscillator, StereoPanner, Track, WaveShaper,
     slice = [].slice,
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty;
+    hasProp = {}.hasOwnProperty,
+    bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   MooogAudioNode = (function() {
     function MooogAudioNode() {
@@ -783,6 +784,8 @@
       if (config == null) {
         config = {};
       }
+      this.__start = bind(this.__start, this);
+      this.__stop = bind(this.__stop, this);
       config.node_type = 'Oscillator';
       Oscillator.__super__.constructor.apply(this, arguments);
       this.configure_from(config);
@@ -793,6 +796,7 @@
       }));
       this._is_started = false;
       this._state = 'stopped';
+      this._timeout = false;
       this.define_readonly_property('state', (function(_this) {
         return function() {
           return _this._state;
@@ -800,26 +804,52 @@
       })(this));
     }
 
-    Oscillator.prototype.start = function() {
+    Oscillator.prototype.start = function(time) {
+      if (time == null) {
+        time = 0;
+      }
+      clearTimeout(this._timeout);
       if (this._state === 'playing') {
         return this;
       }
-      this._state = 'playing';
-      if (this._is_started) {
-        this._nodes[1].gain.value = 1.0;
+      if (time === 0) {
+        this.__start(time);
       } else {
-        this._nodes[0].start();
-        this._is_started = true;
+        this._timeout = setTimeout(this.__start, time * 1000);
       }
       return this;
     };
 
-    Oscillator.prototype.stop = function() {
+    Oscillator.prototype.stop = function(time) {
+      if (time == null) {
+        time = 0;
+      }
+      clearTimeout(this._timeout);
       if (this._state === 'stopped') {
         return this;
       }
+      if (time === 0) {
+        this.__stop();
+      } else {
+        this._timeout = setTimeout(this.__stop, time * 1000);
+      }
+      return this;
+    };
+
+    Oscillator.prototype.__stop = function() {
       this._state = 'stopped';
       this._nodes[1].gain.value = 0;
+      return this;
+    };
+
+    Oscillator.prototype.__start = function() {
+      this._state = 'playing';
+      if (this._is_started) {
+        this._nodes[1].gain.value = 1.0;
+      } else {
+        this._nodes[0].start(0);
+        this._is_started = true;
+      }
       return this;
     };
 
