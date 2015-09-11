@@ -23,6 +23,7 @@ node_modules
 /index.html
 
 /examples/scratch
+/source/scratch
 
 jasmine_examples
 server.rb

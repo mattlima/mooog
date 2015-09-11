@@ -76,6 +76,7 @@ configure :build do
   ignore 'bower_components/*'
   ignore '*.md'
   ignore 'bower.json'
+  ignore 'scratch/*'
 
   set :build_dir, 'examples'
 
