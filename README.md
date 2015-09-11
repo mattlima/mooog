@@ -74,7 +74,7 @@ If you're feeling generous, you can throw me some dosh [here.](https://www.paypa
 
 If you want to jump right in, see the examples. They won't run well on the local
 filesystem because of CORS restrictions on AJAX audio file loads, so they're also
-posted  [http://mattlima.github.io/mooog/](on the github project page).
+posted [on the github project page](http://mattlima.github.io/mooog/).
 
 ### Initializing Mooog
 
