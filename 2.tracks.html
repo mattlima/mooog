@@ -16,7 +16,7 @@
   </head>
 
 
-  <body class="x1">
+  <body class="x2">
 
     <div class="row">
         <div class="small-12 columns">
@@ -27,72 +27,7 @@
     <div class="row">
     <div class="small-12 columns">
 
-        <h3>Fan-out with connect()</h3>
-
-        <div class="panel sound radius">
-
-            <div class="row">
-                <div class="small-2 columns">
-                    <button class="radius expand trigger1" >osc.start()</button>
-                </div>
-
-                <div class="small-10 columns">
-                    <div id="slider1" class="range-slider round" data-slider="0.25" data-mooog-node-target="short_delay" data-mooog-param-target="delayTime" data-options="display_selector: #slider1-val;start:0.05;end:2.0;step:0.05;">
-  <label>#short_delay.delayTime:<span id="slider1-val">0.25</span> secs</label>
-  <span class="range-slider-handle" role="slider" tabindex="0"></span>
-  <span class="range-slider-active-segment"></span>
-  <input type="hidden">
-</div>
-
-
-
-                    <div id="slider2" class="range-slider round" data-slider="1.25" data-mooog-node-target="long_delay" data-mooog-param-target="delayTime" data-options="display_selector: #slider2-val;start:0.05;end:2.0;step:0.05;">
-  <label>#long_delay.delayTime:<span id="slider2-val">1.25</span> secs</label>
-  <span class="range-slider-handle" role="slider" tabindex="0"></span>
-  <span class="range-slider-active-segment"></span>
-  <input type="hidden">
-</div>
-
-
-
-
-
-                </div>
-            </div>
-
-
-
-        </div>
-
-        <p>The <code>connect</code> method returns the source node, which is useful for fanout. It retains the existing connection of the source node to the <code>AudioDestination</code>, so in this example you'll hear the oscillator as well as the delays.
-        </p>
-
-        <pre><code>M = new Mooog();
-M.node( { id: "osc", node_type: "Oscillator", type: "triangle" } )
-    .connect(
-        M.node( { id: "short_delay", node_type: "Delay", delayTime: 0.25 } )
-    )
-    .connect(
-        M.node( { id: "long_delay", node_type: "Delay", delayTime: 0.75 } )
-    )
-
-$(document)
-    .on("mousedown", ".trigger1", function(){
-        M.node("osc").start();
-    })
-    .on("mouseup", ".trigger1", function(){
-        M.node("osc").stop();
-    })
-
-
-
-</code></pre>
-
-
-
-
-
-        <h3>Series connections with chain()</h3>
+        <h3>Creating tracks</h3>
 
         <div class="panel sound radius">
 
@@ -129,8 +64,71 @@ $(document)
 
         </div>
 
-        <p>The <code>chain</code> method returns the destination node and automatically disconnects the source from the <code>AudioDestination</code>, which is useful for effects chains. In this example we also use the <code>buffer_source_file</code> parameter of the Convolver to quickly load an impulse response file. The use of <code>chain()</code> to the Convolver means we don't (and can't) hear any dry signal without making additional connections from the previous node. In most cases using the <a href="/tracks.html">Track</a> object's <code>send</code> would be preferable since it gives us more flexibility.
-        </p>
+        <p>Seting up a track TK</p>
+
+        <pre><code>M = new Mooog();
+M.node( { id: "osc", node_type: "Oscillator", type: "triangle" } )
+    .connect(
+        M.node( { id: "short_delay", node_type: "Delay", delayTime: 0.25 } )
+    )
+    .connect(
+        M.node( { id: "long_delay", node_type: "Delay", delayTime: 0.75 } )
+    )
+
+$(document)
+    .on("mousedown", ".trigger1", function(){
+        M.node("osc").start();
+    })
+    .on("mouseup", ".trigger1", function(){
+        M.node("osc").stop();
+    })
+
+
+
+</code></pre>
+
+
+
+
+
+        <h3>Effect sends with tracks</h3>
+
+        <div class="panel sound radius">
+
+            <div class="row">
+                <div class="small-2 columns">
+                    <button class="radius expand trigger2" >osc.start()</button>
+                </div>
+
+                <div class="small-10 columns">
+                    <div id="slider3" class="range-slider round" data-slider="400" data-mooog-node-target="filter" data-mooog-param-target="frequency" data-options="display_selector: #slider3-val;start:400;end:4000;step:25;">
+  <label>#filter.frequency:<span id="slider3-val">400</span> Hz</label>
+  <span class="range-slider-handle" role="slider" tabindex="0"></span>
+  <span class="range-slider-active-segment"></span>
+  <input type="hidden">
+</div>
+
+
+
+                    <div id="slider4" class="range-slider round" data-slider="0.4" data-mooog-node-target="pre-reverb" data-mooog-param-target="gain" data-options="display_selector: #slider4-val;start:0;end:1.0;step:0.05;">
+  <label>#pre-reverb.gain:<span id="slider4-val">0.4</span> </label>
+  <span class="range-slider-handle" role="slider" tabindex="0"></span>
+  <span class="range-slider-active-segment"></span>
+  <input type="hidden">
+</div>
+
+
+
+
+
+                </div>
+            </div>
+
+
+
+        </div>
+
+        <p>Delay and reverb sends TK </p>
 
         <pre><code>M = new Mooog();
 M.node( { id: "osc2", node_type: "Oscillator", type: "sawtooth" } )
