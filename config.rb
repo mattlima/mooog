@@ -55,7 +55,7 @@ helpers do
   def toc_link(target)
     data.examples.each do |example|
       if( example.url == target || example.name == target )
-        return "/#{example.url}.html"
+        return "#{example.url}.html"
       end
     end
     false
