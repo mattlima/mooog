@@ -364,8 +364,8 @@ jQuery-style getter/setter that also works on `AudioParam` properties. Signature
 With two arguments, the first is taken as the property to get or set. If there's a 
 second property it's used to set the value. 
 
-> MooogAudioNode( { key: value [, key: value]... 
-[, ramp: rampType:mixed] [, at:float ] [, duration:float] [, timeConstant:float], [, cancel:boolean]  } )
+> MooogAudioNode( { key: value [, key: value]... [, ramp: rampType:mixed]
+[, at:float ] [, duration:float] [, timeConstant:float], [, cancel:boolean]  } )
 
 
 When passed an object, the properties of the object are used to set values on `this`.
