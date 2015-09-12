@@ -83,7 +83,7 @@ It takes an optional configuration object with the following properties:
 
 - `debug`: Output debugging messages to the console. *Default: false*
 - `default_gain`: `Gain` objects that are initiated will have their gain automatically set to this value. *Default: 0.5*
-- `default_ramp_type`: `adsr` envelopes will be produced using this type of curve. *Default: 'exponential'*
+- `default_ramp_type`: `adsr` envelopes will be produced using this type of curve ('linear or 'expo'). *Default: 'expo'*
 - `default_send_type`: For sends from `Track` objects. *Default: 'post'*
 - `periodic_wave_length`: The `PeriodicWave` generator functions calculate up to this many partials. *Default: 2048*
 - `curve_length`: The `WaveShaper` curve generator functions produce `Float32Array`s of this length. *Default: 65536*

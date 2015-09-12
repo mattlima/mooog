@@ -30,7 +30,7 @@ object (`AudioContext` or `webkitAudioContext`)
         @config =
           debug: false
           default_gain: 0.5
-          default_ramp_type: 'exponential'
+          default_ramp_type: 'expo'
           default_send_type: 'post'
           periodic_wave_length: 2048
           curve_length: 65536
