@@ -518,9 +518,9 @@ used in place of actual zero, which will throw errors when passed to
         times[1] ||= _0
         times[2] ||= _0 if times.length > 2
         times[3] ||= _0 if times.length > 3
-        config.ramp_type ?= @_instance.config.default_ramp_type
+        config.ramp ?= @_instance.config.default_ramp_type
         #todo: allow ramp_type to be an array with different values for each stage
-        switch config.ramp_type
+        switch config.ramp
           when 'linear' then ramp = param.linearRampToValueAtTime.bind param
           when 'expo' then ramp = param.exponentialRampToValueAtTime.bind param
         

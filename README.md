@@ -242,7 +242,7 @@ envelope will be an ADS envelope (useful if you're responding to user input or t
 - a: The final value of the parameter at the end of the attack stage. *Defaults to 1*
 - s: The value of the parameter at the end of the delay stage (or attack stage, 
 if delay is omitted), to be held until the beginning of the release stage. *Defaults to 1*  
-- ramp_type: 'linear' or 'expo', determines the ramping function to use. *Defaults to the `default_ramp_type`
+- ramp: 'linear' or 'expo', determines the ramping function to use. *Defaults to the `default_ramp_type`
 property of the Mooog config object*
 
 A very small number `fake_zero` is used in place of actual zero if given as the `base`, `a`, or `s`

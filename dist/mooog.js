@@ -539,10 +539,10 @@
       if (times.length > 3) {
         times[3] || (times[3] = _0);
       }
-      if (config.ramp_type == null) {
-        config.ramp_type = this._instance.config.default_ramp_type;
+      if (config.ramp == null) {
+        config.ramp = this._instance.config.default_ramp_type;
       }
-      switch (config.ramp_type) {
+      switch (config.ramp) {
         case 'linear':
           ramp = param.linearRampToValueAtTime.bind(param);
           break;
