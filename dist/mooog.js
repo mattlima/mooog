@@ -901,7 +901,7 @@
     }
 
     Track.prototype.send = function(id, dest, pre, gain) {
-      var source;
+      var new_send, source;
       if (pre == null) {
         pre = this._instance.config.default_send_type;
       }
@@ -912,13 +912,16 @@
         return this._sends[id];
       }
       source = pre === 'pre' ? this._nodes[this._nodes.length - 1] : this._gain_stage;
-      gain = this._sends[id] ? this._sends[id] : new Gain(this._instance, {
+      if (this._sends[id] != null) {
+        return this._sends[id];
+      }
+      this._sends[id] = new_send = new Gain(this._instance, {
         connect_to_destination: false,
         gain: gain
       });
-      source.connect(this.to(gain));
-      gain.connect(this.to(dest));
-      return gain;
+      source.connect(this.to(new_send));
+      new_send.connect(this.to(dest));
+      return new_send;
     };
 
     return Track;

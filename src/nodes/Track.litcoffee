@@ -43,12 +43,11 @@ Creates a send to another `Track` object.
         gain = @_instance.config.default_gain) ->
         return @_sends[id] unless dest?
         source = if (pre is 'pre') then @_nodes[@_nodes.length - 1] else @_gain_stage
-        gain = if @_sends[id] then @_sends[id] else new Gain(
-          @_instance, { connect_to_destination: false, gain: gain }
-        )
-        source.connect @to gain
-        gain.connect @to dest
-        gain
+        return @_sends[id] if @_sends[id]?
+        @_sends[id] = new_send = new Gain @_instance, { connect_to_destination: false, gain: gain }
+        source.connect @to new_send
+        new_send.connect @to dest
+        new_send
         
       
       
