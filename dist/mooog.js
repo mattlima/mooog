@@ -436,7 +436,7 @@
               case "linearRampToValueAtTime":
               case "exponentialRampToValueAtTime":
                 if (from_now) {
-                  this[key].setValueAtTime(val, this.context.currentTime);
+                  this[key].setValueAtTime(this[key].value, this.context.currentTime);
                 }
                 this[key][rampfun](val, this.context.currentTime + at);
                 break;

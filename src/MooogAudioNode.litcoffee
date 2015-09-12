@@ -426,7 +426,7 @@ See [https://jsfiddle.net/5xqhwzwu/1/](https://jsfiddle.net/5xqhwzwu/). See the
               val = new Float32Array val if val instanceof Array
               switch rampfun
                 when "linearRampToValueAtTime", "exponentialRampToValueAtTime"
-                  @[key].setValueAtTime(val, @context.currentTime) if from_now
+                  @[key].setValueAtTime(@[key].value, @context.currentTime) if from_now
                   @[key][rampfun] val, @context.currentTime + at
                 when "setValueAtTime"
                   @[key][rampfun] val, @context.currentTime + at
