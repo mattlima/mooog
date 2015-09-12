@@ -1,0 +1,26 @@
+<% if locals[:new_mooog] %>
+M = new Mooog();
+<% end %>
+M.track( "osc",
+    { id: "saw", node_type: "Oscillator", type: "sawtooth" },
+    { id: "filter", node_type: "BiquadFilter", frequency: 300, Q: 30 },
+    { id: "amplitude", node_type: "Gain", gain: 0 }
+);
+M.node('saw').start();
+
+$(document)
+    .on("mousedown", ".adsr1", function(){
+        M.node("filter").adsr( "frequency", { base: 300, a: 10000, s:2500, times: [0.5, 0.5, 0, 3] } );
+        M.node("amplitude").adsr( "gain", { base: 0, a: 1, s: 0.7, times: [0.1, 0.9, 0, 3] } );
+    })
+    .on("mousedown", ".adsr2", function(){
+        M.node("filter").adsr( "frequency", { base: 300, a: 10000, s:2500, times: [0.5, 0.5] } );
+        M.node("amplitude").adsr( "gain", { base: 0, a: 1, s: 0.7, times: [0.1, 0.9] } );
+    })
+    .on("mouseup", ".adsr2", function(){
+        M.node("filter").param( { frequency: 300, at: 3, ramp: "expo", from_now: true } );
+        M.node("amplitude").param( { gain: 0, at: 3, ramp: "expo", from_now: true } );
+    })
+
+
+

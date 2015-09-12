@@ -7,6 +7,10 @@ a{
   @include aller-bold();
 }
 
+.noMarginTop{
+  margin-top:0;
+}
+
 ol.toc{
   font-size:20px;
   margin-left:2rem;

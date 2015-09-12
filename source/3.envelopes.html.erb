@@ -1,0 +1,55 @@
+<div class="row">
+    <div class="small-12 columns">
+
+        <h3>ADSR</h3>
+
+        <div class="row">
+            <div class="small-12 medium-3 columns">
+                <fieldset class="panel sound radius noMarginTop">
+
+                <legend>Oscillator#saw</legend>
+
+                <div class="small-12  columns">
+                    <button class="radius expand adsr1" >Complete ADSR</button>
+                    <button class="radius expand adsr2" >ADS with R on mouseup</button>
+                </div>
+
+                </fieldset>
+            </div>
+            <div class="small-12 medium-9 columns">
+                  <p>Parameter control envelopes are a fundamental part of electronic sound production. Mooog's <code>adsr()</code> method allows
+          you to easily apply the traditional A(ttack) D(elay) S(ustain) R(elease) envelope to any <code>AudioParam</code>. You
+          specify a base value, a peak attack value, a sustain value, and an array of durations for the phases of the envelope.</p>
+              <ul class="disc">
+                  <li>4 values produce a complete ADSR envelope</li>
+                  <li>3 values produce a simpler ASR envelope</li>
+                  <li>If you're triggering sounds based on user input then you can give a two-value <code>times</code> array and
+                  only the attack, delay, and sustain portions of the envelope will be produced. You'll then need to use one of
+                  the other ramping functions to terminate the envelope when appropriate (remembering to set <code>from_now:
+                  true</code> or the ramps will be calculated beginning at the previously scheduled event instead of the time
+                  you call<code>param()</code>.
+                  </li>
+              </ul>
+
+            </div>
+
+        </div>
+
+
+
+
+        <pre><code><%= partial 'partials/envelopes/example-1.js', locals: { new_mooog: true }  %></code></pre>
+
+
+
+
+
+
+        <script>
+<%= partial 'partials/envelopes/example-1.js', locals: { new_mooog: true }  %>
+        </script>
+
+
+
+    </div>
+</div>
