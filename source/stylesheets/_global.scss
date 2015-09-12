@@ -1,3 +1,7 @@
+.row{
+  max-width: 80rem;
+}
+
 a{
   color:$primary-color-dark;
   @include aller-bold();
@@ -20,6 +24,16 @@ span.supertitle{
   background-color: $primary-color-dark;
   color: white;
   @include novecento();
+}
+
+fieldset.sound{
+  legend{
+    @include aller-bold();
+    @include radius();
+    background-color: $primary-color-dark;
+    color: white;
+    padding:0.2rem 0.7rem;
+  }
 }
 
 .range-slider.round{

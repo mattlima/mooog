@@ -1,20 +1,27 @@
 <% if locals[:new_mooog] %>
 M = new Mooog();
 <% end %>
-M.node( { id: "osc", node_type: "Oscillator", type: "triangle" } )
-    .connect(
-        M.node( { id: "short_delay", node_type: "Delay", delayTime: 0.25 } )
-    )
-    .connect(
-        M.node( { id: "long_delay", node_type: "Delay", delayTime: 0.75 } )
-    )
+M.track( "balafon",
+    { id: "ding", node_type: "AudioBufferSource", buffer_source_file: "sound/balafon1.mp3", loop: true },
+    { id: "compressor", node_type: "DynamicsCompressor", threshold: -30, ratio: 50 } //gross compression to demonstrate automatic chaining
+);
+M.track( "delay",
+    { node_type: "Delay", delayTime: 0.76, feedback: 0.2 }
+);
+M.track( "reverb",
+    { node_type: "Convolver", buffer_source_file: "sound/impulse-responses/st-andrews-church-ortf-shaped.mp3" }
+);
+
+// track.send( id, destination, pre/post, initial_gain )
+M.track("balafon").send( 'delay_send', M.track('delay'), 'post', 0.5);
+M.track("balafon").send( 'reverb_send', M.track('reverb'), 'pre', 0.25);
 
 $(document)
-    .on("mousedown", ".trigger1", function(){
-        M.node("osc").start();
+    .on("mousedown", ".ding.start", function(){
+        M.node("ding").start();
     })
-    .on("mouseup", ".trigger1", function(){
-        M.node("osc").stop();
+    .on("mousedown", ".ding.stop", function(){
+        M.node("ding").stop();
     })
 
 

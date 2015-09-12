@@ -1,66 +1,77 @@
 <div class="row">
     <div class="small-12 columns">
 
-        <h3>Creating tracks</h3>
+        <h3>Creating tracks and sends</h3>
 
-        <div class="panel sound radius">
+        <div class="row">
+            <div class="small-12 columns">
+                <fieldset class="panel sound radius">
 
-            <div class="row">
-                <div class="small-2 columns">
-                    <button class="radius expand trigger2" >osc.start()</button>
+                <legend>Track#balafon</legend>
+
+                <div class="small-12 medium-2 columns">
+                    <button class="radius expand ding start" >ding.start()</button>
+                    <button class="radius expand ding stop" >ding.stop()</button>
                 </div>
 
-                <div class="small-10 columns">
-                    <%= partial "partials/range_slider", locals: { label: "#filter.frequency", units: "Hz", start_val: 400, node_target: "filter", range: [400, 4000], step: 25, param_target: "frequency", jsid: "slider3" } %>
-
-                    <%= partial "partials/range_slider", locals: { label: "#pre-reverb.gain", units: "", start_val: 0.4, node_target: "pre-reverb", range: [0, 1.0], step: 0.05, param_target: "gain", jsid: "slider4" } %>
+                <div class="small-12 medium-5 columns ">
+                    <%= partial "partials/range_slider", locals: { label: "Balafon Pan", units: "", start_val: 0, node_target: "balafon", range: [-1, 1], step: 0.05, param_target: "pan", jsid: "balafon-pan" } %>
 
 
-
+                    <%= partial "partials/range_slider", locals: { label: "Balafon Gain", units: "", start_val: 0.5, node_target: "balafon", range: [0, 1], step: 0.05, param_target: "gain", jsid: "balafon-gain" } %>
                 </div>
+
+                <div class="small-12 medium-5 columns ">
+                    <%= partial "partials/range_slider", locals: { label: "Delay send level", units: "", start_val: 0.5, node_target: "balafon", range: [0, 1], step: 0.05, param_target: "delay_send", target_type: "send", jsid: "balafon-delay-send" } %>
+
+                    <%= partial "partials/range_slider", locals: { label: "Reverb send level", units: "", start_val: 0.25, node_target: "balafon", range: [0, 1], step: 0.05, param_target: "reverb_send", target_type: "send", jsid: "balafon-reverb-send" } %>
+                </div>
+
+
+                </fieldset>
             </div>
+            <div class="small-6 columns">
+                <fieldset class="panel sound radius">
+
+                <legend>Track#delay</legend>
+
+
+                <div class="small-12 columns ">
+                    <%= partial "partials/range_slider", locals: { label: "Delay Pan", units: "", start_val: 0, node_target: "delay", range: [-1, 1], step: 0.05, param_target: "pan", jsid: "delay-pan" } %>
+
+
+                    <%= partial "partials/range_slider", locals: { label: "Delay Gain", units: "", start_val: 0.5, node_target: "delay", range: [0, 1], step: 0.05, param_target: "gain", jsid: "delay-gain" } %>
+                </div>
 
 
 
+                </fieldset>
+            </div>
+            <div class="small-6 columns">
+                <fieldset class="panel sound radius">
+
+                <legend>Track#reverb</legend>
+
+
+                <div class="small-12 columns ">
+                    <%= partial "partials/range_slider", locals: { label: "Reverb Pan", units: "", start_val: 0, node_target: "reverb", range: [-1, 1], step: 0.05, param_target: "pan", jsid: "reverb-pan" } %>
+
+
+                    <%= partial "partials/range_slider", locals: { label: "Reverb Gain", units: "", start_val: 0.5, node_target: "reverb", range: [0, 1], step: 0.05, param_target: "gain", jsid: "reverb-gain" } %>
+                </div>
+
+
+
+                </fieldset>
+            </div>
         </div>
 
-        <p>Seting up a track TK</p>
+
+        <p>In addition to <code>connect()</code> and <code>chain()</code>, Mooog provides a <code>Track</code> object which is a special node that includes a pan/gain stage and a <code>send()</code> method that routes audio to another track, pre- or post-fader. The track object takes a string id as its first argument followed by one or more objects to define the nodes of its internal chain.</p>
+        <p>In this example, we've set up 3 Track objects: an AudioBuffer to play a sound, and two effects tracks for delay (sent post-fader) and a reverb (sent pre-fader). Since the returns are also <code>Track</code> objects, they have their own gain and pan controls.</p>
+        <p>In the code below, the slider change events are omitted for brevity. Track sends are just <code>Gain</code> objects so changing send levels after init is simply: <code>M.track("balafon").send("delay_send").param("gain", new_gain_value);</code></p>
 
         <pre><code><%= partial 'partials/tracks/example-1.js', locals: { new_mooog: true }  %></code></pre>
-
-
-
-
-
-        <h3>Effect sends with tracks</h3>
-
-        <div class="panel sound radius">
-
-            <div class="row">
-                <div class="small-2 columns">
-                    <button class="radius expand trigger2" >osc.start()</button>
-                </div>
-
-                <div class="small-10 columns">
-                    <%= partial "partials/range_slider", locals: { label: "#filter.frequency", units: "Hz", start_val: 400, node_target: "filter", range: [400, 4000], step: 25, param_target: "frequency", jsid: "slider3" } %>
-
-                    <%= partial "partials/range_slider", locals: { label: "#pre-reverb.gain", units: "", start_val: 0.4, node_target: "pre-reverb", range: [0, 1.0], step: 0.05, param_target: "gain", jsid: "slider4" } %>
-
-
-
-                </div>
-            </div>
-
-
-
-        </div>
-
-        <p>Delay and reverb sends TK </p>
-
-        <pre><code><%= partial 'partials/tracks/example-2.js', locals: { new_mooog: true }  %></code></pre>
-
-
-
 
 
 
@@ -69,7 +80,6 @@
 
         <script>
 <%= partial 'partials/tracks/example-1.js', locals: { new_mooog: true }  %>
-<%= partial 'partials/tracks/example-2.js', locals: { new_mooog: false }  %>
         </script>
 
 

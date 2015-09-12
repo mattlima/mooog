@@ -1,0 +1,33 @@
+<% if locals[:new_mooog] %>
+M = new Mooog({debug:true});
+<% end %>
+M.node( "osc", "Oscillator" )
+    .chain(
+        M.node( { node_type: "Gain", gain: 0.5 } ) //don"t blow any speakers
+    );
+
+$(document)
+    .on("mousedown", ".trigger1", function(){
+        M.node("osc").start();
+    })
+    .on("mousedown", ".trigger2", function(){
+        M.node("osc").stop();
+    })
+    .on("click", "[data-waveform]", function(e){
+        M.node("osc").param( "type", $(this).data("waveform") );
+    })
+    .on("change.fndtn.slider", "#freq-slider", function(e){
+        val = $("#freq-slider").attr('data-slider')
+        M.node( "osc" ).param( "frequency", val )
+    })
+    .on("change.fndtn.slider", "#detune-slider", function(e){
+        val = $("#detune-slider").attr('data-slider')
+        M.node( "osc" ).param( "detune", val )
+    })
+    .on("click", ".reset1", function(){
+        M.node("osc").param( { type: 'sine', frequency: 440, detune: 0 } );
+        $("#detune-slider").foundation('slider', 'set_value', 0);
+        $("#freq-slider").foundation('slider', 'set_value', 440);
+    })
+
+

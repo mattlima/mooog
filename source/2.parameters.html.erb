@@ -1,0 +1,136 @@
+<div class="row">
+    <div class="small-12 columns">
+
+        <h3>The param() method</h3>
+
+        <div class="panel sound radius">
+
+            <div class="row">
+                <div class="small-2 columns">
+                    <button class="radius expand trigger1" >osc.start()</button>
+                </div>
+
+                <div class="small-10 columns">
+                    <%= partial "partials/range_slider", locals: { label: "M.node(\"osc\").param( \"frequency\", ", units: ");", start_val: 440, node_target: "osc", range: [200, 800], step: 1, param_target: "frequency", jsid: "freq-slider" } %>
+                </div>
+            </div>
+            <div class="row">
+                <div class="small-2 columns">
+                    <button class="radius expand trigger2" >osc.stop()</button>
+                </div>
+                <div class="small-5 columns">
+                    <%= partial "partials/range_slider", locals: { label: "M.node(\"osc\").param(\"detune\", ", units: ");", start_val: 0, node_target: "osc", range: [-100, 100], step: 1, param_target: "detune", jsid: "detune-slider" } %>
+                </div>
+                <div class="small-5 columns">
+                    <ul class="button-group even-4 round">
+                      <li><a href="#" class="button" data-waveform="sine">Sine</a></li>
+                      <li><a href="#" class="button" data-waveform="triangle">Triangle</a></li>
+                      <li><a href="#" class="button" data-waveform="square">Square</a></li>
+                      <li><a href="#" class="button" data-waveform="sawtooth">Sawtooth</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="row">
+                <div class="small-12 columns">
+                    <button class="radius expand reset1">M.node("osc").param( { type: "sine", frequency: 440, detune: 0 } )</button>
+                </div>
+            </div>
+
+
+
+        </div>
+
+        <p>The <code>param()</code> method serves as a common interface to all the underlying AudioNode properties, whether scalar, enumerated, or AudioParams. The syntax will be familiar to anyone using jQuery.</p>
+
+        <pre><code><%= partial "partials/parameters/example-1.js", locals: { new_mooog: true }  %></code></pre>
+
+
+
+
+
+        <h3>Scheduling parameter changes</h3>
+
+        <div class="panel sound radius">
+
+            <div class="row">
+                <div class="small-6 columns">
+                    <button class="radius expand trigger3" >osc2.start()</button>
+                </div>
+                <div class="small-6 columns">
+                    <button class="radius expand trigger4" >osc2.stop()</button>
+                </div>
+            </div>
+            <div class="row">
+                <div class="small-12 columns">
+
+
+                    <button class="radius expand freq" >M.node("osc2").param("frequency", 200);</button>
+                    <button class="radius expand param1" >M.node("osc2").param({"frequency":800, at: 1});</button>
+                    <button class="radius expand param2" >M.node("osc2").param({"frequency":800, "ramp": "linear", at: 3});</button>
+                    <button class="radius expand param3" >M.node("osc2").param({"frequency":800, "ramp": "expo", at: 3});</button>
+                    <button class="radius expand param4" >M.node("osc2").param({"frequency":[300, 400, 500, 800], "ramp": "curve", at: 2, duration: 2});</button>
+                    <button class="radius expand param5" >M.node("osc2").param({"frequency":800, "ramp": "expo", at: 2, timeConstant: 2});</button>
+
+
+
+                </div>
+            </div>
+
+
+
+        </div>
+
+        <p>The scheduling methods of the <code>AudioParam</code> API are all accessible through additional properties of the <code>param()</code> argument. See the <a href="https://developer.mozilla.org/en-US/docs/Web/API/AudioParam">AudioParam docs</a> for more information. Mooog runs <code>cancelScheduledValues()</code> for consistency unless you explicity add <code>cancel: true</code> to the argument.</p>
+        <table>
+          <thead>
+            <tr>
+              <th>AudioParam native call</th>
+              <th>Mooog equivalent</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>AudioParam.setValueAtTime(val, time)</code></td>
+              <td><code>param( { AudioParamName: val, at: time } )</code></td>
+            </tr>
+            <tr>
+              <td><code>AudioParam.linearRampToValueAtTime(val, time)</code></td>
+              <td><code>param( { AudioParamName: val, at: time, ramp: "linear" } )</code></td>
+            </tr>
+            <tr>
+              <td><code>AudioParam.exponentialRampToValueAtTime(val, time)</code></td>
+              <td><code>param( { AudioParamName: val, at: time, ramp: "expo" } )</code></td>
+            </tr>
+            <tr>
+              <td><code>AudioParam.setValueCurveAtTime(valueArray, time, duration)</code>*</td>
+              <td><code>param( { AudioParamName: valueArray, at: time, ramp: "curve", duration: duration  } )</code></td>
+            </tr>
+            <tr>
+              <td><code>AudioParam.setTargetAtTime(val, startTime, timeConstant)</code></td>
+              <td><code>param( { AudioParamName: val, at: time, ramp: "expo", timeConstant: timeConstant } )</code></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p>*The rhythmic irregularity of the frequency progression produced by the <code>setValueCurveAtTime()</code> method is due to the nearest-value interpolation algorithm it uses. The function is meant for much larger arrays of values describing smooth curves.</p>
+
+
+        <pre><code><%= partial "partials/parameters/example-2.js", locals: { new_mooog: true }  %></code></pre>
+
+
+
+
+
+
+
+
+
+        <script>
+<%= partial "partials/parameters/example-1.js", locals: { new_mooog: true }  %>
+<%= partial "partials/parameters/example-2.js", locals: { new_mooog: false }  %>
+        </script>
+
+
+
+    </div>
+</div>

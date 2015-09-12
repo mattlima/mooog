@@ -1,0 +1,34 @@
+<% if locals[:new_mooog] %>
+M = new Mooog();
+<% end %>
+M.node({id:"osc2", node_type:"Oscillator" })
+    .chain(
+        M.node( { node_type: "Gain", gain: 0.5 } )
+    );
+
+
+$(document)
+    .on("mousedown",".trigger3",function(){
+        M.node("osc2").start();
+    })
+    .on("mousedown",".trigger4",function(){
+        M.node("osc2").stop();
+    })
+    .on("mousedown",".freq",function(){
+        M.node("osc2").param({frequency: 200});
+    })
+    .on("mousedown",".param1",function(){
+        M.node("osc2").param({frequency: 800, at: 1 });
+    })
+    .on("mousedown",".param2",function(){
+        M.node("osc2").param({frequency: 800, ramp: "linear", at: 2});
+    })
+    .on("mousedown",".param3",function(){
+        M.node("osc2").param({frequency: 800, ramp: "expo", at: 2});
+    })
+    .on("mousedown",".param4",function(){
+        M.node("osc2").param({frequency: [300, 400, 500, 800], ramp: "curve", at: 2, duration: 2});
+    })
+    .on("mousedown",".param5",function(){
+        M.node("osc2").param({frequency: 800, ramp: "expo", at: 2, timeConstant: 2});
+    });
