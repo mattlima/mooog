@@ -416,10 +416,10 @@
     };
 
     MooogAudioNode.prototype.get_set = function(key, val, rampfun, at, cancel, extra) {
-      this.debug("ramp " + key + " to " + val + " via " + rampfun + " at " + at + " cancel " + cancel + ", extra " + extra);
       if (this[key] == null) {
         return;
       }
+      this.debug("ramp " + key + " to " + val + " via " + rampfun + " at " + at + " cancel " + cancel + ", extra " + extra);
       switch (this.__typeof(this[key])) {
         case "AudioParam":
           if (val != null) {
@@ -896,7 +896,7 @@
       this._gain_stage.connect(this._destination);
       this._destination = this._pan_stage;
       this.gain = this._gain_stage.gain;
-      this.pan = this._gain_stage.gain;
+      this.pan = this._pan_stage.pan;
       this.zero_node_setup(config);
     }
 

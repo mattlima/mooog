@@ -25,7 +25,7 @@ via `gain` and `pan` methods exposed on the track object.
         @_gain_stage.connect @_destination
         @_destination = @_pan_stage
         @gain = @_gain_stage.gain
-        @pan = @_gain_stage.gain
+        @pan = @_pan_stage.pan
         
         @zero_node_setup config
       
