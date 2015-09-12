@@ -382,12 +382,13 @@
     };
 
     MooogAudioNode.prototype.param = function(key, val) {
-      var at, cancel, duration, extra, k, rampfun, ref, ref1, ref2, ref3, ref4, timeConstant, v;
+      var at, cancel, duration, extra, from_now, k, rampfun, ref, ref1, ref2, ref3, ref4, timeConstant, v;
       if (this.__typeof(key) === 'object') {
         at = parseFloat(key.at) || 0;
         timeConstant = key.timeConstant != null ? parseFloat(key.timeConstant) : false;
         duration = key.duration ? parseFloat(key.duration) : false;
         cancel = typeof key.cancel !== 'undefined' ? key.cancel : true;
+        from_now = !!key.from_now;
         this.debug("keyramp", key.ramp);
         switch (key.ramp) {
           case "linear":
@@ -408,18 +409,17 @@
         }
         for (k in key) {
           v = key[k];
-          this.get_set(k, v, rampfun, at, cancel, extra);
+          this.get_set(k, v, rampfun, at, cancel, from_now, extra);
         }
         return this;
       }
       return this.get_set(key, val, 'setValueAtTime', 0, true);
     };
 
-    MooogAudioNode.prototype.get_set = function(key, val, rampfun, at, cancel, extra) {
+    MooogAudioNode.prototype.get_set = function(key, val, rampfun, at, cancel, from_now, extra) {
       if (this[key] == null) {
         return;
       }
-      this.debug("ramp " + key + " to " + val + " via " + rampfun + " at " + at + " cancel " + cancel + ", extra " + extra);
       switch (this.__typeof(this[key])) {
         case "AudioParam":
           if (val != null) {
@@ -435,6 +435,11 @@
             switch (rampfun) {
               case "linearRampToValueAtTime":
               case "exponentialRampToValueAtTime":
+                if (from_now) {
+                  this[key].setValueAtTime(val, this.context.currentTime);
+                }
+                this[key][rampfun](val, this.context.currentTime + at);
+                break;
               case "setValueAtTime":
                 this[key][rampfun](val, this.context.currentTime + at);
                 break;
@@ -541,7 +546,7 @@
         case 'linear':
           ramp = param.linearRampToValueAtTime.bind(param);
           break;
-        case 'exponential':
+        case 'expo':
           ramp = param.exponentialRampToValueAtTime.bind(param);
       }
       if (times.length === 2) {

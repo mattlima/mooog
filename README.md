@@ -184,14 +184,16 @@ Like jQuery, multiple parameters can be set in the same param call:
 
 `osc.param( {frequency: 800, type: 'sawtooth'} );`
 
-Internally, `param()` actually calls `AudioParam.cancelScheduledValues()` and then uses `AudioParam.setValueAtTime(value, currentTime)` by default in order to ensure consistent behavior.
+Internally, `param()` actually calls `AudioParam.cancelScheduledValues()` and then uses `AudioParam.setValueAtTime(value, currentTime)` 
+by default in order to ensure consistent behavior.
 Put another way, using `param()` will **always** have the desired effect regardless of whether
-other value changes have been scheduled on that parameter.  
+other value changes have been scheduled on that parameter, unlike acting on `Audioparam.value` directly.
 
 #### Parameters in time
 The `AudioParam` API provides 5 different methods for scheduling parameter changes. `param()` can 
 be used to call any of them by adding properties to the object submitted. Here are examples using
-an oscillator's `frequency` parameter:
+an oscillator's `frequency` parameter. Note the use of `from_now` which causes a call to `setValueAtTime`
+at the currentTime if used with linear or exponential ramp functions.
 
 - Set `frequency` to 800 immediately. (Use `setValueAtTime`)  
 `osc.param( {frequency: 800} );`
@@ -199,25 +201,27 @@ an oscillator's `frequency` parameter:
 - Set `frequency` to 800, 4 seconds from now. (Use `setValueAtTime`)  
 `osc.param( {frequency: 800, at: 4} );`
 
-- Set `frequency` to 200, 4 seconds after the previous parameter change.
-(Use `setValueAtTime` without first calling `cancelScheduledValues`)  
-`osc.param( {frequency: 800, at: 4, cancel: false} );`
-
-- Ramp `frequency` from current value linearly, to 800, arriving 4 seconds from now.
-(Use `linearRampToValueAtTime`)  
+- Ramp `frequency` linearly to 800, starting after the last scheduled value change (or now, if 
+there isn't one) and arriving 4 seconds from now. (Use `linearRampToValueAtTime`)  
 `osc.param( {frequency: 800, at: 4, ramp: 'linear'} );`
 
-- Ramp `frequency` from current value exponentially, to 800, arriving 4 seconds from now.
+- Ramp `frequency` linearly to 800, starting now and arriving 4 seconds from now.
+`osc.param( {frequency: 800, at: 4, ramp: 'linear', from_now: true} );`
+
+- Ramp `frequency` exponentially to 800 over 4 seconds, starting now.
 (Use `exponentialRampToValueAtTime`)  
-`osc.param( {frequency: 800, at: 4, ramp: 'expo'} );`
+`osc.param( {frequency: 800, at: 4, ramp: 'expo', from_now: true } );`
 
 - Set `frequency` to asymptotically approach 800, beginning 4 seconds from now. 
 (Use `setTargetAtTime`)  
 `osc.param( {frequency: 800, at: 4, ramp: 'expo', timeConstant: 1.5} );`
 
-- Set `frequency` to values 300, 550, 900, 800 over a period of 2 seconds. 
+- Set `frequency` to values 300, 550, 900, 800 over a period of 2 seconds.* 
 (Use `setValueCurveAtTime`)  
-`osc.param( {frequency: [300, 550, 900, 800], duration: 2, ramp: 'curve'} );`
+`osc.param( {frequency: [300, 550, 900, 800], duration: 2, ramp: 'curve'} );`  
+*The rhythmic irregularity of the frequency progression produced by the `setValueCurveAtTime()`
+method is due to the nearest-value interpolation algorithm it uses. The function is meant for much larger arrays 
+of values describing smooth curves.
 
 The `cancel` and `at` parameters can be used with any of the `ramp` types. 
 
@@ -237,7 +241,9 @@ The release stage can be suppressed by passing an array of 2 elements, in which 
 envelope will be an ADS envelope (useful if you're responding to user input or the duration of the note cannot be predetermined.)
 - a: The final value of the parameter at the end of the attack stage. *Defaults to 1*
 - s: The value of the parameter at the end of the delay stage (or attack stage, 
-if delay is omitted), to be held until the beginning of the release stage. *Defaults to 1*
+if delay is omitted), to be held until the beginning of the release stage. *Defaults to 1*  
+- ramp_type: 'linear' or 'expo', determines the ramping function to use. *Defaults to the `default_ramp_type`
+property of the Mooog config object*
 
 A very small number `fake_zero` is used in place of actual zero if given as the `base`, `a`, or `s`
 property so that the exponential ramping function doesn't throw an error. `fake_zero` defaults to

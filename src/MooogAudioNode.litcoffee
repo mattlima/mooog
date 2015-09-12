@@ -365,7 +365,8 @@ With two arguments, the first is taken as the property to get or set. If there's
 second property it's used to set the value. 
 
 > MooogAudioNode( { key: value [, key: value]... [, ramp: rampType:mixed]
-[,&nbsp;at:float ] [,&nbsp;duration:float] [,&nbsp;timeConstant:float], [, cancel:boolean]  } )
+[,&nbsp;at:float ] [,&nbsp;duration:float] [,&nbsp;timeConstant:float] [, cancel:boolean] 
+[, from_now:boolean]  } )
 
 
 When passed an object, the properties of the object are used to set values on `this`.
@@ -375,8 +376,10 @@ When passed an object, the properties of the object are used to set values on `t
 can be used in conjunction with the `at` property which desribes the time at which to make 
 the change:  
 `ramp`: An enumerated string: 'none', 'linear', 'expo', 'curve'.  *Defaults to 'none'*
-`at`: A float representing a number of seconds in the future or after
-the last scheduled change, depending on the `cancel` parameter. *Defaults to 0*  
+`at`: A float representing a number of seconds in the future at which to arrive at
+or start the changes, depending on the ramp function.  
+`from_now`: A boolean indicating whether the start of value changes via `linearRampToValueAtTime`
+and `exponentialRampToValueAtTime` is now or after the previous value change. *Defaults to false*
 `cancel`: whether to call `cancelScheduledValues` before setting the parameter(s).  
 - To use `setValueCurveAtTime`, `ramp` should be set to `curve` and the `duration` property 
 must be set. Value arrays are automatically coerced to Float32Array types.
@@ -390,6 +393,7 @@ but supply a `timeConstant`. *Defaults to true*
           timeConstant = if key.timeConstant? then parseFloat(key.timeConstant) else false
           duration = if key.duration then parseFloat(key.duration) else false
           cancel = if typeof key.cancel isnt 'undefined' then key.cancel else true
+          from_now = !!key.from_now
           @debug "keyramp", key.ramp
           switch key.ramp
             when "linear" then [rampfun, extra] = ["linearRampToValueAtTime", false]
@@ -400,7 +404,7 @@ but supply a `timeConstant`. *Defaults to true*
               else
                 [rampfun, extra] = ["exponentialRampToValueAtTime", false]
             else [rampfun, extra] = ["setValueAtTime", false]
-          @get_set k, v, rampfun, at, cancel, extra for k, v of key
+          @get_set k, v, rampfun, at, cancel, from_now, extra for k, v of key
           return this
         return @get_set key, val, 'setValueAtTime', 0, true
 
@@ -412,7 +416,7 @@ when dealing with `AudioParam`s to make sure changes are made, and immediate.
 See [https://jsfiddle.net/5xqhwzwu/1/](https://jsfiddle.net/5xqhwzwu/). See the
 `param` definition for the arguments.
 
-      get_set: (key, val, rampfun, at, cancel, extra) ->
+      get_set: (key, val, rampfun, at, cancel, from_now, extra) ->
         return unless @[key]?
         switch @__typeof @[key]
           when "AudioParam"
@@ -421,7 +425,10 @@ See [https://jsfiddle.net/5xqhwzwu/1/](https://jsfiddle.net/5xqhwzwu/). See the
               val = @_instance.config.fake_zero if val is 0
               val = new Float32Array val if val instanceof Array
               switch rampfun
-                when "linearRampToValueAtTime", "exponentialRampToValueAtTime", "setValueAtTime"
+                when "linearRampToValueAtTime", "exponentialRampToValueAtTime"
+                  @[key].setValueAtTime(val, @context.currentTime) if from_now
+                  @[key][rampfun] val, @context.currentTime + at
+                when "setValueAtTime"
                   @[key][rampfun] val, @context.currentTime + at
                 when "setValueCurveAtTime"
                   @[key][rampfun] val, @context.currentTime + at, extra
@@ -515,7 +522,7 @@ used in place of actual zero, which will throw errors when passed to
         #todo: allow ramp_type to be an array with different values for each stage
         switch config.ramp_type
           when 'linear' then ramp = param.linearRampToValueAtTime.bind param
-          when 'exponential' then ramp = param.exponentialRampToValueAtTime.bind param
+          when 'expo' then ramp = param.exponentialRampToValueAtTime.bind param
         
         
         if(times.length is 2)
