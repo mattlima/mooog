@@ -413,7 +413,6 @@ See [https://jsfiddle.net/5xqhwzwu/1/](https://jsfiddle.net/5xqhwzwu/). See the
 `param` definition for the arguments.
 
       get_set: (key, val, rampfun, at, cancel, extra) ->
-        @debug "ramp #{key} to #{val} via #{rampfun} at #{at} cancel #{cancel}, extra #{extra}"
         return unless @[key]?
         switch @__typeof @[key]
           when "AudioParam"
