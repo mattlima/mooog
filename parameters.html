@@ -82,7 +82,7 @@
 
         <p>The <code>param()</code> method serves as a common interface to all the underlying AudioNode properties, whether scalar, enumerated, or AudioParams. The syntax will be familiar to anyone using jQuery.</p>
 
-        <pre><code>M = new Mooog({debug:true});
+        <pre><code>M = new Mooog();
 M.node( "osc", "Oscillator" )
     .chain(
         M.node( { node_type: "Gain", gain: 0.5 } ) //don"t blow any speakers
@@ -229,7 +229,7 @@ $(document)
 
 
         <script>
-M = new Mooog({debug:true});
+M = new Mooog();
 M.node( "osc", "Oscillator" )
     .chain(
         M.node( { node_type: "Gain", gain: 0.5 } ) //don"t blow any speakers

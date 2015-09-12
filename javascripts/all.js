@@ -13103,12 +13103,13 @@ return jQuery;
     };
 
     MooogAudioNode.prototype.param = function(key, val) {
-      var at, cancel, duration, extra, k, rampfun, ref, ref1, ref2, ref3, ref4, timeConstant, v;
+      var at, cancel, duration, extra, from_now, k, rampfun, ref, ref1, ref2, ref3, ref4, timeConstant, v;
       if (this.__typeof(key) === 'object') {
         at = parseFloat(key.at) || 0;
         timeConstant = key.timeConstant != null ? parseFloat(key.timeConstant) : false;
         duration = key.duration ? parseFloat(key.duration) : false;
         cancel = typeof key.cancel !== 'undefined' ? key.cancel : true;
+        from_now = !!key.from_now;
         this.debug("keyramp", key.ramp);
         switch (key.ramp) {
           case "linear":
@@ -13129,18 +13130,17 @@ return jQuery;
         }
         for (k in key) {
           v = key[k];
-          this.get_set(k, v, rampfun, at, cancel, extra);
+          this.get_set(k, v, rampfun, at, cancel, from_now, extra);
         }
         return this;
       }
       return this.get_set(key, val, 'setValueAtTime', 0, true);
     };
 
-    MooogAudioNode.prototype.get_set = function(key, val, rampfun, at, cancel, extra) {
+    MooogAudioNode.prototype.get_set = function(key, val, rampfun, at, cancel, from_now, extra) {
       if (this[key] == null) {
         return;
       }
-      this.debug("ramp " + key + " to " + val + " via " + rampfun + " at " + at + " cancel " + cancel + ", extra " + extra);
       switch (this.__typeof(this[key])) {
         case "AudioParam":
           if (val != null) {
@@ -13156,6 +13156,11 @@ return jQuery;
             switch (rampfun) {
               case "linearRampToValueAtTime":
               case "exponentialRampToValueAtTime":
+                if (from_now) {
+                  this[key].setValueAtTime(this[key].value, this.context.currentTime);
+                }
+                this[key][rampfun](val, this.context.currentTime + at);
+                break;
               case "setValueAtTime":
                 this[key][rampfun](val, this.context.currentTime + at);
                 break;
@@ -13255,14 +13260,14 @@ return jQuery;
       if (times.length > 3) {
         times[3] || (times[3] = _0);
       }
-      if (config.ramp_type == null) {
-        config.ramp_type = this._instance.config.default_ramp_type;
+      if (config.ramp == null) {
+        config.ramp = this._instance.config.default_ramp_type;
       }
-      switch (config.ramp_type) {
+      switch (config.ramp) {
         case 'linear':
           ramp = param.linearRampToValueAtTime.bind(param);
           break;
-        case 'exponential':
+        case 'expo':
           ramp = param.exponentialRampToValueAtTime.bind(param);
       }
       if (times.length === 2) {
@@ -13760,7 +13765,7 @@ return jQuery;
       this.config = {
         debug: false,
         default_gain: 0.5,
-        default_ramp_type: 'exponential',
+        default_ramp_type: 'expo',
         default_send_type: 'post',
         periodic_wave_length: 2048,
         curve_length: 65536,
