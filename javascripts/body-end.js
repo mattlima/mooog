@@ -6,7 +6,12 @@
     $t = $(e.target);
     d = $t.data();
     val = $t.attr('data-slider');
-    return M.node(d.mooogNodeTarget).param(d.mooogParamTarget, val);
+    switch (d.mooogTargetType) {
+      case "send":
+        return M.track(d.mooogNodeTarget).send(d.mooogParamTarget).param("gain", val);
+      default:
+        return M.node(d.mooogNodeTarget).param(d.mooogParamTarget, val);
+    }
   });
 
 }).call(this);

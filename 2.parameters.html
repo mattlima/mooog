@@ -1,0 +1,329 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+
+    <!-- Always force latest IE rendering engine or request Chrome Frame -->
+    <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible">
+
+    <!-- Use title if it's in the page YAML frontmatter -->
+    <title></title>
+
+    <link href="stylesheets/all.css" rel="stylesheet" type="text/css" />
+    <script src="javascripts/all.js" type="text/javascript"></script>
+    <script src="javascripts/highlight/highlight.pack.js" type="text/javascript"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+  </head>
+
+
+  <body class="x2">
+
+    <div class="row">
+        <div class="small-12 columns">
+          <a href="http://mattlima.github.io/mooog/"><span class="supertitle label radius">Mooog examples</span></a>
+              <h1>. </h1>
+        </div>
+    </div>
+    <div class="row">
+    <div class="small-12 columns">
+
+        <h3>The param() method</h3>
+
+        <div class="panel sound radius">
+
+            <div class="row">
+                <div class="small-2 columns">
+                    <button class="radius expand trigger1" >osc.start()</button>
+                </div>
+
+                <div class="small-10 columns">
+                    <div id="freq-slider" class="range-slider round" data-slider="440" data-mooog-node-target="osc" data-mooog-param-target="frequency" data-mooog-target-type="" data-options="display_selector: #freq-slider-val;start:200;end:800;step:1;">
+  <label>M.node("osc").param( "frequency",  <span id="freq-slider-val">440</span> );</label>
+  <span class="range-slider-handle" role="slider" tabindex="0"></span>
+  <span class="range-slider-active-segment"></span>
+  <input type="hidden">
+</div>
+
+
+                </div>
+            </div>
+            <div class="row">
+                <div class="small-2 columns">
+                    <button class="radius expand trigger2" >osc.stop()</button>
+                </div>
+                <div class="small-5 columns">
+                    <div id="detune-slider" class="range-slider round" data-slider="0" data-mooog-node-target="osc" data-mooog-param-target="detune" data-mooog-target-type="" data-options="display_selector: #detune-slider-val;start:-100;end:100;step:1;">
+  <label>M.node("osc").param("detune",  <span id="detune-slider-val">0</span> );</label>
+  <span class="range-slider-handle" role="slider" tabindex="0"></span>
+  <span class="range-slider-active-segment"></span>
+  <input type="hidden">
+</div>
+
+
+                </div>
+                <div class="small-5 columns">
+                    <ul class="button-group even-4 round">
+                      <li><a href="#" class="button" data-waveform="sine">Sine</a></li>
+                      <li><a href="#" class="button" data-waveform="triangle">Triangle</a></li>
+                      <li><a href="#" class="button" data-waveform="square">Square</a></li>
+                      <li><a href="#" class="button" data-waveform="sawtooth">Sawtooth</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="row">
+                <div class="small-12 columns">
+                    <button class="radius expand reset1">M.node("osc").param( { type: "sine", frequency: 440, detune: 0 } )</button>
+                </div>
+            </div>
+
+
+
+        </div>
+
+        <p>The <code>param()</code> method serves as a common interface to all the underlying AudioNode properties, whether scalar, enumerated, or AudioParams. The syntax will be familiar to anyone using jQuery.</p>
+
+        <pre><code>M = new Mooog({debug:true});
+M.node( "osc", "Oscillator" )
+    .chain(
+        M.node( { node_type: "Gain", gain: 0.5 } ) //don"t blow any speakers
+    );
+
+$(document)
+    .on("mousedown", ".trigger1", function(){
+        M.node("osc").start();
+    })
+    .on("mousedown", ".trigger2", function(){
+        M.node("osc").stop();
+    })
+    .on("click", "[data-waveform]", function(e){
+        M.node("osc").param( "type", $(this).data("waveform") );
+    })
+    .on("change.fndtn.slider", "#freq-slider", function(e){
+        val = $("#freq-slider").attr('data-slider')
+        M.node( "osc" ).param( "frequency", val )
+    })
+    .on("change.fndtn.slider", "#detune-slider", function(e){
+        val = $("#detune-slider").attr('data-slider')
+        M.node( "osc" ).param( "detune", val )
+    })
+    .on("click", ".reset1", function(){
+        M.node("osc").param( { type: 'sine', frequency: 440, detune: 0 } );
+        $("#detune-slider").foundation('slider', 'set_value', 0);
+        $("#freq-slider").foundation('slider', 'set_value', 440);
+    })
+
+
+</code></pre>
+
+
+
+
+
+        <h3>Scheduling parameter changes</h3>
+
+        <div class="panel sound radius">
+
+            <div class="row">
+                <div class="small-6 columns">
+                    <button class="radius expand trigger3" >osc2.start()</button>
+                </div>
+                <div class="small-6 columns">
+                    <button class="radius expand trigger4" >osc2.stop()</button>
+                </div>
+            </div>
+            <div class="row">
+                <div class="small-12 columns">
+
+
+                    <button class="radius expand freq" >M.node("osc2").param("frequency", 200);</button>
+                    <button class="radius expand param1" >M.node("osc2").param({"frequency":800, at: 1});</button>
+                    <button class="radius expand param2" >M.node("osc2").param({"frequency":800, "ramp": "linear", at: 3});</button>
+                    <button class="radius expand param3" >M.node("osc2").param({"frequency":800, "ramp": "expo", at: 3});</button>
+                    <button class="radius expand param4" >M.node("osc2").param({"frequency":[300, 400, 500, 800], "ramp": "curve", at: 2, duration: 2});</button>
+                    <button class="radius expand param5" >M.node("osc2").param({"frequency":800, "ramp": "expo", at: 2, timeConstant: 2});</button>
+
+
+
+                </div>
+            </div>
+
+
+
+        </div>
+
+        <p>The scheduling methods of the <code>AudioParam</code> API are all accessible through additional properties of the <code>param()</code> argument. See the <a href="https://developer.mozilla.org/en-US/docs/Web/API/AudioParam">AudioParam docs</a> for more information. Mooog runs <code>cancelScheduledValues()</code> for consistency unless you explicity add <code>cancel: true</code> to the argument.</p>
+        <table>
+          <thead>
+            <tr>
+              <th>AudioParam native call</th>
+              <th>Mooog equivalent</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>AudioParam.setValueAtTime(val, time)</code></td>
+              <td><code>param( { AudioParamName: val, at: time } )</code></td>
+            </tr>
+            <tr>
+              <td><code>AudioParam.linearRampToValueAtTime(val, time)</code></td>
+              <td><code>param( { AudioParamName: val, at: time, ramp: "linear" } )</code></td>
+            </tr>
+            <tr>
+              <td><code>AudioParam.exponentialRampToValueAtTime(val, time)</code></td>
+              <td><code>param( { AudioParamName: val, at: time, ramp: "expo" } )</code></td>
+            </tr>
+            <tr>
+              <td><code>AudioParam.setValueCurveAtTime(valueArray, time, duration)</code>*</td>
+              <td><code>param( { AudioParamName: valueArray, at: time, ramp: "curve", duration: duration  } )</code></td>
+            </tr>
+            <tr>
+              <td><code>AudioParam.setTargetAtTime(val, startTime, timeConstant)</code></td>
+              <td><code>param( { AudioParamName: val, at: time, ramp: "expo", timeConstant: timeConstant } )</code></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p>*The rhythmic irregularity of the frequency progression produced by the <code>setValueCurveAtTime()</code> method is due to the nearest-value interpolation algorithm it uses. The function is meant for much larger arrays of values describing smooth curves.</p>
+
+
+        <pre><code>M = new Mooog();
+M.node({id:"osc2", node_type:"Oscillator" })
+    .chain(
+        M.node( { node_type: "Gain", gain: 0.5 } )
+    );
+
+
+$(document)
+    .on("mousedown",".trigger3",function(){
+        M.node("osc2").start();
+    })
+    .on("mousedown",".trigger4",function(){
+        M.node("osc2").stop();
+    })
+    .on("mousedown",".freq",function(){
+        M.node("osc2").param({frequency: 200});
+    })
+    .on("mousedown",".param1",function(){
+        M.node("osc2").param({frequency: 800, at: 1 });
+    })
+    .on("mousedown",".param2",function(){
+        M.node("osc2").param({frequency: 800, ramp: "linear", at: 2});
+    })
+    .on("mousedown",".param3",function(){
+        M.node("osc2").param({frequency: 800, ramp: "expo", at: 2});
+    })
+    .on("mousedown",".param4",function(){
+        M.node("osc2").param({frequency: [300, 400, 500, 800], ramp: "curve", at: 2, duration: 2});
+    })
+    .on("mousedown",".param5",function(){
+        M.node("osc2").param({frequency: 800, ramp: "expo", at: 2, timeConstant: 2});
+    });
+</code></pre>
+
+
+
+
+
+
+
+
+
+        <script>
+M = new Mooog({debug:true});
+M.node( "osc", "Oscillator" )
+    .chain(
+        M.node( { node_type: "Gain", gain: 0.5 } ) //don"t blow any speakers
+    );
+
+$(document)
+    .on("mousedown", ".trigger1", function(){
+        M.node("osc").start();
+    })
+    .on("mousedown", ".trigger2", function(){
+        M.node("osc").stop();
+    })
+    .on("click", "[data-waveform]", function(e){
+        M.node("osc").param( "type", $(this).data("waveform") );
+    })
+    .on("change.fndtn.slider", "#freq-slider", function(e){
+        val = $("#freq-slider").attr('data-slider')
+        M.node( "osc" ).param( "frequency", val )
+    })
+    .on("change.fndtn.slider", "#detune-slider", function(e){
+        val = $("#detune-slider").attr('data-slider')
+        M.node( "osc" ).param( "detune", val )
+    })
+    .on("click", ".reset1", function(){
+        M.node("osc").param( { type: 'sine', frequency: 440, detune: 0 } );
+        $("#detune-slider").foundation('slider', 'set_value', 0);
+        $("#freq-slider").foundation('slider', 'set_value', 440);
+    })
+
+
+
+M.node({id:"osc2", node_type:"Oscillator" })
+    .chain(
+        M.node( { node_type: "Gain", gain: 0.5 } )
+    );
+
+
+$(document)
+    .on("mousedown",".trigger3",function(){
+        M.node("osc2").start();
+    })
+    .on("mousedown",".trigger4",function(){
+        M.node("osc2").stop();
+    })
+    .on("mousedown",".freq",function(){
+        M.node("osc2").param({frequency: 200});
+    })
+    .on("mousedown",".param1",function(){
+        M.node("osc2").param({frequency: 800, at: 1 });
+    })
+    .on("mousedown",".param2",function(){
+        M.node("osc2").param({frequency: 800, ramp: "linear", at: 2});
+    })
+    .on("mousedown",".param3",function(){
+        M.node("osc2").param({frequency: 800, ramp: "expo", at: 2});
+    })
+    .on("mousedown",".param4",function(){
+        M.node("osc2").param({frequency: [300, 400, 500, 800], ramp: "curve", at: 2, duration: 2});
+    })
+    .on("mousedown",".param5",function(){
+        M.node("osc2").param({frequency: 800, ramp: "expo", at: 2, timeConstant: 2});
+    });
+
+        </script>
+
+
+
+    </div>
+</div>
+
+
+     <div class="row">
+    <div class="small-12 columns">
+        <footer class="panel radius">
+        	<h3>The fine print</h3>
+        	<p>Responsive design framework by <a href="http://foundation.zurb.com/">Zurb</a>.
+        	</p>
+        	<p>Automatic syntax highlighting by <a href="https://highlightjs.org/">highlight.js</a>.
+        	</p>
+        	<p>The convolver examples use impulse responses from the <a href="http://www.openairlib.net/">OpenAir Impulse Response Library</a> licensed under various Creative Commons licenses.
+        	</p>
+    		 <ul class="disc">
+        	    <li><strong><a href="http://www.openairlib.net/auralizationdb/content/st-andrews-church">st-andrews-church-ortf-shaped.wav</a></strong> : <a href="http://creativecommons.org/licenses/by-sa/3.0/">Attribution Share Alike Creative Commons license</a></li>
+    	    </ul>
+    	    <p><strong>balafon.mp3</strong> is the author's creation, released uner the <a href="https://opensource.org/licenses/MIT">MIT License</a></p>
+
+
+        </footer>
+    </div>
+</div>
+
+
+
+     <script src="javascripts/body-end.js" type="text/javascript"></script>
+
+  </body>
+</html>
