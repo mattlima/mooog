@@ -505,6 +505,7 @@ used in place of actual zero, which will throw errors when passed to
 
       adsr: (param, config) ->
         param = @[param] if typeof(param) is "string"
+        #todo: support an array of parameters
         _0 = @_instance.config.fake_zero
         { base, times, a, s } = config
         base ?= _0
