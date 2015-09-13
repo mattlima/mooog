@@ -5,6 +5,9 @@
 a{
   color:$primary-color-dark;
   @include aller-bold();
+  &:hover{
+    color:$primary-color-medium;
+  }
 }
 
 .noMarginTop{
