@@ -370,8 +370,8 @@ second property it's used to set the value.
 
 
 When passed an object, the properties of the object are used to set values on `this`.
-`AudioParam` parameters are set immediately by default using `cancelScheduledValues` and 
-`setValueAtTime`. This behavior can be changed by setting additional properties on the object. 
+`AudioParam` parameters are set immediately by default using `setValueAtTime`. 
+This behavior can be changed by setting additional properties on the object. 
 - To use `linearRampToValueAtTime`, `exponentialRampToValueAtTime`, the `ramp` property 
 can be used in conjunction with the `at` property which desribes the time at which to make 
 the change:  
@@ -380,7 +380,7 @@ the change:
 or start the changes, depending on the ramp function.  
 `from_now`: A boolean indicating whether the start of value changes via `linearRampToValueAtTime`
 and `exponentialRampToValueAtTime` is now or after the previous value change. *Defaults to false*
-`cancel`: whether to call `cancelScheduledValues` before setting the parameter(s).  
+`cancel`: whether to call `cancelScheduledValues` before setting the parameter(s). *Defaults to false* 
 - To use `setValueCurveAtTime`, `ramp` should be set to `curve` and the `duration` property 
 must be set. Value arrays are automatically coerced to Float32Array types.
 `duration`: The length of time to fill with the value changes in the arrays.  
@@ -392,7 +392,7 @@ but supply a `timeConstant`. *Defaults to true*
           at = parseFloat(key.at) || 0
           timeConstant = if key.timeConstant? then parseFloat(key.timeConstant) else false
           duration = if key.duration then parseFloat(key.duration) else false
-          cancel = if typeof key.cancel isnt 'undefined' then key.cancel else true
+          cancel = !!key.cancel
           from_now = !!key.from_now
           @debug "keyramp", key.ramp
           switch key.ramp
@@ -421,7 +421,7 @@ See [https://jsfiddle.net/5xqhwzwu/1/](https://jsfiddle.net/5xqhwzwu/). See the
         switch @__typeof @[key]
           when "AudioParam"
             if val?
-              @[key].cancelScheduledValues(@context.currentTime) if cancel
+              @[key].cancelScheduledValues(0) if cancel
               val = @_instance.config.fake_zero if val is 0
               val = new Float32Array val if val instanceof Array
               switch rampfun
