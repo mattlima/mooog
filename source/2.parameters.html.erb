@@ -80,7 +80,12 @@
 
         </div>
 
-        <p>The scheduling methods of the <code>AudioParam</code> API are all accessible through additional properties of the <code>param()</code> argument. See the <a href="https://developer.mozilla.org/en-US/docs/Web/API/AudioParam">AudioParam docs</a> for more information. Mooog runs <code>cancelScheduledValues()</code> for consistency unless you explicity add <code>cancel: true</code> to the argument.</p>
+        <p>The scheduling methods of the <code>AudioParam</code> API are all accessible through additional properties of the <code>param()</code> argument. See the
+            <a href="https://developer.mozilla.org/en-US/docs/Web/API/AudioParam">AudioParam docs</a> for more information. Mooog runs <code>cancelScheduledValues()</code>
+            for consistency unless you explicity add <code>cancel: true</code> to the argument. By default, <code>linearRampToValueAtTime</code> and <code>exponentialRampToValueAtTime</code>
+            begin their ramps <strong>at the last scheduled change for the parameter, even if it is in the past.</strong> This can lead to confusing
+            behavior where the value jumps abruptly when function is called. To override this behavior, the <code>from_now</code> argument can be set to true, which will force
+            the ramp to start at the current time.</p>
         <table>
           <thead>
             <tr>
@@ -95,11 +100,11 @@
             </tr>
             <tr>
               <td><code>AudioParam.linearRampToValueAtTime(val, time)</code></td>
-              <td><code>param( { AudioParamName: val, at: time, ramp: "linear" } )</code></td>
+              <td><code>param( { AudioParamName: val, at: time, ramp: "linear", from_now: true } )</code></td>
             </tr>
             <tr>
               <td><code>AudioParam.exponentialRampToValueAtTime(val, time)</code></td>
-              <td><code>param( { AudioParamName: val, at: time, ramp: "expo" } )</code></td>
+              <td><code>param( { AudioParamName: val, at: time, ramp: "expo", from_now: true } )</code></td>
             </tr>
             <tr>
               <td><code>AudioParam.setValueCurveAtTime(valueArray, time, duration)</code>*</td>

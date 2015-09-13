@@ -24,8 +24,27 @@
               <h1><%= locals[:ordinal] %>. <%= locals[:name] %></h1>
         </div>
     </div>
+
+
     <%= yield %>
 
+
+    <div class="row">
+        <div class="small-6 columns text-left">
+            <% if(locals[:ordinal].to_i > 1) %>
+                <% link_to toc_link(locals[:prev_example][:name]) do %>
+                <div class="button"><%= "<< #{locals[:ordinal] - 1}. #{locals[:prev_example][:name]}" %></div>
+                <% end %>
+            <% end %>
+        </div>
+        <div class="small-6 columns text-right">
+            <% if locals[:next_example].present? %>
+                <% link_to toc_link(locals[:next_example][:name]) do %>
+                <div class="button"><%= "#{locals[:ordinal] + 1}. #{locals[:next_example][:name]} >>" %></div>
+                <% end %>
+            <% end %>
+        </div>
+    </div>
      <%= partial 'partials/footer' %>
 
 

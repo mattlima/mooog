@@ -35,7 +35,7 @@ end
 c = 0
 data.examples.each do |example|
   c += 1
-  proxy "#{example.url}.html", "/#{example.file}.html", locals: example.merge( { ordinal: c } ).symbolize_keys
+  proxy "#{example.url}.html", "/#{example.file}.html", locals: example.merge( { ordinal: c, next_example: data.examples[c], prev_example: data.examples[c-2] } ).symbolize_keys
 end
 
 ###
