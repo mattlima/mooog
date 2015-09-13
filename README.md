@@ -383,6 +383,7 @@ If you're feeling generous, you can throw me some dosh [here.](https://www.paypa
 
 ## Todo:
 
+- Equalize gain, add error messages for unsupported browsers in examples
 - Optionally use periodic waves for basic oscillator types to minimize volume differences
 - Vary duty cycle on period wave generator
 - Refactor initialization to combine `configure_from` and `zero_node_setup`
