@@ -65,10 +65,6 @@ create panner and gain nodes at the end of its internal chain that can be contro
 from a single place and easily create sends to other `Track`s. Like the base 
 `MooogAudioNode`, it automatically routes the end of its internal chain to the destinationNode.
 
-### Donations
-
-If you're feeling generous, you can throw me some dosh [here.](https://www.paypal.me/MattLima)
-
 
 ## Getting started
 
@@ -381,6 +377,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 
+### Donations
+
+If you're feeling generous, you can throw me some dosh [here.](https://www.paypal.me/MattLima)
 
 ## Todo:
 
