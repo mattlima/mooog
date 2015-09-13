@@ -386,6 +386,9 @@ If you're feeling generous, you can throw me some dosh [here.](https://www.paypa
 - Optionally use periodic waves for basic oscillator types to minimize volume differences
 - Vary duty cycle on period wave generator
 - Refactor initialization to combine `configure_from` and `zero_node_setup`
+- Clean up debug messages
+- Emit loaded event when using `buffer_source_file`
+- Allow parameter arrays in `adsr()`
 
 ## Contributing
 

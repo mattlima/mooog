@@ -17,7 +17,6 @@ via `gain` and `pan` methods exposed on the track object.
         @configure_from config
         
         #todo: make sure we don't need to use insert_node() for this
-        #todo: decide whether to make stereoPanner the default
         @_pan_stage = @_instance.context.createStereoPanner()
         @_gain_stage = @_instance.context.createGain()
         @_gain_stage.gain.value = @_instance.config.default_gain
