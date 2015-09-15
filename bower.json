@@ -8,7 +8,7 @@
   "description": "Chainable Audiocontext nodes",
   "main": "dist/mooog.js",
   "license": "MIT",
-  "private": true,
+  "private": false,
   "moduleType": [
     "globals"
   ],
