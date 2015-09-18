@@ -2,7 +2,7 @@
 
 ##Chainable AudioNode API
 
-Version 0.0.1a
+Version 0.0.2
 
 ### What is Mooog?
 

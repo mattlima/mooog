@@ -387,7 +387,7 @@
         at = parseFloat(key.at) || 0;
         timeConstant = key.timeConstant != null ? parseFloat(key.timeConstant) : false;
         duration = key.duration ? parseFloat(key.duration) : false;
-        cancel = typeof key.cancel !== 'undefined' ? key.cancel : true;
+        cancel = !!key.cancel;
         from_now = !!key.from_now;
         this.debug("keyramp", key.ramp);
         switch (key.ramp) {
@@ -424,7 +424,7 @@
         case "AudioParam":
           if (val != null) {
             if (cancel) {
-              this[key].cancelScheduledValues(this.context.currentTime);
+              this[key].cancelScheduledValues(0);
             }
             if (val === 0) {
               val = this._instance.config.fake_zero;
