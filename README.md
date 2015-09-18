@@ -361,7 +361,6 @@ shaper.curve = shaper.tanh(2);
 shaper.curve = shaper.chebyshev(5); 
 ```
 
-
 ## License
 
 The MIT License (MIT)
@@ -389,6 +388,12 @@ THE SOFTWARE.
 ### Donations
 
 If you're feeling generous, you can throw me some dosh [here.](https://www.paypal.me/MattLima)
+
+
+## Version History
+
+- 0.0.1 : First working version
+- 0.0.2 : Added ChannelMerger, ChannelSplitter, ScriptProcessor nodes, fixed bug when setting callbacks via the config object.
 
 ## Todo:
 
