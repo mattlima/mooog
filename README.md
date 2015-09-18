@@ -323,6 +323,10 @@ which to create an AudioBuffer and then set the `buffer` of the underlying `Audi
 - Automatically regenerates the `buffer` when the `stop()` method is used so you can repeatedly `stop` 
 and `start` without initializing a new Node.
 
+### ChannelMerger and ChannelSplitter
+Constructor parameters `numberOfInputs` or `numberOfOutputs` can be passed in
+the configuration object
+
 ### Convolver
 - Includes a config object property `buffer_source_file` indicating the URL of an audio asset (impulse
 response) from which to create an AudioBuffer and then set the `buffer` of the underlying `AudioNode`
@@ -340,6 +344,10 @@ change this default with the `default_gain` Mooog config option.
 - Exposes a `state` property that is either 'stopped' or 'playing'
 - Sets an internal `gain` so you can repeatedly `stop` and `start` without initializing a new Node.
 
+### ScriptProcessor
+Constructor arguments `numberOfInputChannels`, `numberOfOutputChannels` and `bufferSize` can be 
+passed in the configuration object.
+
 ### WaveShaper
 Includes utility functions [tanh](http://mymbs.mbs.net/~pfisher/FOV2-0010016C/FOV2-0010016E/FOV2-001001A3/tutorials/ezine1/distortion.html) for hyperbolic tangent and [chebyshev](http://music.columbia.edu/cmc/MusicAndComputers/chapter4/04_06.php) for Chebyshev polynomials, generating Float32Array distortion curves. `tanh` takes a single argument representing the coefficient (higher coefficients equal more aggressive shaping). `chebyshev` takes a single argument indicating the number of terms to generate (the exponent of the first term). 
 ```javascript
@@ -352,6 +360,7 @@ shaper.curve = shaper.tanh(2);
 /* Use a 5th-order Chebyshev polynomial waveshaper */
 shaper.curve = shaper.chebyshev(5); 
 ```
+
 
 ## License
 

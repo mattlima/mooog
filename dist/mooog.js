@@ -1,5 +1,5 @@
 (function() {
-  var Analyser, AudioBufferSource, BiquadFilter, Convolver, Delay, DynamicsCompressor, Gain, Mooog, MooogAudioNode, Oscillator, StereoPanner, Track, WaveShaper,
+  var Analyser, AudioBufferSource, BiquadFilter, ChannelMerger, ChannelSplitter, Convolver, Delay, DynamicsCompressor, Gain, MediaElementSource, Mooog, MooogAudioNode, Oscillator, ScriptProcessor, StereoPanner, Track, WaveShaper,
     slice = [].slice,
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty,
@@ -417,7 +417,7 @@
     };
 
     MooogAudioNode.prototype.get_set = function(key, val, rampfun, at, cancel, from_now, extra) {
-      if (this[key] == null) {
+      if (!((this[key] != null) || this.hasOwnProperty(key))) {
         return;
       }
       switch (this.__typeof(this[key])) {
@@ -696,6 +696,50 @@
 
   })(MooogAudioNode);
 
+  ChannelMerger = (function(superClass) {
+    extend(ChannelMerger, superClass);
+
+    function ChannelMerger(_instance, config) {
+      var numberOfInputs;
+      this._instance = _instance;
+      if (config == null) {
+        config = {};
+      }
+      config.node_type = 'ChannelMerger';
+      numberOfInputs = config.numberOfInputs != null ? config.numberOfInputs : 6;
+      delete config.numberOfInputs;
+      ChannelMerger.__super__.constructor.apply(this, arguments);
+      this.configure_from(config);
+      this.insert_node(this.context.createChannelMerger(numberOfInputs), 0);
+      this.zero_node_setup(config);
+    }
+
+    return ChannelMerger;
+
+  })(MooogAudioNode);
+
+  ChannelSplitter = (function(superClass) {
+    extend(ChannelSplitter, superClass);
+
+    function ChannelSplitter(_instance, config) {
+      var numberOfOutputs;
+      this._instance = _instance;
+      if (config == null) {
+        config = {};
+      }
+      config.node_type = 'ChannelSplitter';
+      numberOfOutputs = config.numberOfOutputs != null ? config.numberOfOutputs : 6;
+      delete config.numberOfOutputs;
+      ChannelSplitter.__super__.constructor.apply(this, arguments);
+      this.configure_from(config);
+      this.insert_node(this.context.createChannelSplitter(numberOfOutputs), 0);
+      this.zero_node_setup(config);
+    }
+
+    return ChannelSplitter;
+
+  })(MooogAudioNode);
+
   Convolver = (function(superClass) {
     extend(Convolver, superClass);
 
@@ -781,6 +825,31 @@
 
   })(MooogAudioNode);
 
+  MediaElementSource = (function(superClass) {
+    extend(MediaElementSource, superClass);
+
+    function MediaElementSource(_instance, config) {
+      this._instance = _instance;
+      if (config == null) {
+        config = {};
+      }
+      config.node_type = 'MediaElementSource';
+      if (!config.mediaElement) {
+        throw new Error("MediaElementSource requires mediaElement config argument");
+      }
+      if (typeof config.mediaElement === 'string') {
+        config.mediaElement = document.querySelector(config.mediaElement);
+      }
+      MediaElementSource.__super__.constructor.apply(this, arguments);
+      this.configure_from(config);
+      this.insert_node(this.context.createMediaElementSource(config.mediaElement), 0);
+      this.zero_node_setup(config);
+    }
+
+    return MediaElementSource;
+
+  })(MooogAudioNode);
+
   Oscillator = (function(superClass) {
     extend(Oscillator, superClass);
 
@@ -859,6 +928,33 @@
     };
 
     return Oscillator;
+
+  })(MooogAudioNode);
+
+  ScriptProcessor = (function(superClass) {
+    extend(ScriptProcessor, superClass);
+
+    function ScriptProcessor(_instance, config) {
+      var bufferSize, numberOfInputChannels, numberOfOuputChannels;
+      this._instance = _instance;
+      if (config == null) {
+        config = {};
+      }
+      config.node_type = 'ScriptProcessor';
+      bufferSize = config.bufferSize != null ? config.bufferSize : null;
+      numberOfInputChannels = config.numberOfInputChannels != null ? config.numberOfInputChannels : 2;
+      numberOfOuputChannels = config.numberOfOuputChannels != null ? config.numberOfOuputChannels : 2;
+      delete config.bufferSize;
+      delete config.numberOfInputChannels;
+      delete config.numberOfOuputChannels;
+      this.debug("ScriptProcessorNode is deprecated and will be replaced by AudioWorker");
+      ScriptProcessor.__super__.constructor.apply(this, arguments);
+      this.configure_from(config);
+      this.insert_node(this.context.createScriptProcessor(bufferSize, numberOfInputChannels, numberOfOuputChannels), 0);
+      this.zero_node_setup(config);
+    }
+
+    return ScriptProcessor;
 
   })(MooogAudioNode);
 
@@ -1033,7 +1129,11 @@
       'Analyser': Analyser,
       'DynamicsCompressor': DynamicsCompressor,
       'Delay': Delay,
-      'WaveShaper': WaveShaper
+      'WaveShaper': WaveShaper,
+      'ChannelMerger': ChannelMerger,
+      'ChannelSplitter': ChannelSplitter,
+      'MediaElementSource': MediaElementSource,
+      'ScriptProcessor': ScriptProcessor
     };
 
     function Mooog(initConfig1) {
