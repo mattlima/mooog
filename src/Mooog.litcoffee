@@ -17,6 +17,10 @@ as the Mooog global.
         'DynamicsCompressor': DynamicsCompressor
         'Delay': Delay
         'WaveShaper': WaveShaper
+        'ChannelMerger': ChannelMerger
+        'ChannelSplitter': ChannelSplitter
+        'MediaElementSource': MediaElementSource
+        'ScriptProcessor': ScriptProcessor
 
       
       constructor: (@initConfig = {}) ->

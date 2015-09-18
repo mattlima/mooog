@@ -380,7 +380,8 @@ the change:
 or start the changes, depending on the ramp function.  
 `from_now`: A boolean indicating whether the start of value changes via `linearRampToValueAtTime`
 and `exponentialRampToValueAtTime` is now or after the previous value change. *Defaults to false*
-`cancel`: whether to call `cancelScheduledValues` before setting the parameter(s). *Defaults to false* 
+`cancel`: whether to call `cancelScheduledValues` before setting the parameter(s). 
+*Defaults to false* 
 - To use `setValueCurveAtTime`, `ramp` should be set to `curve` and the `duration` property 
 must be set. Value arrays are automatically coerced to Float32Array types.
 `duration`: The length of time to fill with the value changes in the arrays.  
@@ -417,7 +418,7 @@ See [https://jsfiddle.net/5xqhwzwu/1/](https://jsfiddle.net/5xqhwzwu/). See the
 `param` definition for the arguments.
 
       get_set: (key, val, rampfun, at, cancel, from_now, extra) ->
-        return unless @[key]?
+        return unless @[key]? or @hasOwnProperty(key)
         switch @__typeof @[key]
           when "AudioParam"
             if val?
