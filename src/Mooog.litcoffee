@@ -40,6 +40,7 @@ object (`AudioContext` or `webkitAudioContext`)
           curve_length: 65536
           fake_zero: 1/65536
         @init(@initConfig)
+        
 
         @_nodes = {}
         #@_connections = {}
@@ -93,6 +94,7 @@ and gain stages.
         if typeof id is 'string'
           if node_list.length
             throw new Error("#{id} is already assigned to #{@_nodes[id]}") if @_nodes[id]?
+            throw new Error("Unknown node type #{node_list}") unless Mooog.LEGAL_NODES[node_list]?
             @_nodes[id] = new MooogAudioNode(this, id, node_list...)
           else if @_nodes?[id]?
             return @_nodes[id]
@@ -100,7 +102,29 @@ and gain stages.
         else
           node = new MooogAudioNode(this, [id].concat(node_list...)...)
           @_nodes[node.id] = node
-      
+   
+
+### Mooog.extend
+Experimental function for adding new Node definitions from external sources
+
+
+      @extend: (nodeName, nodeDef) ->
+        ((child, parent) ->
+          for key in parent
+            if (Object.hasOwnProperty.call(parent, key))
+              child[key] = parent[key]
+          ctor = ()->
+            @constructor = child
+            @
+          ctor.prototype = parent.prototype
+          child.prototype = new ctor
+          child.__super__ = parent.prototype
+          child
+          )(nodeDef, Mooog.MooogAudioNode)
+        @LEGAL_NODES[nodeName] = nodeDef
+
+
+
       
 ### Mooog.freq
 Convenience function for converting MIDI notes to equal temperament Hz

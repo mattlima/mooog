@@ -1218,6 +1218,9 @@
           if (this._nodes[id] != null) {
             throw new Error(id + " is already assigned to " + this._nodes[id]);
           }
+          if (Mooog.LEGAL_NODES[node_list] == null) {
+            throw new Error("Unknown node type " + node_list);
+          }
           return this._nodes[id] = (function(func, args, ctor) {
             ctor.prototype = func.prototype;
             var child = new ctor, result = func.apply(child, args);
@@ -1236,6 +1239,27 @@
         })(MooogAudioNode, [this].concat(slice.call((ref1 = [id]).concat.apply(ref1, node_list))), function(){});
         return this._nodes[node.id] = node;
       }
+    };
+
+    Mooog.extend = function(nodeName, nodeDef) {
+      (function(child, parent) {
+        var ctor, j, key, len;
+        for (j = 0, len = parent.length; j < len; j++) {
+          key = parent[j];
+          if (Object.hasOwnProperty.call(parent, key)) {
+            child[key] = parent[key];
+          }
+        }
+        ctor = function() {
+          this.constructor = child;
+          return this;
+        };
+        ctor.prototype = parent.prototype;
+        child.prototype = new ctor;
+        child.__super__ = parent.prototype;
+        return child;
+      })(nodeDef, Mooog.MooogAudioNode);
+      return this.LEGAL_NODES[nodeName] = nodeDef;
     };
 
     Mooog.freq = function(n) {
