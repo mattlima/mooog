@@ -2,3 +2,5 @@ node_modules
 source/*
 *.wav
 server.rb
+
+build/
