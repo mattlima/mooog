@@ -14,8 +14,8 @@ via `gain` and `pan` methods exposed on the track object.
         @debug 'initializing track object'
         config.node_type = 'Track'
         super
-        @configure_from config
         
+      before_config: (config)->
         #todo: make sure we don't need to use insert_node() for this
         @_pan_stage = @_instance.context.createStereoPanner()
         @_gain_stage = @_instance.context.createGain()
@@ -25,8 +25,9 @@ via `gain` and `pan` methods exposed on the track object.
         @_destination = @_pan_stage
         @gain = @_gain_stage.gain
         @pan = @_pan_stage.pan
+      
+      after_config: (config) ->
         
-        @zero_node_setup config
       
       
 ### Track.send

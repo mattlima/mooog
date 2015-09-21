@@ -7,22 +7,17 @@ Wraps the AudioBufferSourceNode AudioContext object
 
     class AudioBufferSource extends MooogAudioNode
       constructor: (@_instance, config = {}) ->
-        config.node_type = 'AudioBufferSource'
         super
-        @configure_from config
         
+      before_config: (config)->
         @insert_node @context.createBufferSource(), 0
         @define_buffer_source_properties()
-        
-        @zero_node_setup config
-        
+      
+      after_config: (config)->
         @insert_node new Gain @_instance, {
           gain: 1.0
           connect_to_destination: @config.connect_to_destination
           }
-          
-        
-
         @_state = 'stopped'
         @define_readonly_property 'state', () =>
           @_state

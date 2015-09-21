@@ -5,15 +5,13 @@ of the native constructor can be passed in the configuration object.
 
     class ChannelMerger extends MooogAudioNode
       constructor: (@_instance, config = {}) ->
-        config.node_type = 'ChannelMerger'
-        numberOfInputs = if config.numberOfInputs? then config.numberOfInputs else 6
+        @__numberOfInputs = if config.numberOfInputs? then config.numberOfInputs else 6
         delete config.numberOfInputs
-        
         super
-        @configure_from config
         
-        @insert_node @context.createChannelMerger( numberOfInputs ), 0
+      before_config: (config)->
+        @insert_node @context.createChannelMerger( @__numberOfInputs ), 0
         
-        @zero_node_setup config
 
+      after_config: (config)->
       

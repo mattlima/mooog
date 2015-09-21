@@ -4,10 +4,11 @@ Wraps the BiquadFilterNode AudioContext object
 
     class BiquadFilter extends MooogAudioNode
       constructor: (@_instance, config = {}) ->
-        config.node_type = 'BiquadFilter'
         super
-        @configure_from config
+      
+      before_config: (config)->
         @insert_node @context.createBiquadFilter(), 0
-        @zero_node_setup config
+      
+      after_config: (config)->
 
       

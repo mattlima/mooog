@@ -52,16 +52,23 @@ Take care of first type signature (ID and string type)
         if @__typeof(node_list[0]) is "string" \
         and @__typeof(node_list[1]) is "string" \
         and Mooog.LEGAL_NODES[node_list[1]]?
-          return new Mooog.LEGAL_NODES[node_list[1]] @_instance, { id: node_list[0] }
+          return new Mooog.LEGAL_NODES[node_list[1]] @_instance,
+          { id: node_list[0], node_type: node_list[1] }
 
 Otherwise, this is one or more config objects.
         
         if node_list.length is 1
-          return unless @constructor.name is "MooogAudioNode"
-          if Mooog.LEGAL_NODES[node_list[0].node_type]?
-            return new Mooog.LEGAL_NODES[node_list[0].node_type] @_instance, node_list[0]
+          config = node_list[0]
+          if @constructor.name is "MooogAudioNode"
+            if Mooog.LEGAL_NODES[config.node_type]?
+              return new Mooog.LEGAL_NODES[config.node_type] @_instance, config
+            else
+              throw new Error("Omitted or undefined node type in config options.")
           else
-            throw new Error("Omitted or undefined node type in config options.")
+            @configure_from config
+            @before_config config
+            @zero_node_setup config
+            @after_config config
         else
           for i in node_list
             if Mooog.LEGAL_NODES[node_list[i].node_type?]
@@ -77,6 +84,7 @@ wrapped `AudioNode`. This function merges the config defaults with the supplied 
 the `config` property of the node
       
       configure_from: (ob) ->
+        @node_type = if ob.node_type? then ob.node_type else @constructor.name
         @id = if ob.id? then ob.id else @new_id()
         for k, v of @config_defaults
           @config[k] = if (k of ob) then ob[k] else @config_defaults[k]
@@ -109,7 +117,7 @@ configuration object.
 Includes the ID in the string representation of the object.      
 
       toString: () ->
-        "#{@.constructor.name}#"+@id
+        "#{@node_type}#"+@id
 
 
 
@@ -118,7 +126,7 @@ Generates a new string identifier for this node.
       
       
       new_id: () ->
-        "#{@.constructor.name}_#{Math.round(Math.random()*100000)}"
+        "#{@node_type}_#{Math.round(Math.random()*100000)}"
 
 
 ### MooogAudioNode.__typeof

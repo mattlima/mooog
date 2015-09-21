@@ -21,6 +21,8 @@ as the Mooog global.
         'ChannelSplitter': ChannelSplitter
         'MediaElementSource': MediaElementSource
         'ScriptProcessor': ScriptProcessor
+      
+      @MooogAudioNode = MooogAudioNode
 
       
       constructor: (@initConfig = {}) ->
@@ -88,7 +90,6 @@ and gain stages.
           
 
 
-        
       node: (id, node_list...) ->
         return new MooogAudioNode(this) unless arguments.length
         if typeof id is 'string'
@@ -104,25 +105,23 @@ and gain stages.
           @_nodes[node.id] = node
    
 
-### Mooog.extend
+### Mooog.extend_with
 Experimental function for adding new Node definitions from external sources
 
 
-      @extend: (nodeName, nodeDef) ->
-        ((child, parent) ->
-          for key in parent
-            if (Object.hasOwnProperty.call(parent, key))
-              child[key] = parent[key]
-          ctor = ()->
-            @constructor = child
-            @
-          ctor.prototype = parent.prototype
-          child.prototype = new ctor
-          child.__super__ = parent.prototype
-          child
-          )(nodeDef, Mooog.MooogAudioNode)
-        @LEGAL_NODES[nodeName] = nodeDef
-
+      @extend_with: (nodeName, nodeDef) ->
+        window.nodeDef = nodeDef
+        if !nodeDef.prototype.before_config?
+          throw new Error "Node definition prototype must have a before_config function"
+        if !nodeDef.prototype.after_config?
+          throw new Error "Node definition prototype must have a before_config function"
+        if Mooog.LEGAL_NODES[nodeName]?
+          throw new Error "#{nodeName} class already defined"
+        Mooog.LEGAL_NODES[nodeName] = nodeDef
+        null
+      
+      
+                
 
 
       
