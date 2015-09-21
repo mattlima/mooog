@@ -1,4 +1,5 @@
 // require_tree .
+//= require modernizr/modernizr
 //= require jquery/dist/jquery
 //= require foundation/js/foundation/foundation
 //= require foundation/js/foundation/foundation.equalizer
