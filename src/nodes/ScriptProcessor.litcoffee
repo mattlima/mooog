@@ -6,10 +6,10 @@ configuration object, as can the callback `onaudioprocess` function.
 
     class ScriptProcessor extends MooogAudioNode
       constructor: (@_instance, config = {}) ->
-        bufferSize = if config.bufferSize? then config.bufferSize else null
-        numberOfInputChannels = \
+        @__bufferSize = if config.bufferSize? then config.bufferSize else null
+        @__numberOfInputChannels = \
         if config.numberOfInputChannels? then config.numberOfInputChannels else 2
-        numberOfOuputChannels = \
+        @__numberOfOuputChannels = \
         if config.numberOfOuputChannels? then config.numberOfOuputChannels else 2
         delete config.bufferSize
         delete config.numberOfInputChannels
@@ -21,7 +21,7 @@ configuration object, as can the callback `onaudioprocess` function.
       
       before_config: (config)->
         @insert_node @context.createScriptProcessor(
-          bufferSize, numberOfInputChannels, numberOfOuputChannels
+          @__bufferSize, @__numberOfInputChannels, @__numberOfOuputChannels
         ), 0
       
       after_config: (config)->

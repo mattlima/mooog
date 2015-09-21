@@ -42,11 +42,9 @@ object (`AudioContext` or `webkitAudioContext`)
           curve_length: 65536
           fake_zero: 1/65536
         @init(@initConfig)
-        
-
         @_nodes = {}
         #@_connections = {}
-
+        @__typeof = MooogAudioNode.prototype.__typeof
 
 
       init: (initConfig) ->
@@ -89,24 +87,121 @@ and gain stages.
           throw new Error("Track id must be a string")
           
 
+### Mooog.node
 
-      node: (id, node_list...) ->
-        return new MooogAudioNode(this) unless arguments.length
-        if typeof id is 'string'
-          if node_list.length
-            throw new Error("#{id} is already assigned to #{@_nodes[id]}") if @_nodes[id]?
-            throw new Error("Unknown node type #{node_list}") unless Mooog.LEGAL_NODES[node_list]?
-            @_nodes[id] = new MooogAudioNode(this, id, node_list...)
-          else if @_nodes?[id]?
-            return @_nodes[id]
-          else throw new Error("No MooogAudioNode found with id #{id}")
-        else
-          node = new MooogAudioNode(this, [id].concat(node_list...)...)
-          @_nodes[node.id] = node
-   
+Creates new nodes or chains of nodes. Signatures:
+
+> node(id:string, node_type:string)
+
+`id`: A unique identifier to assign to this Node
+`node_type`: String representing the type of Node to initialize
+
+
+> node(node_definition:object)
+> node(id:string, node_definition:object [, node_definition...])
+
+`node_definition`: An object used to create and configure the new Node. 
+
+Required properties:
+  - `node_type`: String indicating the type of Node (Oscillator, Gain, etc.)
+  
+Optional properties for all nodes
+  - `id`: Unique string identifier, will be created programatically if not given.
+  - `connect_to_destination`: Boolean indicating whether the last in this node's 
+`_nodes` array is automatically connected to the `AudioDestinationNode`. *default: true*
+
+Additional properties  
+  - Any additional key-value pairs will be used to set properties of the underlying `AudioNode`
+object after initialization. 
+
+If more than one `node_definition` object is given, the first argument must be a string id
+to assign to a `MooogAudioNode` base node. The nodes will be added to its internal chain 
+according to the `node_definition` objects.
+
+
+      node: () ->
+        arg0 = arguments[0]
+        arg1 = arguments[1]
+        type0 = @__typeof arg0
+        type1 = @__typeof arg1
+        
+        
+Take care of first type signature (ID and string type)
+        
+    
+        if type0 is "string" and type1 is "string"
+          if Mooog.LEGAL_NODES[arg1]?
+            if @_nodes[arg0]
+              throw new Error("#{arg0} is already assigned to #{@_nodes[arg0]}")
+            @_nodes[arg0] = new Mooog.LEGAL_NODES[arg1] @, { id: arg0, node_type: arg1 }
+          else
+            console.log(arguments)
+            throw new Error "Unknown node type #{arg1}"
+            
+            
+This might be a request for an existing node
+        
+    
+        else if type0 is "string" and type1 is "undefined"
+          if @_nodes[arg0]
+            return @_nodes[arg0]
+          else
+            throw new Error("No MooogAudioNode found with id #{arg0}")
+    
+            
+Is it a single `node_definition` object?
+    
+        
+        else if type0 is "object" and type1 is "undefined"
+          if @_nodes[arg0.id]
+            throw new Error("#{arg0.id} is already assigned to #{@_nodes[arg0.id]}")
+          else if Mooog.LEGAL_NODES[arg0.node_type]?
+            new_node = new Mooog.LEGAL_NODES[arg0.node_type] @, arg0
+            @_nodes[new_node.id] = new_node
+          else
+            throw new Error("Omitted or undefined node type in config options.")
+        
+Or an array of `node_definition` objects
+        
+        
+        else if type0 is "object" and type1 is "object"
+          throw new Error "A string id for the base node must be provided if you give
+          more than one node definition"
+        
+        else if type0 is "string" and type1 is "object"
+          new_node = new MooogAudioNode @, {id: arg0}
+          @_nodes[new_node.id] = new_node
+          for i in arguments
+            new_node.add new MooogAudioNode @, i
+            
+            
+        
 
 ### Mooog.extend_with
-Experimental function for adding new Node definitions from external sources
+
+Adds a new node definition from defined after initialization. At a minimum, the node definition
+looks like:
+
+``` coffeescript
+class MyNewNode extends Mooog.MooogAudioNode
+  constructor: (@_instance, config)->
+    super
+
+  #this hook runs before the configuration object is parsed
+  before_config: (config)->
+    #do something here like create the internal node chain
+  
+  #this hook runs after the configuration object is parsed
+  after_config: (config)->
+    #add additional nodes, perform post-config settings
+
+  #all object properties defined will be available on the node
+  some_new_function: (e) ->
+    
+
+#Then run this command to sanity-check the node and make it available via the Mooog instance
+Mooog.extend_with "MyNewNodeName", MyNewNode
+```
 
 
       @extend_with: (nodeName, nodeDef) ->
