@@ -6,9 +6,7 @@
     bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   MooogAudioNode = (function() {
-    function MooogAudioNode() {
-      var _instance, i, j, len, node_list;
-      _instance = arguments[0], node_list = 2 <= arguments.length ? slice.call(arguments, 1) : [];
+    function MooogAudioNode(_instance, config) {
       this._instance = _instance;
       this._destination = this._instance._destination;
       this.context = this._instance.context;
@@ -19,34 +17,23 @@
       this.config = {};
       this._connections = [];
       this._exposed_properties = {};
-      if (this.__typeof(node_list[0]) === "string" && this.__typeof(node_list[1]) === "string" && (Mooog.LEGAL_NODES[node_list[1]] != null)) {
-        return new Mooog.LEGAL_NODES[node_list[1]](this._instance, {
-          id: node_list[0]
-        });
-      }
-      if (node_list.length === 1) {
-        if (this.constructor.name !== "MooogAudioNode") {
-          return;
-        }
-        if (Mooog.LEGAL_NODES[node_list[0].node_type] != null) {
-          return new Mooog.LEGAL_NODES[node_list[0].node_type](this._instance, node_list[0]);
+      if (this.constructor.name === "MooogAudioNode") {
+        if (Mooog.LEGAL_NODES[config.node_type] != null) {
+          return new Mooog.LEGAL_NODES[config.node_type](this._instance, config);
         } else {
           throw new Error("Omitted or undefined node type in config options.");
         }
       } else {
-        for (j = 0, len = node_list.length; j < len; j++) {
-          i = node_list[j];
-          if (Mooog.LEGAL_NODES[node_list[i].node_type != null]) {
-            this._nodes.push(new Mooog.LEGAL_NODES[node_list[i].node_type](this._instance, node_list[i]));
-          } else {
-            throw new Error("Omitted or undefined node type in config options.");
-          }
-        }
+        this.configure_from(config);
+        this.before_config(config);
+        this.zero_node_setup(config);
+        this.after_config(config);
       }
     }
 
     MooogAudioNode.prototype.configure_from = function(ob) {
       var k, ref, v;
+      this.node_type = ob.node_type != null ? ob.node_type : this.constructor.name;
       this.id = ob.id != null ? ob.id : this.new_id();
       ref = this.config_defaults;
       for (k in ref) {
@@ -84,11 +71,11 @@
     };
 
     MooogAudioNode.prototype.toString = function() {
-      return (this.constructor.name + "#") + this.id;
+      return (this.node_type + "#") + this.id;
     };
 
     MooogAudioNode.prototype.new_id = function() {
-      return this.constructor.name + "_" + (Math.round(Math.random() * 100000));
+      return this.node_type + "_" + (Math.round(Math.random() * 100000));
     };
 
     MooogAudioNode.prototype.__typeof = function(thing) {
@@ -590,12 +577,14 @@
       if (config == null) {
         config = {};
       }
-      config.node_type = 'Analyser';
       Analyser.__super__.constructor.apply(this, arguments);
-      this.configure_from(config);
-      this.insert_node(this.context.createAnalyser(), 0);
-      this.zero_node_setup(config);
     }
+
+    Analyser.prototype.before_config = function(config) {
+      return this.insert_node(this.context.createAnalyser(), 0);
+    };
+
+    Analyser.prototype.after_config = function(config) {};
 
     return Analyser;
 
@@ -609,23 +598,26 @@
       if (config == null) {
         config = {};
       }
-      config.node_type = 'AudioBufferSource';
       AudioBufferSource.__super__.constructor.apply(this, arguments);
-      this.configure_from(config);
+    }
+
+    AudioBufferSource.prototype.before_config = function(config) {
       this.insert_node(this.context.createBufferSource(), 0);
-      this.define_buffer_source_properties();
-      this.zero_node_setup(config);
+      return this.define_buffer_source_properties();
+    };
+
+    AudioBufferSource.prototype.after_config = function(config) {
       this.insert_node(new Gain(this._instance, {
         gain: 1.0,
         connect_to_destination: this.config.connect_to_destination
       }));
       this._state = 'stopped';
-      this.define_readonly_property('state', (function(_this) {
+      return this.define_readonly_property('state', (function(_this) {
         return function() {
           return _this._state;
         };
       })(this));
-    }
+    };
 
     AudioBufferSource.prototype.start = function() {
       if (this._state === 'playing') {
@@ -685,12 +677,14 @@
       if (config == null) {
         config = {};
       }
-      config.node_type = 'BiquadFilter';
       BiquadFilter.__super__.constructor.apply(this, arguments);
-      this.configure_from(config);
-      this.insert_node(this.context.createBiquadFilter(), 0);
-      this.zero_node_setup(config);
     }
+
+    BiquadFilter.prototype.before_config = function(config) {
+      return this.insert_node(this.context.createBiquadFilter(), 0);
+    };
+
+    BiquadFilter.prototype.after_config = function(config) {};
 
     return BiquadFilter;
 
@@ -700,19 +694,20 @@
     extend(ChannelMerger, superClass);
 
     function ChannelMerger(_instance, config) {
-      var numberOfInputs;
       this._instance = _instance;
       if (config == null) {
         config = {};
       }
-      config.node_type = 'ChannelMerger';
-      numberOfInputs = config.numberOfInputs != null ? config.numberOfInputs : 6;
+      this.__numberOfInputs = config.numberOfInputs != null ? config.numberOfInputs : 6;
       delete config.numberOfInputs;
       ChannelMerger.__super__.constructor.apply(this, arguments);
-      this.configure_from(config);
-      this.insert_node(this.context.createChannelMerger(numberOfInputs), 0);
-      this.zero_node_setup(config);
     }
+
+    ChannelMerger.prototype.before_config = function(config) {
+      return this.insert_node(this.context.createChannelMerger(this.__numberOfInputs), 0);
+    };
+
+    ChannelMerger.prototype.after_config = function(config) {};
 
     return ChannelMerger;
 
@@ -722,19 +717,20 @@
     extend(ChannelSplitter, superClass);
 
     function ChannelSplitter(_instance, config) {
-      var numberOfOutputs;
       this._instance = _instance;
       if (config == null) {
         config = {};
       }
-      config.node_type = 'ChannelSplitter';
-      numberOfOutputs = config.numberOfOutputs != null ? config.numberOfOutputs : 6;
+      this.__numberOfOutputs = config.numberOfOutputs != null ? config.numberOfOutputs : 6;
       delete config.numberOfOutputs;
       ChannelSplitter.__super__.constructor.apply(this, arguments);
-      this.configure_from(config);
-      this.insert_node(this.context.createChannelSplitter(numberOfOutputs), 0);
-      this.zero_node_setup(config);
     }
+
+    ChannelSplitter.prototype.before_config = function(config) {
+      return this.insert_node(this.context.createChannelSplitter(this.__numberOfOutputs), 0);
+    };
+
+    ChannelSplitter.prototype.after_config = function(config) {};
 
     return ChannelSplitter;
 
@@ -748,13 +744,15 @@
       if (config == null) {
         config = {};
       }
-      config.node_type = 'Convolver';
       Convolver.__super__.constructor.apply(this, arguments);
-      this.configure_from(config);
-      this.insert_node(this.context.createConvolver(), 0);
-      this.define_buffer_source_properties();
-      this.zero_node_setup(config);
     }
+
+    Convolver.prototype.before_config = function(config) {
+      this.insert_node(this.context.createConvolver(), 0);
+      return this.define_buffer_source_properties();
+    };
+
+    Convolver.prototype.after_config = function(config) {};
 
     return Convolver;
 
@@ -768,9 +766,10 @@
       if (config == null) {
         config = {};
       }
-      config.node_type = 'Delay';
       Delay.__super__.constructor.apply(this, arguments);
-      this.configure_from(config);
+    }
+
+    Delay.prototype.before_config = function(config) {
       this.insert_node(this.context.createDelay(), 0);
       this._feedback_stage = new Gain(this._instance, {
         connect_to_destination: false,
@@ -778,9 +777,10 @@
       });
       this._nodes[0].connect(this.to(this._feedback_stage));
       this._feedback_stage.connect(this.to(this._nodes[0]));
-      this.feedback = this._feedback_stage.gain;
-      this.zero_node_setup(config);
-    }
+      return this.feedback = this._feedback_stage.gain;
+    };
+
+    Delay.prototype.after_config = function(config) {};
 
     return Delay;
 
@@ -794,12 +794,14 @@
       if (config == null) {
         config = {};
       }
-      config.node_type = 'DynamicsCompressor';
       DynamicsCompressor.__super__.constructor.apply(this, arguments);
-      this.configure_from(config);
-      this.insert_node(this.context.createDynamicsCompressor(), 0);
-      this.zero_node_setup(config);
     }
+
+    DynamicsCompressor.prototype.before_config = function(config) {
+      return this.insert_node(this.context.createDynamicsCompressor(), 0);
+    };
+
+    DynamicsCompressor.prototype.after_config = function(config) {};
 
     return DynamicsCompressor;
 
@@ -813,13 +815,15 @@
       if (config == null) {
         config = {};
       }
-      config.node_type = 'Gain';
       Gain.__super__.constructor.apply(this, arguments);
-      this.configure_from(config);
-      this.insert_node(this.context.createGain(), 0);
-      this._nodes[0].gain.value = this._instance.config.default_gain;
-      this.zero_node_setup(config);
     }
+
+    Gain.prototype.before_config = function(config) {
+      this.insert_node(this.context.createGain(), 0);
+      return this._nodes[0].gain.value = this._instance.config.default_gain;
+    };
+
+    Gain.prototype.after_config = function(config) {};
 
     return Gain;
 
@@ -833,18 +837,20 @@
       if (config == null) {
         config = {};
       }
-      config.node_type = 'MediaElementSource';
+      MediaElementSource.__super__.constructor.apply(this, arguments);
+    }
+
+    MediaElementSource.prototype.before_config = function(config) {
       if (!config.mediaElement) {
         throw new Error("MediaElementSource requires mediaElement config argument");
       }
       if (typeof config.mediaElement === 'string') {
         config.mediaElement = document.querySelector(config.mediaElement);
       }
-      MediaElementSource.__super__.constructor.apply(this, arguments);
-      this.configure_from(config);
-      this.insert_node(this.context.createMediaElementSource(config.mediaElement), 0);
-      this.zero_node_setup(config);
-    }
+      return this.insert_node(this.context.createMediaElementSource(config.mediaElement), 0);
+    };
+
+    MediaElementSource.prototype.after_config = function(config) {};
 
     return MediaElementSource;
 
@@ -860,23 +866,26 @@
       }
       this.__start = bind(this.__start, this);
       this.__stop = bind(this.__stop, this);
-      config.node_type = 'Oscillator';
       Oscillator.__super__.constructor.apply(this, arguments);
-      this.configure_from(config);
-      this.insert_node(this.context.createOscillator(), 0);
-      this.zero_node_setup(config);
+    }
+
+    Oscillator.prototype.before_config = function(config) {
+      return this.insert_node(this.context.createOscillator(), 0);
+    };
+
+    Oscillator.prototype.after_config = function(config) {
       this.insert_node(new Gain(this._instance, {
         connect_to_destination: this.config.connect_to_destination
       }));
       this._is_started = false;
       this._state = 'stopped';
       this._timeout = false;
-      this.define_readonly_property('state', (function(_this) {
+      return this.define_readonly_property('state', (function(_this) {
         return function() {
           return _this._state;
         };
       })(this));
-    }
+    };
 
     Oscillator.prototype.start = function(time) {
       if (time == null) {
@@ -935,24 +944,25 @@
     extend(ScriptProcessor, superClass);
 
     function ScriptProcessor(_instance, config) {
-      var bufferSize, numberOfInputChannels, numberOfOuputChannels;
       this._instance = _instance;
       if (config == null) {
         config = {};
       }
-      config.node_type = 'ScriptProcessor';
-      bufferSize = config.bufferSize != null ? config.bufferSize : null;
-      numberOfInputChannels = config.numberOfInputChannels != null ? config.numberOfInputChannels : 2;
-      numberOfOuputChannels = config.numberOfOuputChannels != null ? config.numberOfOuputChannels : 2;
+      this.__bufferSize = config.bufferSize != null ? config.bufferSize : null;
+      this.__numberOfInputChannels = config.numberOfInputChannels != null ? config.numberOfInputChannels : 2;
+      this.__numberOfOuputChannels = config.numberOfOuputChannels != null ? config.numberOfOuputChannels : 2;
       delete config.bufferSize;
       delete config.numberOfInputChannels;
       delete config.numberOfOuputChannels;
       this.debug("ScriptProcessorNode is deprecated and will be replaced by AudioWorker");
       ScriptProcessor.__super__.constructor.apply(this, arguments);
-      this.configure_from(config);
-      this.insert_node(this.context.createScriptProcessor(bufferSize, numberOfInputChannels, numberOfOuputChannels), 0);
-      this.zero_node_setup(config);
     }
+
+    ScriptProcessor.prototype.before_config = function(config) {
+      return this.insert_node(this.context.createScriptProcessor(this.__bufferSize, this.__numberOfInputChannels, this.__numberOfOuputChannels), 0);
+    };
+
+    ScriptProcessor.prototype.after_config = function(config) {};
 
     return ScriptProcessor;
 
@@ -966,12 +976,14 @@
       if (config == null) {
         config = {};
       }
-      config.node_type = 'StereoPanner';
       StereoPanner.__super__.constructor.apply(this, arguments);
-      this.configure_from(config);
-      this.insert_node(this.context.createStereoPanner(), 0);
-      this.zero_node_setup(config);
     }
+
+    StereoPanner.prototype.before_config = function(config) {
+      return this.insert_node(this.context.createStereoPanner(), 0);
+    };
+
+    StereoPanner.prototype.after_config = function(config) {};
 
     return StereoPanner;
 
@@ -989,7 +1001,9 @@
       this.debug('initializing track object');
       config.node_type = 'Track';
       Track.__super__.constructor.apply(this, arguments);
-      this.configure_from(config);
+    }
+
+    Track.prototype.before_config = function(config) {
       this._pan_stage = this._instance.context.createStereoPanner();
       this._gain_stage = this._instance.context.createGain();
       this._gain_stage.gain.value = this._instance.config.default_gain;
@@ -997,9 +1011,10 @@
       this._gain_stage.connect(this._destination);
       this._destination = this._pan_stage;
       this.gain = this._gain_stage.gain;
-      this.pan = this._pan_stage.pan;
-      this.zero_node_setup(config);
-    }
+      return this.pan = this._pan_stage.pan;
+    };
+
+    Track.prototype.after_config = function(config) {};
 
     Track.prototype.send = function(id, dest, pre, gain) {
       var new_send, source;
@@ -1037,12 +1052,14 @@
       if (config == null) {
         config = {};
       }
-      config.node_type = 'WaveShaper';
       WaveShaper.__super__.constructor.apply(this, arguments);
-      this.configure_from(config);
-      this.insert_node(this.context.createWaveShaper(), 0);
-      this.zero_node_setup(config);
     }
+
+    WaveShaper.prototype.before_config = function(config) {
+      return this.insert_node(this.context.createWaveShaper(), 0);
+    };
+
+    WaveShaper.prototype.after_config = function(config) {};
 
     WaveShaper.prototype.chebyshev = function(terms, last, current) {
       var el, i, lasttemp, newcurrent;
@@ -1136,6 +1153,8 @@
       'ScriptProcessor': ScriptProcessor
     };
 
+    Mooog.MooogAudioNode = MooogAudioNode;
+
     function Mooog(initConfig1) {
       this.initConfig = initConfig1 != null ? initConfig1 : {};
       this._BROWSER_CONSTRUCTOR = false;
@@ -1152,6 +1171,7 @@
       };
       this.init(this.initConfig);
       this._nodes = {};
+      this.__typeof = MooogAudioNode.prototype.__typeof;
     }
 
     Mooog.prototype.init = function(initConfig) {
@@ -1208,34 +1228,68 @@
     };
 
     Mooog.prototype.node = function() {
-      var id, node, node_list, ref, ref1;
-      id = arguments[0], node_list = 2 <= arguments.length ? slice.call(arguments, 1) : [];
-      if (!arguments.length) {
-        return new MooogAudioNode(this);
-      }
-      if (typeof id === 'string') {
-        if (node_list.length) {
-          if (this._nodes[id] != null) {
-            throw new Error(id + " is already assigned to " + this._nodes[id]);
+      var arg0, arg1, i, j, len, new_node, results, type0, type1;
+      arg0 = arguments[0];
+      arg1 = arguments[1];
+      type0 = this.__typeof(arg0);
+      type1 = this.__typeof(arg1);
+      if (type0 === "string" && type1 === "string") {
+        if (Mooog.LEGAL_NODES[arg1] != null) {
+          if (this._nodes[arg0]) {
+            throw new Error(arg0 + " is already assigned to " + this._nodes[arg0]);
           }
-          return this._nodes[id] = (function(func, args, ctor) {
-            ctor.prototype = func.prototype;
-            var child = new ctor, result = func.apply(child, args);
-            return Object(result) === result ? result : child;
-          })(MooogAudioNode, [this, id].concat(slice.call(node_list)), function(){});
-        } else if (((ref = this._nodes) != null ? ref[id] : void 0) != null) {
-          return this._nodes[id];
+          return this._nodes[arg0] = new Mooog.LEGAL_NODES[arg1](this, {
+            id: arg0,
+            node_type: arg1
+          });
         } else {
-          throw new Error("No MooogAudioNode found with id " + id);
+          console.log(arguments);
+          throw new Error("Unknown node type " + arg1);
         }
-      } else {
-        node = (function(func, args, ctor) {
-          ctor.prototype = func.prototype;
-          var child = new ctor, result = func.apply(child, args);
-          return Object(result) === result ? result : child;
-        })(MooogAudioNode, [this].concat(slice.call((ref1 = [id]).concat.apply(ref1, node_list))), function(){});
-        return this._nodes[node.id] = node;
+      } else if (type0 === "string" && type1 === "undefined") {
+        if (this._nodes[arg0]) {
+          return this._nodes[arg0];
+        } else {
+          throw new Error("No MooogAudioNode found with id " + arg0);
+        }
+      } else if (type0 === "object" && type1 === "undefined") {
+        if (this._nodes[arg0.id]) {
+          throw new Error(arg0.id + " is already assigned to " + this._nodes[arg0.id]);
+        } else if (Mooog.LEGAL_NODES[arg0.node_type] != null) {
+          new_node = new Mooog.LEGAL_NODES[arg0.node_type](this, arg0);
+          return this._nodes[new_node.id] = new_node;
+        } else {
+          throw new Error("Omitted or undefined node type in config options.");
+        }
+      } else if (type0 === "object" && type1 === "object") {
+        throw new Error("A string id for the base node must be provided if you give more than one node definition");
+      } else if (type0 === "string" && type1 === "object") {
+        new_node = new MooogAudioNode(this, {
+          id: arg0
+        });
+        this._nodes[new_node.id] = new_node;
+        results = [];
+        for (j = 0, len = arguments.length; j < len; j++) {
+          i = arguments[j];
+          results.push(new_node.add(new MooogAudioNode(this, i)));
+        }
+        return results;
       }
+    };
+
+    Mooog.extend_with = function(nodeName, nodeDef) {
+      window.nodeDef = nodeDef;
+      if (nodeDef.prototype.before_config == null) {
+        throw new Error("Node definition prototype must have a before_config function");
+      }
+      if (nodeDef.prototype.after_config == null) {
+        throw new Error("Node definition prototype must have a before_config function");
+      }
+      if (Mooog.LEGAL_NODES[nodeName] != null) {
+        throw new Error(nodeName + " class already defined");
+      }
+      Mooog.LEGAL_NODES[nodeName] = nodeDef;
+      return null;
     };
 
     Mooog.freq = function(n) {

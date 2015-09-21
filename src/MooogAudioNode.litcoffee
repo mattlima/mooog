@@ -6,21 +6,12 @@ The MooogAudioNode object wraps one or more AudioNode objects. By default it
 exposes the `AudioNode` methods of the first AudioNode in the `_nodes`
 array. 
 
-Signatures:
 
-> MooogAudioNode(instance:Mooog , id:string, node_def:mixed)
+> MooogAudioNode(instance:Mooog , node_definition:object)
 
 `_instance`: The parent `Mooog` instance  
-`id`: A unique identifier to assign to this Node
-`node_def`: Either a string representing the type of Node to initialize
+`node_definition`: Either a string representing the type of Node to initialize
 or an object with initialization params (see below) 
-
-
-
-> MooogAudioNode(instance:Mooog , node_definition:object [, node_definition...])
-
-`_instance`: The parent `Mooog` instance  
-`node_definition`: An object used to create and configure the new Node. 
 
 Required properties:
   - `node_type`: String indicating the type of Node (Oscillator, Gain, etc.)
@@ -37,7 +28,7 @@ object after initialization.
 
 
     class MooogAudioNode
-      constructor: (@_instance, node_list...) ->
+      constructor: (@_instance, config) ->
         @_destination = @_instance._destination
         @context = @_instance.context
         @_nodes = []
@@ -46,29 +37,19 @@ object after initialization.
         @config = {}
         @_connections = []
         @_exposed_properties = {}
+                
         
-Take care of first type signature (ID and string type)
-
-        if @__typeof(node_list[0]) is "string" \
-        and @__typeof(node_list[1]) is "string" \
-        and Mooog.LEGAL_NODES[node_list[1]]?
-          return new Mooog.LEGAL_NODES[node_list[1]] @_instance, { id: node_list[0] }
-
-Otherwise, this is one or more config objects.
-        
-        if node_list.length is 1
-          return unless @constructor.name is "MooogAudioNode"
-          if Mooog.LEGAL_NODES[node_list[0].node_type]?
-            return new Mooog.LEGAL_NODES[node_list[0].node_type] @_instance, node_list[0]
+        if @constructor.name is "MooogAudioNode"
+          if Mooog.LEGAL_NODES[config.node_type]?
+            return new Mooog.LEGAL_NODES[config.node_type] @_instance, config
           else
             throw new Error("Omitted or undefined node type in config options.")
         else
-          for i in node_list
-            if Mooog.LEGAL_NODES[node_list[i].node_type?]
-              @_nodes.push new Mooog.LEGAL_NODES[node_list[i].node_type] @_instance, node_list[i]
-            else
-              throw new Error("Omitted or undefined node type in config options.")
-
+          @configure_from config
+          @before_config config
+          @zero_node_setup config
+          @after_config config
+        
         
 
 ### MooogAudioNode.configure_from
@@ -77,6 +58,7 @@ wrapped `AudioNode`. This function merges the config defaults with the supplied 
 the `config` property of the node
       
       configure_from: (ob) ->
+        @node_type = if ob.node_type? then ob.node_type else @constructor.name
         @id = if ob.id? then ob.id else @new_id()
         for k, v of @config_defaults
           @config[k] = if (k of ob) then ob[k] else @config_defaults[k]
@@ -109,7 +91,7 @@ configuration object.
 Includes the ID in the string representation of the object.      
 
       toString: () ->
-        "#{@.constructor.name}#"+@id
+        "#{@node_type}#"+@id
 
 
 
@@ -118,7 +100,7 @@ Generates a new string identifier for this node.
       
       
       new_id: () ->
-        "#{@.constructor.name}_#{Math.round(Math.random()*100000)}"
+        "#{@node_type}_#{Math.round(Math.random()*100000)}"
 
 
 ### MooogAudioNode.__typeof

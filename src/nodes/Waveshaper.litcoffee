@@ -5,12 +5,15 @@ Wraps the WaveShaperNode AudioContext object
     class WaveShaper extends MooogAudioNode
       
       constructor: (@_instance, config = {}) ->
-        config.node_type = 'WaveShaper'
         super
-        @configure_from config
+      
+      before_config: (config)->
         @insert_node @context.createWaveShaper(), 0
-        @zero_node_setup config
-
+      
+      after_config: (config)->
+        
+        
+        
    
       
       chebyshev: (terms, last = [1], current = [1,0]) ->

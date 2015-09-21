@@ -4,13 +4,12 @@ Wraps the OscillatorNode AudioContext object
 
     class Oscillator extends MooogAudioNode
       constructor: (@_instance, config = {}) ->
-        config.node_type = 'Oscillator'
         super
-        @configure_from config
+      
+      before_config: (config)->
         @insert_node @context.createOscillator(), 0
-        @zero_node_setup config
-        
-        
+      
+      after_config: (config)->
         @insert_node new Gain( @_instance, { connect_to_destination: @config.connect_to_destination } )
         @_is_started = false
         @_state = 'stopped'

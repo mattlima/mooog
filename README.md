@@ -2,7 +2,7 @@
 
 ##Chainable AudioNode API
 
-Version 0.0.2
+Version 0.0.3
 
 ### What is Mooog?
 
@@ -392,8 +392,9 @@ If you're feeling generous, you can throw me some dosh [here.](https://www.paypa
 
 ## Version History
 
-- 0.0.1 : First working version
+- 0.0.1 : First working version.
 - 0.0.2 : Added ChannelMerger, ChannelSplitter, ScriptProcessor nodes, fixed bug when setting callbacks via the config object.
+- 0.0.3 : Refactor for more rational signatures and easier homebrew Node creation.
 
 ## Todo:
 
