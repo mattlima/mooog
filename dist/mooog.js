@@ -1,5 +1,5 @@
 (function() {
-  var Analyser, AudioBufferSource, BiquadFilter, ChannelMerger, ChannelSplitter, Convolver, Delay, DynamicsCompressor, Gain, MediaElementSource, Mooog, MooogAudioNode, Oscillator, ScriptProcessor, StereoPanner, Track, WaveShaper,
+  var Analyser, AudioBufferSource, BiquadFilter, ChannelMerger, ChannelSplitter, Convolver, Delay, DynamicsCompressor, Gain, MediaElementSource, Mooog, MooogAudioNode, Oscillator, Panner, ScriptProcessor, StereoPanner, Track, WaveShaper,
     slice = [].slice,
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty,
@@ -940,6 +940,27 @@
 
   })(MooogAudioNode);
 
+  Panner = (function(superClass) {
+    extend(Panner, superClass);
+
+    function Panner(_instance, config) {
+      this._instance = _instance;
+      if (config == null) {
+        config = {};
+      }
+      Panner.__super__.constructor.apply(this, arguments);
+    }
+
+    Panner.prototype.before_config = function(config) {
+      return this.insert_node(this.context.createPanner(), 0);
+    };
+
+    Panner.prototype.after_config = function(config) {};
+
+    return Panner;
+
+  })(MooogAudioNode);
+
   ScriptProcessor = (function(superClass) {
     extend(ScriptProcessor, superClass);
 
@@ -1137,20 +1158,21 @@
 
   Mooog = (function() {
     Mooog.LEGAL_NODES = {
-      'Oscillator': Oscillator,
-      'StereoPanner': StereoPanner,
-      'Gain': Gain,
-      'AudioBufferSource': AudioBufferSource,
-      'Convolver': Convolver,
-      'BiquadFilter': BiquadFilter,
       'Analyser': Analyser,
-      'DynamicsCompressor': DynamicsCompressor,
-      'Delay': Delay,
-      'WaveShaper': WaveShaper,
+      'AudioBufferSource': AudioBufferSource,
+      'BiquadFilter': BiquadFilter,
       'ChannelMerger': ChannelMerger,
       'ChannelSplitter': ChannelSplitter,
+      'Convolver': Convolver,
+      'Delay': Delay,
+      'DynamicsCompressor': DynamicsCompressor,
+      'Gain': Gain,
       'MediaElementSource': MediaElementSource,
-      'ScriptProcessor': ScriptProcessor
+      'Oscillator': Oscillator,
+      'Panner': Panner,
+      'ScriptProcessor': ScriptProcessor,
+      'StereoPanner': StereoPanner,
+      'WaveShaper': WaveShaper
     };
 
     Mooog.MooogAudioNode = MooogAudioNode;
@@ -1170,9 +1192,35 @@
         fake_zero: 1 / 65536
       };
       this.init(this.initConfig);
+      this.iOS_setup();
       this._nodes = {};
       this.__typeof = MooogAudioNode.prototype.__typeof;
+      if (!Mooog.browser_test().all) {
+        console.log("AudioContext not fully supported in this browser. Run Mooog.browser_test() for more info");
+      }
     }
+
+    Mooog.prototype.iOS_setup = function() {
+      var body, instantProcess, is_iOS, tmpBuf, tmpProc;
+      is_iOS = navigator.userAgent.indexOf('like Mac OS X') !== -1;
+      if (is_iOS) {
+        body = document.body;
+        tmpBuf = this.context.createBufferSource();
+        tmpProc = this.context.createScriptProcessor(256, 1, 1);
+        instantProcess = function() {
+          tmpBuf.start(0);
+          tmpBuf.connect(tmpProc);
+          return tmpProc.connect(this.context.destination);
+        };
+        body.addEventListener('touchstart', instantProcess, false);
+        return tmpProc.onaudioprocess = function() {
+          tmpBuf.disconnect();
+          tmpProc.disconnect();
+          body.removeEventListener('touchstart', instantProcess, false);
+          return tmpProc.onaudioprocess = null;
+        };
+      }
+    };
 
     Mooog.prototype.init = function(initConfig) {
       var key, ref, results, val;
@@ -1352,6 +1400,20 @@
       real = new Float32Array(a);
       imag = new Float32Array(real.length);
       return this.context.createPeriodicWave(real, imag);
+    };
+
+    Mooog.browser_test = function() {
+      var __t, ctxt, tests;
+      ctxt = window.AudioContext || window.webkitAudioContext;
+      __t = new ctxt();
+      tests = {
+        all: true
+      };
+      tests.all = (tests.unprefixed = window.AudioContext != null) ? tests.all : false;
+      tests.all = (tests.start_stop = __t.createOscillator().start != null) ? tests.all : false;
+      tests.all = (tests.stereo_panner = __t.createStereoPanner != null) ? tests.all : false;
+      tests.all = (tests.script_processor = __t.createScriptProcessor != null) ? tests.all : false;
+      return tests;
     };
 
     return Mooog;

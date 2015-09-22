@@ -7,20 +7,22 @@ as the Mooog global.
     class Mooog
     
       @LEGAL_NODES:
-        'Oscillator': Oscillator
-        'StereoPanner': StereoPanner
-        'Gain': Gain
-        'AudioBufferSource': AudioBufferSource
-        'Convolver': Convolver
-        'BiquadFilter': BiquadFilter
+      
         'Analyser': Analyser
-        'DynamicsCompressor': DynamicsCompressor
-        'Delay': Delay
-        'WaveShaper': WaveShaper
+        'AudioBufferSource': AudioBufferSource
+        'BiquadFilter': BiquadFilter
         'ChannelMerger': ChannelMerger
         'ChannelSplitter': ChannelSplitter
+        'Convolver': Convolver
+        'Delay': Delay
+        'DynamicsCompressor': DynamicsCompressor
+        'Gain': Gain
         'MediaElementSource': MediaElementSource
+        'Oscillator': Oscillator
+        'Panner': Panner
         'ScriptProcessor': ScriptProcessor
+        'StereoPanner': StereoPanner
+        'WaveShaper': WaveShaper
       
       @MooogAudioNode = MooogAudioNode
 
@@ -42,9 +44,36 @@ object (`AudioContext` or `webkitAudioContext`)
           curve_length: 65536
           fake_zero: 1/65536
         @init(@initConfig)
+        
+        @iOS_setup()
         @_nodes = {}
         #@_connections = {}
         @__typeof = MooogAudioNode.prototype.__typeof
+        console.log "AudioContext not fully supported in this browser.
+        Run Mooog.browser_test() for more info" unless Mooog.browser_test().all
+
+
+### Mooog.iOS_setup
+A little hocus pocus to get around Apple's restrictions on sound production before
+use input. Taken from 
+https://github.com/shinnn/AudioContext-Polyfill/blob/master/audiocontext-polyfill.js
+
+      iOS_setup: () ->
+        is_iOS = (navigator.userAgent.indexOf('like Mac OS X') isnt -1)
+        if is_iOS
+          body = document.body
+          tmpBuf = @context.createBufferSource()
+          tmpProc = @context.createScriptProcessor(256, 1, 1)
+          instantProcess = () ->
+            tmpBuf.start(0)
+            tmpBuf.connect(tmpProc)
+            tmpProc.connect(@context.destination)
+          body.addEventListener('touchstart', instantProcess, false)
+          tmpProc.onaudioprocess = () ->
+            tmpBuf.disconnect()
+            tmpProc.disconnect()
+            body.removeEventListener('touchstart', instantProcess, false)
+            tmpProc.onaudioprocess = null
 
 
       init: (initConfig) ->
@@ -269,7 +298,24 @@ Convenience function for converting MIDI notes to equal temperament Hz
         imag = new Float32Array(real.length)
         return @context.createPeriodicWave(real, imag)
       
+      
 
+### Mooog.browser_test
+Tests a few API hooks see whether Mooog will run correctly in a browser. Returns
+an object of test results, including `all` property which should indicate whether
+Mooog can do its thing.
+
+
+      @browser_test: ()->
+        ctxt = window.AudioContext || window.webkitAudioContext
+        __t = new ctxt()
+        tests = { all: true }
+        tests.all = if (tests.unprefixed = window.AudioContext?) then tests.all else false
+        tests.all = if (tests.start_stop = __t.createOscillator().start?) then tests.all else false
+        tests.all = if (tests.stereo_panner = __t.createStereoPanner?) then tests.all else false
+        tests.all = if (tests.script_processor = __t.createScriptProcessor?)
+        then tests.all else false
+        tests
 
 
     window.Mooog = Mooog
