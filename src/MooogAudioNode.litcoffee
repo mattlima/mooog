@@ -23,7 +23,7 @@ Optional properties for all nodes
 
 Additional properties  
   - Any additional key-value pairs will be used to set properties of the underlying `AudioNode`
-object after initialization. 
+object after initialization.
 
 
 
