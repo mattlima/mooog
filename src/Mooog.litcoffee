@@ -28,13 +28,6 @@ as the Mooog global.
 
       
       constructor: (@initConfig = {}) ->
-      
-`_BROWSER_CONSTRUCTOR` Stores the type of constructor used for the AudioContext 
-object (`AudioContext` or `webkitAudioContext`)
-
-        @_BROWSER_CONSTRUCTOR = false
-        @context = @create_context()
-        @_destination = @context.destination
         @config =
           debug: false
           default_gain: 0.5
@@ -43,6 +36,16 @@ object (`AudioContext` or `webkitAudioContext`)
           periodic_wave_length: 2048
           curve_length: 65536
           fake_zero: 1/65536
+          allow_multiple_audiocontexts: false
+              
+
+`_BROWSER_CONSTRUCTOR` Stores the type of constructor used for the AudioContext 
+object (`AudioContext` or `webkitAudioContext`)
+
+        @_BROWSER_CONSTRUCTOR = false
+        @context = @create_context()
+        @_destination = @context.destination
+        
         @init(@initConfig)
         
         @iOS_setup()
@@ -80,16 +83,21 @@ https://github.com/shinnn/AudioContext-Polyfill/blob/master/audiocontext-polyfil
         for key, val of @config
           if initConfig[key]?
             @config[key] = initConfig[key]
+        null
 
-
+        
+      @context = false
+      
       create_context: () ->
-        if(window.AudioContext?)
-          @_BROWSER_CONSTRUCTOR = 'AudioContext'
-          return new AudioContext()
-        if(window.webkitAudioContext?)
-          @_BROWSER_CONSTRUCTOR = 'webkitAudioContext'
-          return new webkitAudioContext()
-        throw new Error("This browser does not yet support the AudioContext API")
+        @_BROWSER_CONSTRUCTOR = switch
+          when window.AudioContext? then 'AudioContext'
+          when window.webkitAudioContext? then 'webkitAudioContext'
+          else throw new Error("This browser does not yet support the AudioContext API")
+        if @config.allow_multiple_audiocontexts
+          return new window[@_BROWSER_CONSTRUCTOR]
+        Mooog.context || Mooog.context = new window[@_BROWSER_CONSTRUCTOR]
+          
+        
 
 
 ### Mooog.track
