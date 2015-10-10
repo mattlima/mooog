@@ -1179,9 +1179,6 @@
 
     function Mooog(initConfig1) {
       this.initConfig = initConfig1 != null ? initConfig1 : {};
-      this._BROWSER_CONSTRUCTOR = false;
-      this.context = this.create_context();
-      this._destination = this.context.destination;
       this.config = {
         debug: false,
         default_gain: 0.5,
@@ -1189,8 +1186,12 @@
         default_send_type: 'post',
         periodic_wave_length: 2048,
         curve_length: 65536,
-        fake_zero: 1 / 65536
+        fake_zero: 1 / 65536,
+        allow_multiple_audiocontexts: false
       };
+      this._BROWSER_CONSTRUCTOR = false;
+      this.context = this.create_context();
+      this._destination = this.context.destination;
       this.init(this.initConfig);
       this.iOS_setup();
       this._nodes = {};
@@ -1223,30 +1224,34 @@
     };
 
     Mooog.prototype.init = function(initConfig) {
-      var key, ref, results, val;
+      var key, ref, val;
       ref = this.config;
-      results = [];
       for (key in ref) {
         val = ref[key];
         if (initConfig[key] != null) {
-          results.push(this.config[key] = initConfig[key]);
-        } else {
-          results.push(void 0);
+          this.config[key] = initConfig[key];
         }
       }
-      return results;
+      return null;
     };
 
+    Mooog.context = false;
+
     Mooog.prototype.create_context = function() {
-      if ((window.AudioContext != null)) {
-        this._BROWSER_CONSTRUCTOR = 'AudioContext';
-        return new AudioContext();
+      this._BROWSER_CONSTRUCTOR = (function() {
+        switch (false) {
+          case window.AudioContext == null:
+            return 'AudioContext';
+          case window.webkitAudioContext == null:
+            return 'webkitAudioContext';
+          default:
+            throw new Error("This browser does not yet support the AudioContext API");
+        }
+      })();
+      if (this.config.allow_multiple_audiocontexts) {
+        return new window[this._BROWSER_CONSTRUCTOR];
       }
-      if ((window.webkitAudioContext != null)) {
-        this._BROWSER_CONSTRUCTOR = 'webkitAudioContext';
-        return new webkitAudioContext();
-      }
-      throw new Error("This browser does not yet support the AudioContext API");
+      return Mooog.context || (Mooog.context = new window[this._BROWSER_CONSTRUCTOR]);
     };
 
     Mooog.prototype.track = function() {

@@ -84,6 +84,7 @@ It takes an optional configuration object with the following properties:
 - `periodic_wave_length`: The `PeriodicWave` generator functions calculate up to this many partials. *Default: 2048*
 - `curve_length`: The `WaveShaper` curve generator functions produce `Float32Array`s of this length. *Default: 65536*
 - `fake_zero`: This number is substituted for zero to prevent errors when zero is passed to an exponential ramp function. *Default: 1 / 65536*
+- `allow_multiple_audiocontexts`: Browsers differ in how many `AudioContext` instances they support. Safari supports one, Chrome supports 6, and Firefox appears to have no limit. Therefore, by default, Mooog reuses the same AudioContext even if you initialize multiple Mooog objects, but you can override that with this option. *Default: false*
           
 
 ### Creating AudioNodes
