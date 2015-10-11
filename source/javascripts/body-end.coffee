@@ -1,5 +1,9 @@
 $(document).foundation()
 
+if(!Mooog.browser_test().all)
+  $('#not-supported').foundation('reveal', 'open')
+
+
 $('[data-slider]').on 'change.fndtn.slider', (e)->
   $t = $(e.target)
   d = $t.data()
