@@ -17,3 +17,11 @@
         </footer>
     </div>
 </div>
+
+<% if locals[:check_support] %>
+<div class="reveal-modal medium" data-reveal id="not-supported">
+    <h3>AudioContext not fully supported</h3>
+    <p>Your browser doesn't fully support the current AudioContext spec, so these examples may not function.</p>
+    <p>For more information, see the section on <%= link_to "browser support", toc_link("browser-support") %>.</p>
+</div>
+<% end %>

@@ -64,7 +64,17 @@ h1,h2{
     @include radius();
   }
 }
+
 h3,h4,h5,h6{
   @include aller-bold();
   @include title-shadow();
+}
+
+span.supported{
+  color: green;
+  @include aller-bold();
+}
+span.unsupported{
+  color: red;
+  @include aller-bold();
 }

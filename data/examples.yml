@@ -1,12 +1,20 @@
 - :url: "basic-connections"
   :file: "1.basic-connections"
   :name: "Basic Connections"
+  :check_support: true
 - :url: "parameters"
   :file: "2.parameters"
   :name: "Parameters"
+  :check_support: true
 - :url: "tracks"
   :file: "2.tracks"
   :name: "Tracks"
+  :check_support: true
 - :url: "envelopes"
   :file: "3.envelopes"
   :name: "Envelopes"
+  :check_support: true
+- :url: "browser-support"
+  :file: "9.browser-support"
+  :name: "Browser Support"
+  :check_support: false
