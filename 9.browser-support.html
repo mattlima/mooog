@@ -1,0 +1,126 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+
+    <!-- Always force latest IE rendering engine or request Chrome Frame -->
+    <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible">
+
+    <!-- Use title if it's in the page YAML frontmatter -->
+    <title></title>
+
+    <link href="stylesheets/all.css" rel="stylesheet" type="text/css" />
+    <script src="javascripts/modernizr.js" type="text/javascript"></script>
+    <script src="javascripts/all.js" type="text/javascript"></script>
+    <script src="javascripts/highlight/highlight.pack.js" type="text/javascript"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-67532851-1', 'auto');
+  ga('send', 'pageview');
+
+</script>  </head>
+
+
+  <body class="x9">
+
+    <div class="row">
+        <div class="small-12 columns">
+          <a href="http://mattlima.github.io/mooog/"><span class="supertitle label radius">Mooog examples</span></a>
+              <h1>. </h1>
+        </div>
+    </div>
+
+
+    <div class="row">
+    <div class="small-12 columns">
+
+        <h3>Browser support</h3>
+
+        <div class="row">
+            <div class="small-12  columns">
+                <p>Mooog is not a shim for the deprecated Audio API. It also doesn't (yet) worry
+                    about cross-platform issues. It is developed and tested on the latest version
+                    of Google Chrome, and expects to run there. Ensuring cross-platform
+                    consistency is on the to-do list once the API stabilizes and browser support
+                    improves. </p>
+
+                <p><code>Mooog.browser_test()</code> returns an object with a set of boolean properties indicating whether your
+                    browser is current in its support of the spec.</p>
+
+
+              <ul class="disc">
+                  <li>Your browser <span data-mooog-toggle="unprefixed"></span> support the unprefixed <code>AudioContext</code> object.</li>
+                  <li>Your browser <span data-mooog-toggle="start_stop"></span> support the <code>start</code> and
+                  <code>stop</code> methods instead of <code>noteon</code> and <code>noteoff</code>.</li>
+                  <li>Your browser <span data-mooog-toggle="stereo_panner"></span> support the <code>StereoPannerNode</code></li>
+                  <li>Your browser <span data-mooog-toggle="script_processor"></span> support the <code>ScriptProcessorNode</code></li>
+
+
+              </ul>
+
+            </div>
+
+        </div>
+
+
+
+
+
+        <script>
+            $(document).ready(function(){
+                var support = Mooog.browser_test();
+                $("[data-mooog-toggle]").each(function(){
+                    if( support[$(this).data('mooogToggle')] ){
+                        $(this).addClass('supported').text("does");
+                    }else{
+                        $(this).addClass('unsupported').text("does not");
+                    }
+                })
+            })
+        </script>
+
+
+
+    </div>
+</div>
+
+
+
+    <div class="row">
+        <div class="small-6 columns text-left">
+        </div>
+        <div class="small-6 columns text-right">
+        </div>
+    </div>
+     <div class="row">
+    <div class="small-12 columns">
+        <footer class="panel radius">
+        	<h3>The fine print</h3>
+        	<p>Responsive design framework by <a href="http://foundation.zurb.com/">Zurb</a>.
+        	</p>
+        	<p>Automatic syntax highlighting by <a href="https://highlightjs.org/">highlight.js</a>.
+        	</p>
+        	<p>The convolver examples use impulse responses from the <a href="http://www.openairlib.net/">OpenAir Impulse Response Library</a> licensed under various Creative Commons licenses.
+        	</p>
+    		 <ul class="disc">
+        	    <li><strong><a href="http://www.openairlib.net/auralizationdb/content/st-andrews-church">st-andrews-church-ortf-shaped.wav</a></strong> : <a href="http://creativecommons.org/licenses/by-sa/3.0/">Attribution Share Alike Creative Commons license</a></li>
+    	    </ul>
+    	    <p><strong>balafon.mp3</strong> is the author's creation, released under the <a href="https://opensource.org/licenses/MIT">MIT License</a></p>
+
+
+        </footer>
+    </div>
+</div>
+
+
+
+
+     <script src="javascripts/body-end.js" type="text/javascript"></script>
+
+  </body>
+</html>

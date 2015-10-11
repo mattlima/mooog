@@ -10,6 +10,7 @@
     <title></title>
 
     <link href="stylesheets/all.css" rel="stylesheet" type="text/css" />
+    <script src="javascripts/modernizr.js" type="text/javascript"></script>
     <script src="javascripts/all.js" type="text/javascript"></script>
     <script src="javascripts/highlight/highlight.pack.js" type="text/javascript"></script>
     <script>hljs.initHighlightingOnLoad();</script>
@@ -146,7 +147,8 @@ $(document)
 <a href="tracks.html">                <div class="button"><< 3. Tracks</div>
 </a>        </div>
         <div class="small-6 columns text-right">
-        </div>
+<a href="browser-support.html">                <div class="button">5. Browser Support >></div>
+</a>        </div>
     </div>
      <div class="row">
     <div class="small-12 columns">
@@ -166,6 +168,12 @@ $(document)
 
         </footer>
     </div>
+</div>
+
+<div class="reveal-modal medium" data-reveal id="not-supported">
+    <h3>AudioContext not fully supported</h3>
+    <p>Your browser doesn't fully support the current AudioContext spec, so these examples may not function.</p>
+    <p>For more information, see the section on <a href="browser-support.html">browser support</a>.</p>
 </div>
 
 
