@@ -9212,7 +9212,7 @@ return jQuery;
 /*
  * Foundation Responsive Library
  * http://foundation.zurb.com
- * Copyright 2014, ZURB
+ * Copyright 2015, ZURB
  * Free to use under the MIT license.
  * http://www.opensource.org/licenses/mit-license.php
 */
@@ -9222,14 +9222,12 @@ return jQuery;
   'use strict';
 
   var header_helpers = function (class_array) {
-    var i = class_array.length;
     var head = $('head');
-
-    while (i--) {
-      if (head.has('.' + class_array[i]).length === 0) {
-        head.append('<meta class="' + class_array[i] + '" />');
+    head.prepend($.map(class_array, function (class_name) {
+      if (head.has('.' + class_name).length === 0) {
+        return '<meta class="' + class_name + '" />';
       }
-    }
+    }));
   };
 
   header_helpers([
@@ -9502,21 +9500,30 @@ return jQuery;
     return string;
   }
 
+  function MediaQuery(selector) {
+    this.selector = selector;
+    this.query = '';
+  }
+
+  MediaQuery.prototype.toString = function () {
+    return this.query || (this.query = S(this.selector).css('font-family').replace(/^[\/\\'"]+|(;\s?})+|[\/\\'"]+$/g, ''));
+  };
+
   window.Foundation = {
     name : 'Foundation',
 
-    version : '5.5.2',
+    version : '5.5.3',
 
     media_queries : {
-      'small'       : S('.foundation-mq-small').css('font-family').replace(/^[\/\\'"]+|(;\s?})+|[\/\\'"]+$/g, ''),
-      'small-only'  : S('.foundation-mq-small-only').css('font-family').replace(/^[\/\\'"]+|(;\s?})+|[\/\\'"]+$/g, ''),
-      'medium'      : S('.foundation-mq-medium').css('font-family').replace(/^[\/\\'"]+|(;\s?})+|[\/\\'"]+$/g, ''),
-      'medium-only' : S('.foundation-mq-medium-only').css('font-family').replace(/^[\/\\'"]+|(;\s?})+|[\/\\'"]+$/g, ''),
-      'large'       : S('.foundation-mq-large').css('font-family').replace(/^[\/\\'"]+|(;\s?})+|[\/\\'"]+$/g, ''),
-      'large-only'  : S('.foundation-mq-large-only').css('font-family').replace(/^[\/\\'"]+|(;\s?})+|[\/\\'"]+$/g, ''),
-      'xlarge'      : S('.foundation-mq-xlarge').css('font-family').replace(/^[\/\\'"]+|(;\s?})+|[\/\\'"]+$/g, ''),
-      'xlarge-only' : S('.foundation-mq-xlarge-only').css('font-family').replace(/^[\/\\'"]+|(;\s?})+|[\/\\'"]+$/g, ''),
-      'xxlarge'     : S('.foundation-mq-xxlarge').css('font-family').replace(/^[\/\\'"]+|(;\s?})+|[\/\\'"]+$/g, '')
+      'small'       : new MediaQuery('.foundation-mq-small'),
+      'small-only'  : new MediaQuery('.foundation-mq-small-only'),
+      'medium'      : new MediaQuery('.foundation-mq-medium'),
+      'medium-only' : new MediaQuery('.foundation-mq-medium-only'),
+      'large'       : new MediaQuery('.foundation-mq-large'),
+      'large-only'  : new MediaQuery('.foundation-mq-large-only'),
+      'xlarge'      : new MediaQuery('.foundation-mq-xlarge'),
+      'xlarge-only' : new MediaQuery('.foundation-mq-xlarge-only'),
+      'xxlarge'     : new MediaQuery('.foundation-mq-xxlarge')
     },
 
     stylesheet : $('<style></style>').appendTo('head')[0].sheet,
@@ -9941,7 +9948,7 @@ return jQuery;
   Foundation.libs.equalizer = {
     name : 'equalizer',
 
-    version : '5.5.2',
+    version : '5.5.3',
 
     settings : {
       use_tallest : true,
@@ -10045,7 +10052,7 @@ return jQuery;
   Foundation.libs.offcanvas = {
     name : 'offcanvas',
 
-    version : '5.5.2',
+    version : '5.5.3',
 
     settings : {
       open_method : 'move',
@@ -10061,16 +10068,22 @@ return jQuery;
           S = self.S,
           move_class = '',
           right_postfix = '',
-          left_postfix = '';
+          left_postfix = '',
+          top_postfix = '',
+          bottom_postfix = '';
 
       if (this.settings.open_method === 'move') {
         move_class = 'move-';
         right_postfix = 'right';
         left_postfix = 'left';
+        top_postfix = 'top';
+        bottom_postfix = 'bottom';
       } else if (this.settings.open_method === 'overlap_single') {
         move_class = 'offcanvas-overlap-';
         right_postfix = 'right';
         left_postfix = 'left';
+        top_postfix = 'top';
+        bottom_postfix = 'bottom';
       } else if (this.settings.open_method === 'overlap') {
         move_class = 'offcanvas-overlap';
       }
@@ -10099,6 +10112,7 @@ return jQuery;
           }
           $('.left-off-canvas-toggle').attr('aria-expanded', 'true');
         })
+        //end of left canvas
         .on('click.fndtn.offcanvas', '.right-off-canvas-toggle', function (e) {
           self.click_toggle_class(e, move_class + left_postfix);
           if (self.settings.open_method !== 'overlap') {
@@ -10122,6 +10136,55 @@ return jQuery;
           }
           $('.right-off-canvas-toggle').attr('aria-expanded', 'true');
         })
+        //end of right canvas
+        .on('click.fndtn.offcanvas', '.top-off-canvas-toggle', function (e) {
+          self.click_toggle_class(e, move_class + bottom_postfix);
+          if (self.settings.open_method !== 'overlap') {
+            S('.top-submenu').removeClass(move_class + bottom_postfix);
+          }
+          $('.top-off-canvas-toggle').attr('aria-expanded', 'true');
+        })
+        .on('click.fndtn.offcanvas', '.top-off-canvas-menu a', function (e) {
+          var settings = self.get_settings(e);
+          var parent = S(this).parent();
+
+          if (settings.close_on_click && !parent.hasClass('has-submenu') && !parent.hasClass('back')) {
+            self.hide.call(self, move_class + bottom_postfix, self.get_wrapper(e));
+            parent.parent().removeClass(move_class + bottom_postfix);
+          } else if (S(this).parent().hasClass('has-submenu')) {
+            e.preventDefault();
+            S(this).siblings('.top-submenu').toggleClass(move_class + bottom_postfix);
+          } else if (parent.hasClass('back')) {
+            e.preventDefault();
+            parent.parent().removeClass(move_class + bottom_postfix);
+          }
+          $('.top-off-canvas-toggle').attr('aria-expanded', 'true');
+        })
+        //end of top canvas
+        .on('click.fndtn.offcanvas', '.bottom-off-canvas-toggle', function (e) {
+          self.click_toggle_class(e, move_class + top_postfix);
+          if (self.settings.open_method !== 'overlap') {
+            S('.bottom-submenu').removeClass(move_class + top_postfix);
+          }
+          $('.bottom-off-canvas-toggle').attr('aria-expanded', 'true');
+        })
+        .on('click.fndtn.offcanvas', '.bottom-off-canvas-menu a', function (e) {
+          var settings = self.get_settings(e);
+          var parent = S(this).parent();
+
+          if (settings.close_on_click && !parent.hasClass('has-submenu') && !parent.hasClass('back')) {
+            self.hide.call(self, move_class + top_postfix, self.get_wrapper(e));
+            parent.parent().removeClass(move_class + top_postfix);
+          } else if (S(this).parent().hasClass('has-submenu')) {
+            e.preventDefault();
+            S(this).siblings('.bottom-submenu').toggleClass(move_class + top_postfix);
+          } else if (parent.hasClass('back')) {
+            e.preventDefault();
+            parent.parent().removeClass(move_class + top_postfix);
+          }
+          $('.bottom-off-canvas-toggle').attr('aria-expanded', 'true');
+        })
+        //end of bottom
         .on('click.fndtn.offcanvas', '.exit-off-canvas', function (e) {
           self.click_remove_class(e, move_class + left_postfix);
           S('.right-submenu').removeClass(move_class + left_postfix);
@@ -10137,6 +10200,23 @@ return jQuery;
           if (right_postfix) {
             self.click_remove_class(e, move_class + right_postfix);
             $('.right-off-canvas-toggle').attr('aria-expanded', 'false');
+          }
+        })
+        .on('click.fndtn.offcanvas', '.exit-off-canvas', function (e) {
+          self.click_remove_class(e, move_class + top_postfix);
+          S('.bottom-submenu').removeClass(move_class + top_postfix);
+          if (bottom_postfix) {
+            self.click_remove_class(e, move_class + bottom_postfix);
+            S('.top-submenu').removeClass(move_class + top_postfix);
+          }
+          $('.bottom-off-canvas-toggle').attr('aria-expanded', 'true');
+        })
+        .on('click.fndtn.offcanvas', '.exit-off-canvas', function (e) {
+          self.click_remove_class(e, move_class + top_postfix);
+          $('.top-off-canvas-toggle').attr('aria-expanded', 'false');
+          if (bottom_postfix) {
+            self.click_remove_class(e, move_class + bottom_postfix);
+            $('.bottom-off-canvas-toggle').attr('aria-expanded', 'false');
           }
         });
     },
@@ -10197,7 +10277,7 @@ return jQuery;
   Foundation.libs.alert = {
     name : 'alert',
 
-    version : '5.5.2',
+    version : '5.5.3',
 
     settings : {
       callback : function () {}
@@ -10240,7 +10320,7 @@ return jQuery;
   Foundation.libs.tooltip = {
     name : 'tooltip',
 
-    version : '5.5.2',
+    version : '5.5.3',
 
     settings : {
       additional_inheritable_classes : [],
@@ -10249,6 +10329,8 @@ return jQuery;
       touch_close_text : 'Tap To Close',
       disable_for_touch : false,
       hover_delay : 200,
+      fade_in_duration : 150,
+      fade_out_duration : 150,
       show_on : 'all',
       tip_template : function (selector, content) {
         return '<span data-selector="' + selector + '" id="' + selector + '" class="'
@@ -10444,14 +10526,14 @@ return jQuery;
     },
 
     reposition : function (target, tip, classes) {
-      var width, nub, nubHeight, nubWidth, column, objPos;
+      var width, nub, nubHeight, nubWidth, objPos;
 
       tip.css('visibility', 'hidden').show();
 
       width = target.data('width');
       nub = tip.children('.nub');
       nubHeight = nub.outerHeight();
-      nubWidth = nub.outerHeight();
+      nubWidth = nub.outerWidth();
 
       if (this.small()) {
         tip.css({'width' : '100%'});
@@ -10467,39 +10549,46 @@ return jQuery;
           'right' : (right) ? right : 'auto'
         }).end();
       };
+      
+      var o_top = target.offset().top;
+      var o_left = target.offset().left;
+      var outerHeight = target.outerHeight();
 
-      objPos(tip, (target.offset().top + target.outerHeight() + 10), 'auto', 'auto', target.offset().left);
+      objPos(tip, (o_top + outerHeight + 10), 'auto', 'auto', o_left);
 
       if (this.small()) {
-        objPos(tip, (target.offset().top + target.outerHeight() + 10), 'auto', 'auto', 12.5, $(this.scope).width());
+        objPos(tip, (o_top + outerHeight + 10), 'auto', 'auto', 12.5, $(this.scope).width());
         tip.addClass('tip-override');
-        objPos(nub, -nubHeight, 'auto', 'auto', target.offset().left);
+        objPos(nub, -nubHeight, 'auto', 'auto', o_left);
       } else {
-        var left = target.offset().left;
+        
         if (Foundation.rtl) {
           nub.addClass('rtl');
-          left = target.offset().left + target.outerWidth() - tip.outerWidth();
+          o_left = o_left + target.outerWidth() - tip.outerWidth();
         }
 
-        objPos(tip, (target.offset().top + target.outerHeight() + 10), 'auto', 'auto', left);
+        objPos(tip, (o_top + outerHeight + 10), 'auto', 'auto', o_left);
         // reset nub from small styles, if they've been applied
         if (nub.attr('style')) {
           nub.removeAttr('style');
         }
         
         tip.removeClass('tip-override');
+        
+        var tip_outerHeight = tip.outerHeight();
+        
         if (classes && classes.indexOf('tip-top') > -1) {
           if (Foundation.rtl) {
             nub.addClass('rtl');
           }
-          objPos(tip, (target.offset().top - tip.outerHeight()), 'auto', 'auto', left)
+          objPos(tip, (o_top - tip_outerHeight), 'auto', 'auto', o_left)
             .removeClass('tip-override');
         } else if (classes && classes.indexOf('tip-left') > -1) {
-          objPos(tip, (target.offset().top + (target.outerHeight() / 2) - (tip.outerHeight() / 2)), 'auto', 'auto', (target.offset().left - tip.outerWidth() - nubHeight))
+          objPos(tip, (o_top + (outerHeight / 2) - (tip_outerHeight / 2)), 'auto', 'auto', (o_left - tip.outerWidth() - nubHeight))
             .removeClass('tip-override');
           nub.removeClass('rtl');
         } else if (classes && classes.indexOf('tip-right') > -1) {
-          objPos(tip, (target.offset().top + (target.outerHeight() / 2) - (tip.outerHeight() / 2)), 'auto', 'auto', (target.offset().left + target.outerWidth() + nubHeight))
+          objPos(tip, (o_top + (outerHeight / 2) - (tip_outerHeight / 2)), 'auto', 'auto', (o_left + target.outerWidth() + nubHeight))
             .removeClass('tip-override');
           nub.removeClass('rtl');
         }
@@ -10543,19 +10632,19 @@ return jQuery;
 
     show : function ($target) {
       var $tip = this.getTip($target);
-
       if ($target.data('tooltip-open-event-type') == 'touch') {
         this.convert_to_touch($target);
       }
 
       this.reposition($target, $tip, $target.attr('class'));
       $target.addClass('open');
-      $tip.fadeIn(150);
+      $tip.fadeIn(this.settings.fade_in_duration);
     },
 
     hide : function ($target) {
       var $tip = this.getTip($target);
-      $tip.fadeOut(150, function () {
+
+      $tip.fadeOut(this.settings.fade_out_duration, function () {
         $tip.find('.tap-to-close').remove();
         $tip.off('click.fndtn.tooltip.tapclose MSPointerDown.fndtn.tapclose');
         $target.removeClass('open');
@@ -10579,13 +10668,13 @@ return jQuery;
   Foundation.libs.slider = {
     name : 'slider',
 
-    version : '5.5.2',
+    version : '5.5.3',
 
     settings : {
       start : 0,
       end : 100,
       step : 1,
-      precision : null,
+      precision : 2,
       initial : null,
       display_selector : '',
       vertical : false,
@@ -10603,7 +10692,6 @@ return jQuery;
 
     events : function () {
       var self = this;
-
       $(this.scope)
         .off('.slider')
         .on('mousedown.fndtn.slider touchstart.fndtn.slider pointerdown.fndtn.slider',
@@ -10628,6 +10716,23 @@ return jQuery;
           }
         })
         .on('mouseup.fndtn.slider touchend.fndtn.slider pointerup.fndtn.slider', function (e) {
+          if(!self.cache.active) {
+            // if the user has just clicked into the slider without starting to drag the handle
+            var slider = $(e.target).attr('role') === 'slider' ? $(e.target) : $(e.target).closest('.range-slider').find("[role='slider']");
+
+            if (slider.length && (!slider.parent().hasClass('disabled') && !slider.parent().attr('disabled'))) {
+              self.set_active_slider(slider);
+              if ($.data(self.cache.active[0], 'settings').vertical) {
+                var scroll_offset = 0;
+                if (!e.pageY) {
+                  scroll_offset = window.scrollY;
+                }
+                self.calculate_position(self.cache.active, self.get_cursor_position(e, 'y') + scroll_offset);
+              } else {
+                self.calculate_position(self.cache.active, self.get_cursor_position(e, 'x'));
+              }
+            }
+          }
           self.remove_active_slider();
         })
         .on('change.fndtn.slider', function (e) {
@@ -10647,9 +10752,8 @@ return jQuery;
 
         if (settings.display_selector != '') {
           $(settings.display_selector).each(function(){
-            if (this.hasOwnProperty('value')) {
-              $(this).change(function(){
-                // is there a better way to do this?
+            if ($(this).attr('value')) {
+              $(this).off('change').on('change', function () {
                 slider.foundation("slider", "set_value", $(this).val());
               });
             }
@@ -10860,7 +10964,7 @@ return jQuery;
   Foundation.libs.topbar = {
     name : 'topbar',
 
-    version : '5.5.2',
+    version : '5.5.3',
 
     settings : {
       index : 0,
@@ -11021,17 +11125,17 @@ return jQuery;
           self.toggle(this);
         })
         .on('click.fndtn.topbar contextmenu.fndtn.topbar', '.top-bar .top-bar-section li a[href^="#"],[' + this.attr_name() + '] .top-bar-section li a[href^="#"]', function (e) {
-            var li = $(this).closest('li'),
-                topbar = li.closest('[' + self.attr_name() + ']'),
-                settings = topbar.data(self.attr_name(true) + '-init');
+          var li = $(this).closest('li'),
+              topbar = li.closest('[' + self.attr_name() + ']'),
+              settings = topbar.data(self.attr_name(true) + '-init');
 
-            if (settings.dropdown_autoclose && settings.is_hover) {
-              var hoverLi = $(this).closest('.hover');
-              hoverLi.removeClass('hover');
-            }
-            if (self.breakpoint() && !li.hasClass('back') && !li.hasClass('has-dropdown')) {
-              self.toggle();
-            }
+          if (settings.dropdown_autoclose && settings.is_hover) {
+            var hoverLi = $(this).closest('.hover');
+            hoverLi.removeClass('hover');
+          }
+          if (self.breakpoint() && !li.hasClass('back') && !li.hasClass('has-dropdown')) {
+            self.toggle();
+          }
 
         })
         .on('click.fndtn.topbar', '[' + this.attr_name() + '] li.has-dropdown', function (e) {
@@ -11313,7 +11417,7 @@ return jQuery;
   };
 }(jQuery, window, window.document));
 (function() {
-  var Analyser, AudioBufferSource, BiquadFilter, ChannelMerger, ChannelSplitter, Convolver, Delay, DynamicsCompressor, Gain, MediaElementSource, Mooog, MooogAudioNode, Oscillator, ScriptProcessor, StereoPanner, Track, WaveShaper,
+  var Analyser, AudioBufferSource, BiquadFilter, ChannelMerger, ChannelSplitter, Convolver, Delay, DynamicsCompressor, Gain, MediaElementSource, Mooog, MooogAudioNode, Oscillator, Panner, ScriptProcessor, StereoPanner, Track, WaveShaper,
     slice = [].slice,
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty,
@@ -12254,6 +12358,27 @@ return jQuery;
 
   })(MooogAudioNode);
 
+  Panner = (function(superClass) {
+    extend(Panner, superClass);
+
+    function Panner(_instance, config) {
+      this._instance = _instance;
+      if (config == null) {
+        config = {};
+      }
+      Panner.__super__.constructor.apply(this, arguments);
+    }
+
+    Panner.prototype.before_config = function(config) {
+      return this.insert_node(this.context.createPanner(), 0);
+    };
+
+    Panner.prototype.after_config = function(config) {};
+
+    return Panner;
+
+  })(MooogAudioNode);
+
   ScriptProcessor = (function(superClass) {
     extend(ScriptProcessor, superClass);
 
@@ -12451,29 +12576,27 @@ return jQuery;
 
   Mooog = (function() {
     Mooog.LEGAL_NODES = {
-      'Oscillator': Oscillator,
-      'StereoPanner': StereoPanner,
-      'Gain': Gain,
-      'AudioBufferSource': AudioBufferSource,
-      'Convolver': Convolver,
-      'BiquadFilter': BiquadFilter,
       'Analyser': Analyser,
-      'DynamicsCompressor': DynamicsCompressor,
-      'Delay': Delay,
-      'WaveShaper': WaveShaper,
+      'AudioBufferSource': AudioBufferSource,
+      'BiquadFilter': BiquadFilter,
       'ChannelMerger': ChannelMerger,
       'ChannelSplitter': ChannelSplitter,
+      'Convolver': Convolver,
+      'Delay': Delay,
+      'DynamicsCompressor': DynamicsCompressor,
+      'Gain': Gain,
       'MediaElementSource': MediaElementSource,
-      'ScriptProcessor': ScriptProcessor
+      'Oscillator': Oscillator,
+      'Panner': Panner,
+      'ScriptProcessor': ScriptProcessor,
+      'StereoPanner': StereoPanner,
+      'WaveShaper': WaveShaper
     };
 
     Mooog.MooogAudioNode = MooogAudioNode;
 
     function Mooog(initConfig1) {
       this.initConfig = initConfig1 != null ? initConfig1 : {};
-      this._BROWSER_CONSTRUCTOR = false;
-      this.context = this.create_context();
-      this._destination = this.context.destination;
       this.config = {
         debug: false,
         default_gain: 0.5,
@@ -12481,38 +12604,72 @@ return jQuery;
         default_send_type: 'post',
         periodic_wave_length: 2048,
         curve_length: 65536,
-        fake_zero: 1 / 65536
+        fake_zero: 1 / 65536,
+        allow_multiple_audiocontexts: false
       };
+      this._BROWSER_CONSTRUCTOR = false;
+      this.context = this.create_context();
+      this._destination = this.context.destination;
       this.init(this.initConfig);
+      this.iOS_setup();
       this._nodes = {};
       this.__typeof = MooogAudioNode.prototype.__typeof;
+      if (!Mooog.browser_test().all) {
+        console.log("AudioContext not fully supported in this browser. Run Mooog.browser_test() for more info");
+      }
     }
 
+    Mooog.prototype.iOS_setup = function() {
+      var body, instantProcess, is_iOS, tmpBuf, tmpProc;
+      is_iOS = navigator.userAgent.indexOf('like Mac OS X') !== -1;
+      if (is_iOS) {
+        body = document.body;
+        tmpBuf = this.context.createBufferSource();
+        tmpProc = this.context.createScriptProcessor(256, 1, 1);
+        instantProcess = function() {
+          tmpBuf.start(0);
+          tmpBuf.connect(tmpProc);
+          return tmpProc.connect(this.context.destination);
+        };
+        body.addEventListener('touchstart', instantProcess, false);
+        return tmpProc.onaudioprocess = function() {
+          tmpBuf.disconnect();
+          tmpProc.disconnect();
+          body.removeEventListener('touchstart', instantProcess, false);
+          return tmpProc.onaudioprocess = null;
+        };
+      }
+    };
+
     Mooog.prototype.init = function(initConfig) {
-      var key, ref, results, val;
+      var key, ref, val;
       ref = this.config;
-      results = [];
       for (key in ref) {
         val = ref[key];
         if (initConfig[key] != null) {
-          results.push(this.config[key] = initConfig[key]);
-        } else {
-          results.push(void 0);
+          this.config[key] = initConfig[key];
         }
       }
-      return results;
+      return null;
     };
 
+    Mooog.context = false;
+
     Mooog.prototype.create_context = function() {
-      if ((window.AudioContext != null)) {
-        this._BROWSER_CONSTRUCTOR = 'AudioContext';
-        return new AudioContext();
+      this._BROWSER_CONSTRUCTOR = (function() {
+        switch (false) {
+          case window.AudioContext == null:
+            return 'AudioContext';
+          case window.webkitAudioContext == null:
+            return 'webkitAudioContext';
+          default:
+            throw new Error("This browser does not yet support the AudioContext API");
+        }
+      })();
+      if (this.config.allow_multiple_audiocontexts) {
+        return new window[this._BROWSER_CONSTRUCTOR];
       }
-      if ((window.webkitAudioContext != null)) {
-        this._BROWSER_CONSTRUCTOR = 'webkitAudioContext';
-        return new webkitAudioContext();
-      }
-      throw new Error("This browser does not yet support the AudioContext API");
+      return Mooog.context || (Mooog.context = new window[this._BROWSER_CONSTRUCTOR]);
     };
 
     Mooog.prototype.track = function() {
@@ -12666,6 +12823,20 @@ return jQuery;
       real = new Float32Array(a);
       imag = new Float32Array(real.length);
       return this.context.createPeriodicWave(real, imag);
+    };
+
+    Mooog.browser_test = function() {
+      var __t, ctxt, tests;
+      ctxt = window.AudioContext || window.webkitAudioContext;
+      __t = new ctxt();
+      tests = {
+        all: true
+      };
+      tests.all = (tests.unprefixed = window.AudioContext != null) ? tests.all : false;
+      tests.all = (tests.start_stop = __t.createOscillator().start != null) ? tests.all : false;
+      tests.all = (tests.stereo_panner = __t.createStereoPanner != null) ? tests.all : false;
+      tests.all = (tests.script_processor = __t.createScriptProcessor != null) ? tests.all : false;
+      return tests;
     };
 
     return Mooog;
