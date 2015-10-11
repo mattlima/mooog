@@ -1,6 +1,10 @@
 (function() {
   $(document).foundation();
 
+  if (!Mooog.browser_test().all) {
+    $('#not-supported').foundation('reveal', 'open');
+  }
+
   $('[data-slider]').on('change.fndtn.slider', function(e) {
     var $t, d, val;
     $t = $(e.target);
