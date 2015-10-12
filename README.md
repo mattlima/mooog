@@ -44,14 +44,6 @@ M.node(
   .start()
 ```
 
-### What Mooog isn't
-
-Mooog is not a shim for the deprecated Audio API. It also doesn't (yet) worry
-about cross-platform issues. It is developed and tested on the latest version
-of Google Chrome, and expects to run there. Ensuring cross-platform 
-consistency is on the to-do list once the API stabilizes and browser support
-improves. 
-
 ### Features
 Mooog provides a `MooogAudioNode` object that can wrap one or more AudioNodes. 
 At a minumum, it exposes the methods of the wrapped Node (or the first in its internal
@@ -64,6 +56,16 @@ There is also a specialized MooogAudioNode object called `Track`, which will aut
 create panner and gain nodes at the end of its internal chain that can be controlled 
 from a single place and easily create sends to other `Track`s. Like the base 
 `MooogAudioNode`, it automatically routes the end of its internal chain to the destinationNode.
+
+### Patches
+
+Mooog implements several shims for the deprecated Audio API. Ensuring total 
+cross-platform consistency is on the to-do list once the API stabilizes and browser support
+improves.
+
+#### StereoPannerNode
+Mooog shims the `StereoPannerNode` on webkit browsers like Safari that don't support it. 
+(Adapted from (https://github.com/mohayonao/stereo-panner-node)[https://github.com/mohayonao/stereo-panner-node])
 
 
 ## Getting started
@@ -396,6 +398,7 @@ If you're feeling generous, you can throw me some dosh [here.](https://www.paypa
 - 0.0.1 : First working version.
 - 0.0.2 : Added ChannelMerger, ChannelSplitter, ScriptProcessor nodes, fixed bug when setting callbacks via the config object.
 - 0.0.3 : Refactor for more rational signatures and easier homebrew Node creation.
+- 0.0.4 : Add shim for StereoPannerNode
 
 ## Todo:
 
