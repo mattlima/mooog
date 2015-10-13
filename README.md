@@ -77,6 +77,10 @@ If you want to jump right in, see the examples. They won't run well on the local
 filesystem because of CORS restrictions on AJAX audio file loads, so they're also
 posted [on the github project page](http://mattlima.github.io/mooog/).
 
+## Install via bower
+
+`bower install mooog`
+
 ### Initializing Mooog
 
 Mooog sets up a (Webkit)AudioContext object and manages connections to its `DestinationNode` automatically.
