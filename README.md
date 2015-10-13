@@ -58,10 +58,13 @@ from a single place and easily create sends to other `Track`s. Like the base
 `MooogAudioNode`, it automatically routes the end of its internal chain to the destinationNode.
 
 ### Patches
-
-Mooog implements several shims for the deprecated Audio API. Ensuring total 
-cross-platform consistency is on the to-do list once the API stabilizes and browser support
-improves.
+The Web Audio API is not, and never will be, supported on IE (though it is supported on Edge), which
+limits its usefulness for general web projects until Edge supplants IE. Even where it is supported, the 
+API still has not matured (AudioWorkers, for example, are not implemented anywhere yet) so Mooog doesn't
+worry too much about cross-browser compatibility issues. It does, however, implement a patch 
+for the absence of the StereoPannerNode on for the deprecated Audio API, since panning is such a 
+basic audio operation and the Mooog `Track` object relies on it. Ensuring cross-platform
+consistency is on the to-do list once the API stabilizes and browser support improves.
 
 #### StereoPannerNode
 Mooog shims the `StereoPannerNode` on webkit browsers like Safari that don't support it. 
