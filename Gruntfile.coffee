@@ -59,7 +59,8 @@ module.exports = (grunt, options) ->
         options:
           sourceMap: true
           sourceMapName: 'dist/mooog.min.js.map'
-          mangle: false
+#           mangle: false
+          mangle: { except: 'Analyser,AudioBufferSource,BiquadFilter,ChannelMerger,ChannelSplitter,Convolver,Delay,DynamicsCompressor,Gain,MediaElementSource,Oscillator,Panner,ScriptProcessor,StereoPanner,Track,WaveShaper'}
         files: {
           'dist/mooog.min.js': ['dist/mooog.js']
         }
