@@ -1,5 +1,5 @@
 (function() {
-  var Analyser, AudioBufferSource, BiquadFilter, ChannelMerger, ChannelSplitter, Convolver, Delay, DynamicsCompressor, Gain, MediaElementSource, Mooog, MooogAudioNode, Oscillator, ScriptProcessor, StereoPanner, Track, WaveShaper,
+  var Analyser, AudioBufferSource, BiquadFilter, ChannelMerger, ChannelSplitter, Convolver, Delay, DynamicsCompressor, Gain, MediaElementSource, Mooog, MooogAudioNode, Oscillator, Panner, ScriptProcessor, StereoPanner, Track, WaveShaper,
     slice = [].slice,
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     hasProp = {}.hasOwnProperty,
@@ -940,6 +940,27 @@
 
   })(MooogAudioNode);
 
+  Panner = (function(superClass) {
+    extend(Panner, superClass);
+
+    function Panner(_instance, config) {
+      this._instance = _instance;
+      if (config == null) {
+        config = {};
+      }
+      Panner.__super__.constructor.apply(this, arguments);
+    }
+
+    Panner.prototype.before_config = function(config) {
+      return this.insert_node(this.context.createPanner(), 0);
+    };
+
+    Panner.prototype.after_config = function(config) {};
+
+    return Panner;
+
+  })(MooogAudioNode);
+
   ScriptProcessor = (function(superClass) {
     extend(ScriptProcessor, superClass);
 
@@ -1137,29 +1158,27 @@
 
   Mooog = (function() {
     Mooog.LEGAL_NODES = {
-      'Oscillator': Oscillator,
-      'StereoPanner': StereoPanner,
-      'Gain': Gain,
-      'AudioBufferSource': AudioBufferSource,
-      'Convolver': Convolver,
-      'BiquadFilter': BiquadFilter,
       'Analyser': Analyser,
-      'DynamicsCompressor': DynamicsCompressor,
-      'Delay': Delay,
-      'WaveShaper': WaveShaper,
+      'AudioBufferSource': AudioBufferSource,
+      'BiquadFilter': BiquadFilter,
       'ChannelMerger': ChannelMerger,
       'ChannelSplitter': ChannelSplitter,
+      'Convolver': Convolver,
+      'Delay': Delay,
+      'DynamicsCompressor': DynamicsCompressor,
+      'Gain': Gain,
       'MediaElementSource': MediaElementSource,
-      'ScriptProcessor': ScriptProcessor
+      'Oscillator': Oscillator,
+      'Panner': Panner,
+      'ScriptProcessor': ScriptProcessor,
+      'StereoPanner': StereoPanner,
+      'WaveShaper': WaveShaper
     };
 
     Mooog.MooogAudioNode = MooogAudioNode;
 
     function Mooog(initConfig1) {
       this.initConfig = initConfig1 != null ? initConfig1 : {};
-      this._BROWSER_CONSTRUCTOR = false;
-      this.context = this.create_context();
-      this._destination = this.context.destination;
       this.config = {
         debug: false,
         default_gain: 0.5,
@@ -1167,38 +1186,75 @@
         default_send_type: 'post',
         periodic_wave_length: 2048,
         curve_length: 65536,
-        fake_zero: 1 / 65536
+        fake_zero: 1 / 65536,
+        allow_multiple_audiocontexts: false
       };
+      this._BROWSER_CONSTRUCTOR = false;
+      this.context = this.create_context();
+      this._destination = this.context.destination;
       this.init(this.initConfig);
+      Mooog.browser_test();
+      this.iOS_setup();
       this._nodes = {};
       this.__typeof = MooogAudioNode.prototype.__typeof;
+      if (!Mooog.browser_test().all) {
+        console.log("AudioContext not fully supported in this browser. Run Mooog.browser_test() for more info");
+      }
     }
 
+    Mooog.prototype.iOS_setup = function() {
+      var body, instantProcess, is_iOS, tmpBuf, tmpProc;
+      is_iOS = navigator.userAgent.indexOf('like Mac OS X') !== -1;
+      if (is_iOS) {
+        body = document.body;
+        tmpBuf = this.context.createBufferSource();
+        tmpProc = this.context.createScriptProcessor(256, 1, 1);
+        instantProcess = (function(_this) {
+          return function() {
+            tmpBuf.start(0);
+            tmpBuf.connect(tmpProc);
+            return tmpProc.connect(_this.context.destination);
+          };
+        })(this);
+        body.addEventListener('touchstart', instantProcess, false);
+        return tmpProc.onaudioprocess = function() {
+          tmpBuf.disconnect();
+          tmpProc.disconnect();
+          body.removeEventListener('touchstart', instantProcess, false);
+          return tmpProc.onaudioprocess = null;
+        };
+      }
+    };
+
     Mooog.prototype.init = function(initConfig) {
-      var key, ref, results, val;
+      var key, ref, val;
       ref = this.config;
-      results = [];
       for (key in ref) {
         val = ref[key];
         if (initConfig[key] != null) {
-          results.push(this.config[key] = initConfig[key]);
-        } else {
-          results.push(void 0);
+          this.config[key] = initConfig[key];
         }
       }
-      return results;
+      return null;
     };
 
+    Mooog.context = false;
+
     Mooog.prototype.create_context = function() {
-      if ((window.AudioContext != null)) {
-        this._BROWSER_CONSTRUCTOR = 'AudioContext';
-        return new AudioContext();
+      this._BROWSER_CONSTRUCTOR = (function() {
+        switch (false) {
+          case window.AudioContext == null:
+            return 'AudioContext';
+          case window.webkitAudioContext == null:
+            return 'webkitAudioContext';
+          default:
+            throw new Error("This browser does not yet support the AudioContext API");
+        }
+      })();
+      if (this.config.allow_multiple_audiocontexts) {
+        return new window[this._BROWSER_CONSTRUCTOR];
       }
-      if ((window.webkitAudioContext != null)) {
-        this._BROWSER_CONSTRUCTOR = 'webkitAudioContext';
-        return new webkitAudioContext();
-      }
-      throw new Error("This browser does not yet support the AudioContext API");
+      return Mooog.context || (Mooog.context = new window[this._BROWSER_CONSTRUCTOR]);
     };
 
     Mooog.prototype.track = function() {
@@ -1352,6 +1408,168 @@
       real = new Float32Array(a);
       imag = new Float32Array(real.length);
       return this.context.createPeriodicWave(real, imag);
+    };
+
+    Mooog.brower_test_results = false;
+
+    Mooog.browser_test = function() {
+      var __t, ctxt, tests;
+      if (this.browser_test_results) {
+        return this.browser_test_results;
+      }
+      ctxt = window.AudioContext || window.webkitAudioContext;
+      __t = new ctxt();
+      tests = {
+        all: true
+      };
+      tests.all = (tests.unprefixed = window.AudioContext != null) ? tests.all : false;
+      tests.all = (tests.start_stop = __t.createOscillator().start != null) ? tests.all : false;
+      if (!(__t.createStereoPanner != null)) {
+        tests.stereo_panner = 'patched';
+        this.patch_StereoPanner();
+      }
+      tests.all = (tests.script_processor = __t.createScriptProcessor != null) ? tests.all : false;
+      return this.browser_test_results = tests;
+    };
+
+    Mooog.patch_StereoPanner = function() {
+      var StereoPannerImpl, WS_CURVE_SIZE, ctxt, curveL, curveR, i, j, ref;
+      WS_CURVE_SIZE = 4096;
+      curveL = new Float32Array(WS_CURVE_SIZE);
+      curveR = new Float32Array(WS_CURVE_SIZE);
+      for (i = j = 0, ref = WS_CURVE_SIZE; 0 <= ref ? j <= ref : j >= ref; i = 0 <= ref ? ++j : --j) {
+        curveL[i] = Math.cos((i / WS_CURVE_SIZE) * Math.PI * 0.5);
+        curveR[i] = Math.sin((i / WS_CURVE_SIZE) * Math.PI * 0.5);
+      }
+
+      /*
+          
+       *  StereoPannerImpl
+       *  +--------------------------------+  +------------------------+
+       *  | ChannelSplitter(inlet)         |  | BufferSourceNode(_dc1) |
+       *  +--------------------------------+  | buffer: [ 1, 1 ]       |
+       *    |                            |    | loop: true             |
+       *    |                            |    +------------------------+
+       *    |                            |       |
+       *    |                            |  +----------------+
+       *    |                            |  | GainNode(_pan) |
+       *    |                            |  | gain: 0(pan)   |
+       *    |                            |  +----------------+
+       *    |                            |    |
+       *    |    +-----------------------|----+
+       *    |    |                       |    |
+       *    |  +----------------------+  |  +----------------------+
+       *    |  | WaveShaperNode(_wsL) |  |  | WaveShaperNode(_wsR) |
+       *    |  | curve: curveL        |  |  | curve: curveR        |
+       *    |  +----------------------+  |  +----------------------+
+       *    |               |            |               |
+       *    |               |            |               |
+       *    |               |            |               |
+       *  +--------------+  |          +--------------+  |
+       *  | GainNode(_L) |  |          | GainNode(_R) |  |
+       *  | gain: 0    <----+          | gain: 0    <----+
+       *  +--------------+             +--------------+
+       *    |                            |
+       *  +--------------------------------+
+       *  | ChannelMergerNode(outlet)      |
+       *  +--------------------------------+
+       */
+      StereoPannerImpl = (function() {
+        function StereoPannerImpl(audioContext) {
+          this.audioContext = audioContext;
+          this.inlet = audioContext.createChannelSplitter(2);
+          this._pan = audioContext.createGain();
+          this.pan = this._pan.gain;
+          this._wsL = audioContext.createWaveShaper();
+          this._wsR = audioContext.createWaveShaper();
+          this._L = audioContext.createGain();
+          this._R = audioContext.createGain();
+          this.outlet = audioContext.createChannelMerger(2);
+          this.inlet.channelCount = 2;
+          this.inlet.channelCountMode = "explicit";
+          this._pan.gain.value = 0;
+          this._wsL.curve = curveL;
+          this._wsR.curve = curveR;
+          this._L.gain.value = 0;
+          this._R.gain.value = 0;
+          this.inlet.connect(this._L, 0);
+          this.inlet.connect(this._R, 1);
+          this._L.connect(this.outlet, 0, 0);
+          this._R.connect(this.outlet, 0, 1);
+          this._pan.connect(this._wsL);
+          this._pan.connect(this._wsR);
+          this._wsL.connect(this._L.gain);
+          this._wsR.connect(this._R.gain);
+          this._isConnected = false;
+          this._dc1buffer = null;
+          this._dc1 = null;
+        }
+
+        StereoPannerImpl.prototype.connect = function(destination) {
+          var audioContext;
+          audioContext = this.audioContext;
+          if (!this._isConnected) {
+            this._isConnected = true;
+            this._dc1buffer = audioContext.createBuffer(1, 2, audioContext.sampleRate);
+            this._dc1buffer.getChannelData(0).set([1, 1]);
+            this._dc1 = audioContext.createBufferSource();
+            this._dc1.buffer = this._dc1buffer;
+            this._dc1.loop = true;
+            this._dc1.start(audioContext.currentTime);
+            this._dc1.connect(this._pan);
+          }
+          return AudioNode.prototype.connect.call(this.outlet, destination);
+        };
+
+        StereoPannerImpl.prototype.disconnect = function() {
+          this.audioContext;
+          if (this._isConnected) {
+            this._isConnected = false;
+            this._dc1.stop(audioContext.currentTime);
+            this._dc1.disconnect();
+            this._dc1 = null;
+            this._dc1buffer = null;
+          }
+          return AudioNode.prototype.disconnect.call(this.outlet);
+        };
+
+        return StereoPannerImpl;
+
+      })();
+      StereoPanner = (function() {
+        function StereoPanner(audioContext) {
+          var impl;
+          impl = new StereoPannerImpl(audioContext);
+          Object.defineProperties(impl.inlet, {
+            pan: {
+              value: impl.pan,
+              enumerable: true
+            },
+            connect: {
+              value: function(node) {
+                return impl.connect(node);
+              }
+            },
+            disconnect: {
+              value: function() {
+                return impl.disconnect();
+              }
+            }
+          });
+          return impl.inlet;
+        }
+
+        return StereoPanner;
+
+      })();
+      ctxt = window.AudioContext || window.webkitAudioContext;
+      if (!ctxt || ctxt.prototype.hasOwnProperty("createStereoPanner")) {
+
+      } else {
+        return ctxt.prototype.createStereoPanner = function() {
+          return new StereoPanner(this);
+        };
+      }
     };
 
     return Mooog;

@@ -2,7 +2,7 @@
 
 ##Chainable AudioNode API
 
-Version 0.0.3
+Version 0.0.4
 
 ### What is Mooog?
 
@@ -44,14 +44,6 @@ M.node(
   .start()
 ```
 
-### What Mooog isn't
-
-Mooog is not a shim for the deprecated Audio API. It also doesn't (yet) worry
-about cross-platform issues. It is developed and tested on the latest version
-of Google Chrome, and expects to run there. Ensuring cross-platform 
-consistency is on the to-do list once the API stabilizes and browser support
-improves. 
-
 ### Features
 Mooog provides a `MooogAudioNode` object that can wrap one or more AudioNodes. 
 At a minumum, it exposes the methods of the wrapped Node (or the first in its internal
@@ -64,6 +56,19 @@ There is also a specialized MooogAudioNode object called `Track`, which will aut
 create panner and gain nodes at the end of its internal chain that can be controlled 
 from a single place and easily create sends to other `Track`s. Like the base 
 `MooogAudioNode`, it automatically routes the end of its internal chain to the destinationNode.
+
+### Patches
+The Web Audio API is not, and never will be, supported on IE (though it is supported on Edge), which
+limits its usefulness for general web projects until Edge supplants IE. Even where it is supported, the 
+API still has not matured (AudioWorkers, for example, are not implemented anywhere yet) so Mooog doesn't
+worry too much about cross-browser compatibility issues. It does, however, implement a patch 
+for the absence of the StereoPannerNode on for the deprecated Audio API, since panning is such a 
+basic audio operation and the Mooog `Track` object relies on it. Ensuring cross-platform
+consistency is on the to-do list once the API stabilizes and browser support improves.
+
+#### StereoPannerNode
+Mooog shims the `StereoPannerNode` on webkit browsers like Safari that don't support it. 
+(Adapted from (https://github.com/mohayonao/stereo-panner-node)[https://github.com/mohayonao/stereo-panner-node])
 
 
 ## Getting started
@@ -84,6 +89,7 @@ It takes an optional configuration object with the following properties:
 - `periodic_wave_length`: The `PeriodicWave` generator functions calculate up to this many partials. *Default: 2048*
 - `curve_length`: The `WaveShaper` curve generator functions produce `Float32Array`s of this length. *Default: 65536*
 - `fake_zero`: This number is substituted for zero to prevent errors when zero is passed to an exponential ramp function. *Default: 1 / 65536*
+- `allow_multiple_audiocontexts`: Browsers differ in how many `AudioContext` instances they support. Safari supports one, Chrome supports 6, and Firefox appears to have no limit. Therefore, by default, Mooog reuses the same AudioContext even if you initialize multiple Mooog objects, but you can override that with this option. *Default: false*
           
 
 ### Creating AudioNodes
@@ -395,6 +401,7 @@ If you're feeling generous, you can throw me some dosh [here.](https://www.paypa
 - 0.0.1 : First working version.
 - 0.0.2 : Added ChannelMerger, ChannelSplitter, ScriptProcessor nodes, fixed bug when setting callbacks via the config object.
 - 0.0.3 : Refactor for more rational signatures and easier homebrew Node creation.
+- 0.0.4 : Add shim for StereoPannerNode
 
 ## Todo:
 

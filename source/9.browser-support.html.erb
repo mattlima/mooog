@@ -1,0 +1,52 @@
+<div class="row">
+    <div class="small-12 columns">
+
+        <h3>Browser support</h3>
+
+        <div class="row">
+            <div class="small-12  columns">
+                <p>Mooog is not a shim for the deprecated Audio API. It also doesn't (yet) worry
+                    about cross-platform issues. It is developed and tested on the latest version
+                    of Google Chrome, and expects to run there. Ensuring cross-platform
+                    consistency is on the to-do list once the API stabilizes and browser support
+                    improves. </p>
+
+                <p><code>Mooog.browser_test()</code> returns an object with a set of boolean properties indicating whether your
+                    browser is current in its support of the spec.</p>
+
+
+              <ul class="disc">
+                  <li>Your browser <span data-mooog-toggle="unprefixed"></span> support the unprefixed <code>AudioContext</code> object.</li>
+                  <li>Your browser <span data-mooog-toggle="start_stop"></span> support the <code>start</code> and
+                  <code>stop</code> methods instead of <code>noteon</code> and <code>noteoff</code>.</li>
+                  <li>Your browser <span data-mooog-toggle="stereo_panner"></span> support the <code>StereoPannerNode</code></li>
+                  <li>Your browser <span data-mooog-toggle="script_processor"></span> support the <code>ScriptProcessorNode</code></li>
+
+
+              </ul>
+
+            </div>
+
+        </div>
+
+
+
+
+
+        <script>
+            $(document).ready(function(){
+                var support = Mooog.browser_test();
+                $("[data-mooog-toggle]").each(function(){
+                    if( support[$(this).data('mooogToggle')] ){
+                        $(this).addClass('supported').text("does");
+                    }else{
+                        $(this).addClass('unsupported').text("does not");
+                    }
+                })
+            })
+        </script>
+
+
+
+    </div>
+</div>
