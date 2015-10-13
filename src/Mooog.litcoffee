@@ -48,6 +48,7 @@ object (`AudioContext` or `webkitAudioContext`)
         
         @init(@initConfig)
         
+        Mooog.browser_test()
         @iOS_setup()
         @_nodes = {}
         #@_connections = {}
@@ -309,21 +310,172 @@ Convenience function for converting MIDI notes to equal temperament Hz
       
 
 ### Mooog.browser_test
-Tests a few API hooks see whether Mooog will run correctly in a browser. Returns
-an object of test results, including `all` property which should indicate whether
-Mooog can do its thing.
+Tests parts of the API to see whether Mooog will run correctly in a browser. Attempts to
+patch a few of them (StereoPanner, noteOn/NoteOff), and returns an object of test results
+including an `all` property which should indicate whether Mooog can do its thing.
 
-
+      @brower_test_results: false
+      
       @browser_test: ()->
+        if @browser_test_results
+          return @browser_test_results
         ctxt = window.AudioContext || window.webkitAudioContext
         __t = new ctxt()
         tests = { all: true }
         tests.all = if (tests.unprefixed = window.AudioContext?) then tests.all else false
         tests.all = if (tests.start_stop = __t.createOscillator().start?) then tests.all else false
-        tests.all = if (tests.stereo_panner = __t.createStereoPanner?) then tests.all else false
+        unless (__t.createStereoPanner?)
+          tests.stereo_panner = 'patched'
+          @patch_StereoPanner()
         tests.all = if (tests.script_processor = __t.createScriptProcessor?)
         then tests.all else false
-        tests
+        @browser_test_results = tests
+        
+
+
+### Mooog.patch_StereoPanner
+Safari currently lacks support for the StereoPanner node. This function patches it.
+Adapted from 
+(https://github.com/mohayonao/stereo-panner-node)[https://github.com/mohayonao/stereo-panner-node]
+
+        
+        
+        
+      @patch_StereoPanner: () ->
+        WS_CURVE_SIZE = 4096
+        curveL = new Float32Array(WS_CURVE_SIZE)
+        curveR = new Float32Array(WS_CURVE_SIZE)
+      
+        for i in [0..WS_CURVE_SIZE]
+          curveL[i] = Math.cos((i / WS_CURVE_SIZE) * Math.PI * 0.5)
+          curveR[i] = Math.sin((i / WS_CURVE_SIZE) * Math.PI * 0.5)
+      
+        ###
+            
+         *  StereoPannerImpl
+         *  +--------------------------------+  +------------------------+
+         *  | ChannelSplitter(inlet)         |  | BufferSourceNode(_dc1) |
+         *  +--------------------------------+  | buffer: [ 1, 1 ]       |
+         *    |                            |    | loop: true             |
+         *    |                            |    +------------------------+
+         *    |                            |       |
+         *    |                            |  +----------------+
+         *    |                            |  | GainNode(_pan) |
+         *    |                            |  | gain: 0(pan)   |
+         *    |                            |  +----------------+
+         *    |                            |    |
+         *    |    +-----------------------|----+
+         *    |    |                       |    |
+         *    |  +----------------------+  |  +----------------------+
+         *    |  | WaveShaperNode(_wsL) |  |  | WaveShaperNode(_wsR) |
+         *    |  | curve: curveL        |  |  | curve: curveR        |
+         *    |  +----------------------+  |  +----------------------+
+         *    |               |            |               |
+         *    |               |            |               |
+         *    |               |            |               |
+         *  +--------------+  |          +--------------+  |
+         *  | GainNode(_L) |  |          | GainNode(_R) |  |
+         *  | gain: 0    <----+          | gain: 0    <----+
+         *  +--------------+             +--------------+
+         *    |                            |
+         *  +--------------------------------+
+         *  | ChannelMergerNode(outlet)      |
+         *  +--------------------------------+
+        ###
+      
+        class StereoPannerImpl
+      
+          constructor: (audioContext) ->
+            @audioContext = audioContext
+            @inlet = audioContext.createChannelSplitter(2)
+            @_pan = audioContext.createGain()
+            @pan = @_pan.gain
+            @_wsL = audioContext.createWaveShaper()
+            @_wsR = audioContext.createWaveShaper()
+            @_L = audioContext.createGain()
+            @_R = audioContext.createGain()
+            @outlet = audioContext.createChannelMerger(2)
+      
+            @inlet.channelCount = 2
+            @inlet.channelCountMode = "explicit"
+            @_pan.gain.value = 0
+            @_wsL.curve = curveL
+            @_wsR.curve = curveR
+            @_L.gain.value = 0
+            @_R.gain.value = 0
+      
+            @inlet.connect(@_L, 0)
+            @inlet.connect(@_R, 1)
+            @_L.connect(@outlet, 0, 0)
+            @_R.connect(@outlet, 0, 1)
+            @_pan.connect(@_wsL)
+            @_pan.connect(@_wsR)
+            @_wsL.connect(@_L.gain)
+            @_wsR.connect(@_R.gain)
+      
+            @_isConnected = false
+            @_dc1buffer = null
+            @_dc1 = null
+      
+          connect:  (destination) ->
+            audioContext = @audioContext
+      
+            if (!@_isConnected)
+              @_isConnected = true
+              @_dc1buffer = audioContext.createBuffer(1, 2, audioContext.sampleRate)
+              @_dc1buffer.getChannelData(0).set([ 1, 1 ])
+      
+              @_dc1 = audioContext.createBufferSource()
+              @_dc1.buffer = @_dc1buffer
+              @_dc1.loop = true
+              @_dc1.start(audioContext.currentTime)
+              @_dc1.connect(@_pan)
+      
+            AudioNode.prototype.connect.call(@outlet, destination)
+      
+      
+          disconnect: () ->
+            @audioContext
+      
+            if (@_isConnected)
+              @_isConnected = false
+              @_dc1.stop(audioContext.currentTime)
+              @_dc1.disconnect()
+              @_dc1 = null
+              @_dc1buffer = null
+      
+            AudioNode.prototype.disconnect.call(@outlet)
+      
+      
+      
+      
+      
+        class StereoPanner
+      
+          constructor: (audioContext) ->
+            impl = new StereoPannerImpl(audioContext)
+      
+            Object.defineProperties(impl.inlet,
+              pan:
+                value: impl.pan,
+                enumerable: true
+              connect:
+                value: (node) ->
+                  return impl.connect(node)
+              disconnect:
+                value: () ->
+                  return impl.disconnect()
+            )
+      
+            return impl.inlet
+      
+      
+        ctxt = window.AudioContext || window.webkitAudioContext
+        if (!ctxt || ctxt.prototype.hasOwnProperty("createStereoPanner"))
+          return
+        else
+          ctxt.prototype.createStereoPanner = () ->
+            return new StereoPanner(this)
 
 
     window.Mooog = Mooog
