@@ -67,7 +67,7 @@ https://github.com/shinnn/AudioContext-Polyfill/blob/master/audiocontext-polyfil
           body = document.body
           tmpBuf = @context.createBufferSource()
           tmpProc = @context.createScriptProcessor(256, 1, 1)
-          instantProcess = () ->
+          instantProcess = () =>
             tmpBuf.start(0)
             tmpBuf.connect(tmpProc)
             tmpProc.connect(@context.destination)
