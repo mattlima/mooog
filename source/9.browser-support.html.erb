@@ -5,11 +5,13 @@
 
         <div class="row">
             <div class="small-12  columns">
-                <p>Mooog is not a shim for the deprecated Audio API. It also doesn't (yet) worry
-                    about cross-platform issues. It is developed and tested on the latest version
-                    of Google Chrome, and expects to run there. Ensuring cross-platform
-                    consistency is on the to-do list once the API stabilizes and browser support
-                    improves. </p>
+                <p>The Web Audio API is not, and never will be, supported on IE (though it is supported on Edge), which
+limits its usefulness for general web projects until Edge supplants IE. Even where it is supported, the
+API still has not matured (AudioWorkers, for example, are not implemented anywhere yet) so Mooog doesn't
+worry too much about cross-browser compatibility issues. It does, however, implement a patch
+for the absence of the StereoPannerNode on for the deprecated Audio API (for Safari), since panning is such a
+basic audio operation and the Mooog `Track` object relies on it. Ensuring cross-platform
+consistency is on the to-do list once the API stabilizes and browser support improves. </p>
 
                 <p><code>Mooog.browser_test()</code> returns an object with a set of boolean properties indicating whether your
                     browser is current in its support of the spec.</p>
