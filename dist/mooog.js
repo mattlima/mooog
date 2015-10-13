@@ -1209,11 +1209,13 @@
         body = document.body;
         tmpBuf = this.context.createBufferSource();
         tmpProc = this.context.createScriptProcessor(256, 1, 1);
-        instantProcess = function() {
-          tmpBuf.start(0);
-          tmpBuf.connect(tmpProc);
-          return tmpProc.connect(this.context.destination);
-        };
+        instantProcess = (function(_this) {
+          return function() {
+            tmpBuf.start(0);
+            tmpBuf.connect(tmpProc);
+            return tmpProc.connect(_this.context.destination);
+          };
+        })(this);
         body.addEventListener('touchstart', instantProcess, false);
         return tmpProc.onaudioprocess = function() {
           tmpBuf.disconnect();
