@@ -68,7 +68,7 @@ consistency is on the to-do list once the API stabilizes and browser support imp
 
 #### StereoPannerNode
 Mooog shims the `StereoPannerNode` on webkit browsers like Safari that don't support it. 
-(Adapted from (https://github.com/mohayonao/stereo-panner-node)[https://github.com/mohayonao/stereo-panner-node])
+(Adapted from [https://github.com/mohayonao/stereo-panner-node](https://github.com/mohayonao/stereo-panner-node))
 
 
 ## Getting started
