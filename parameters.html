@@ -151,7 +151,7 @@ $(document)
                     <button class="radius expand param1" >M.node("osc2").param({"frequency":800, at: 1});</button>
                     <button class="radius expand param2" >M.node("osc2").param({"frequency":800, "ramp": "linear", at: 3});</button>
                     <button class="radius expand param3" >M.node("osc2").param({"frequency":800, "ramp": "expo", at: 3});</button>
-                    <button class="radius expand param4" >M.node("osc2").param({"frequency":[300, 400, 500, 800], "ramp": "curve", at: 2, duration: 2});</button>
+                    <button class="radius expand param4" >M.node("osc2").param({"frequency":[300, 350, 250, 450, 200, 800], "ramp": "curve", at: 2, duration: 2});</button>
                     <button class="radius expand param5" >M.node("osc2").param({"frequency":800, "ramp": "expo", at: 2, timeConstant: 2});</button>
 
 
@@ -200,7 +200,7 @@ $(document)
           </tbody>
         </table>
 
-        <p>*The rhythmic irregularity of the frequency progression produced by the <code>setValueCurveAtTime()</code> method is due to the nearest-value interpolation algorithm it uses. The function is meant for much larger arrays of values describing smooth curves.</p>
+        <p>*The interpolation between values when using <code>setValueCurveAtTime()</code> was undefined until <a href="https://github.com/WebAudio/web-audio-api/issues/131#issuecomment-113935918">recently</a>. Chrome 46.0.2490 uses linear interpolation; earlier versions use nearest neighbor (no interpolation), so the transitions you hear may be smooth or abrupt depending on your browser.</p>
 
 
         <pre><code>M = new Mooog();
@@ -230,7 +230,7 @@ $(document)
         M.node("osc2").param({frequency: 800, ramp: "expo", at: 2});
     })
     .on("mousedown",".param4",function(){
-        M.node("osc2").param({frequency: [300, 400, 500, 800], ramp: "curve", at: 2, duration: 2});
+        M.node("osc2").param({frequency: [300, 350, 250, 450, 200, 800], ramp: "curve", at: 2, duration: 2});
     })
     .on("mousedown",".param5",function(){
         M.node("osc2").param({frequency: 800, ramp: "expo", at: 2, timeConstant: 2});
@@ -304,7 +304,7 @@ $(document)
         M.node("osc2").param({frequency: 800, ramp: "expo", at: 2});
     })
     .on("mousedown",".param4",function(){
-        M.node("osc2").param({frequency: [300, 400, 500, 800], ramp: "curve", at: 2, duration: 2});
+        M.node("osc2").param({frequency: [300, 350, 250, 450, 200, 800], ramp: "curve", at: 2, duration: 2});
     })
     .on("mousedown",".param5",function(){
         M.node("osc2").param({frequency: 800, ramp: "expo", at: 2, timeConstant: 2});
