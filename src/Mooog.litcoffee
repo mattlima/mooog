@@ -324,9 +324,15 @@ including an `all` property which should indicate whether Mooog can do its thing
         tests = { all: true }
         tests.all = if (tests.unprefixed = window.AudioContext?) then tests.all else false
         tests.all = if (tests.start_stop = __t.createOscillator().start?) then tests.all else false
-        unless (__t.createStereoPanner?)
-          tests.stereo_panner = 'patched'
-          @patch_StereoPanner()
+        if __t.createStereoPanner?
+          tests.stereo_panner = true
+        else
+          try
+            @patch_StereoPanner()
+            tests.stereo_panner = 'patched'
+          catch error
+            test.stereo_panner = false
+            tests.all = false
         tests.all = if (tests.script_processor = __t.createScriptProcessor?)
         then tests.all else false
         @browser_test_results = tests

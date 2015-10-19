@@ -13356,7 +13356,7 @@ return jQuery;
     Mooog.brower_test_results = false;
 
     Mooog.browser_test = function() {
-      var __t, ctxt, tests;
+      var __t, ctxt, error, tests;
       if (this.browser_test_results) {
         return this.browser_test_results;
       }
@@ -13367,9 +13367,17 @@ return jQuery;
       };
       tests.all = (tests.unprefixed = window.AudioContext != null) ? tests.all : false;
       tests.all = (tests.start_stop = __t.createOscillator().start != null) ? tests.all : false;
-      if (!(__t.createStereoPanner != null)) {
-        tests.stereo_panner = 'patched';
-        this.patch_StereoPanner();
+      if (__t.createStereoPanner != null) {
+        tests.stereo_panner = true;
+      } else {
+        try {
+          this.patch_StereoPanner();
+          tests.stereo_panner = 'patched';
+        } catch (_error) {
+          error = _error;
+          test.stereo_panner = false;
+          tests.all = false;
+        }
       }
       tests.all = (tests.script_processor = __t.createScriptProcessor != null) ? tests.all : false;
       return this.browser_test_results = tests;
