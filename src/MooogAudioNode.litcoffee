@@ -289,22 +289,35 @@ of `this` unless they were created by a previous call to the function.
         @debug "exposing", node
         for key,val of node
           if @[key]? and !@_exposed_properties[key] then continue
-          @_exposed_properties[key] = true
-          switch @__typeof val
-            when 'function'
-              @[key] = val.bind node
-            when 'AudioParam'
-              @[key] = val
-            when "string", "number", "boolean", "object"
-              ((o, node, key) ->
-                Object.defineProperty o, key, {
-                  get: ->
-                    node[key]
-                  set: (val) ->
-                    node[key] = val
-                  enumerable: true
-                  configurable: true
-                })(@, node, key)
+          @expose_property node, key
+        node
+        
+        
+### MooogAudioNode.expose_property
+Worker function for expose_properties_of, also used in plugins. 
+     
+      expose_property: (node, key) ->
+        @_exposed_properties[key] = true
+        val = node[key]
+        switch @__typeof val
+          when 'function'
+            @[key] = val.bind node
+          when 'AudioParam'
+            @[key] = val
+          when "string", "number", "boolean", "object"
+            ((o, node, key) ->
+              Object.defineProperty o, key, {
+                get: ->
+                  node[key]
+                set: (val) ->
+                  node[key] = val
+                enumerable: true
+                configurable: true
+              })(@, node, key)
+        key
+ 
+      
+      
 
 
 

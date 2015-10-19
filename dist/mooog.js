@@ -273,44 +273,47 @@
     MooogAudioNode.prototype.from = MooogAudioNode.prototype.to;
 
     MooogAudioNode.prototype.expose_properties_of = function(node) {
-      var key, results, val;
+      var key, val;
       this.debug("exposing", node);
-      results = [];
       for (key in node) {
         val = node[key];
         if ((this[key] != null) && !this._exposed_properties[key]) {
           continue;
         }
-        this._exposed_properties[key] = true;
-        switch (this.__typeof(val)) {
-          case 'function':
-            results.push(this[key] = val.bind(node));
-            break;
-          case 'AudioParam':
-            results.push(this[key] = val);
-            break;
-          case "string":
-          case "number":
-          case "boolean":
-          case "object":
-            results.push((function(o, node, key) {
-              return Object.defineProperty(o, key, {
-                get: function() {
-                  return node[key];
-                },
-                set: function(val) {
-                  return node[key] = val;
-                },
-                enumerable: true,
-                configurable: true
-              });
-            })(this, node, key));
-            break;
-          default:
-            results.push(void 0);
-        }
+        this.expose_property(node, key);
       }
-      return results;
+      return node;
+    };
+
+    MooogAudioNode.prototype.expose_property = function(node, key) {
+      var val;
+      this._exposed_properties[key] = true;
+      val = node[key];
+      switch (this.__typeof(val)) {
+        case 'function':
+          this[key] = val.bind(node);
+          break;
+        case 'AudioParam':
+          this[key] = val;
+          break;
+        case "string":
+        case "number":
+        case "boolean":
+        case "object":
+          (function(o, node, key) {
+            return Object.defineProperty(o, key, {
+              get: function() {
+                return node[key];
+              },
+              set: function(val) {
+                return node[key] = val;
+              },
+              enumerable: true,
+              configurable: true
+            });
+          })(this, node, key);
+      }
+      return key;
     };
 
     MooogAudioNode.prototype.safely_disconnect = function(node1, node2, output, input) {
