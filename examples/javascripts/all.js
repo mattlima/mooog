@@ -12213,44 +12213,47 @@ return jQuery;
     MooogAudioNode.prototype.from = MooogAudioNode.prototype.to;
 
     MooogAudioNode.prototype.expose_properties_of = function(node) {
-      var key, results, val;
+      var key, val;
       this.debug("exposing", node);
-      results = [];
       for (key in node) {
         val = node[key];
         if ((this[key] != null) && !this._exposed_properties[key]) {
           continue;
         }
-        this._exposed_properties[key] = true;
-        switch (this.__typeof(val)) {
-          case 'function':
-            results.push(this[key] = val.bind(node));
-            break;
-          case 'AudioParam':
-            results.push(this[key] = val);
-            break;
-          case "string":
-          case "number":
-          case "boolean":
-          case "object":
-            results.push((function(o, node, key) {
-              return Object.defineProperty(o, key, {
-                get: function() {
-                  return node[key];
-                },
-                set: function(val) {
-                  return node[key] = val;
-                },
-                enumerable: true,
-                configurable: true
-              });
-            })(this, node, key));
-            break;
-          default:
-            results.push(void 0);
-        }
+        this.expose_property(node, key);
       }
-      return results;
+      return node;
+    };
+
+    MooogAudioNode.prototype.expose_property = function(node, key) {
+      var val;
+      this._exposed_properties[key] = true;
+      val = node[key];
+      switch (this.__typeof(val)) {
+        case 'function':
+          this[key] = val.bind(node);
+          break;
+        case 'AudioParam':
+          this[key] = val;
+          break;
+        case "string":
+        case "number":
+        case "boolean":
+        case "object":
+          (function(o, node, key) {
+            return Object.defineProperty(o, key, {
+              get: function() {
+                return node[key];
+              },
+              set: function(val) {
+                return node[key] = val;
+              },
+              enumerable: true,
+              configurable: true
+            });
+          })(this, node, key);
+      }
+      return key;
     };
 
     MooogAudioNode.prototype.safely_disconnect = function(node1, node2, output, input) {
@@ -13133,6 +13136,7 @@ return jQuery;
       this.context = this.create_context();
       this._destination = this.context.destination;
       this.init(this.initConfig);
+      Mooog.browser_test();
       this.iOS_setup();
       this._nodes = {};
       this.__typeof = MooogAudioNode.prototype.__typeof;
@@ -13148,11 +13152,13 @@ return jQuery;
         body = document.body;
         tmpBuf = this.context.createBufferSource();
         tmpProc = this.context.createScriptProcessor(256, 1, 1);
-        instantProcess = function() {
-          tmpBuf.start(0);
-          tmpBuf.connect(tmpProc);
-          return tmpProc.connect(this.context.destination);
-        };
+        instantProcess = (function(_this) {
+          return function() {
+            tmpBuf.start(0);
+            tmpBuf.connect(tmpProc);
+            return tmpProc.connect(_this.context.destination);
+          };
+        })(this);
         body.addEventListener('touchstart', instantProcess, false);
         return tmpProc.onaudioprocess = function() {
           tmpBuf.disconnect();
@@ -13347,8 +13353,13 @@ return jQuery;
       return this.context.createPeriodicWave(real, imag);
     };
 
+    Mooog.brower_test_results = false;
+
     Mooog.browser_test = function() {
       var __t, ctxt, tests;
+      if (this.browser_test_results) {
+        return this.browser_test_results;
+      }
       ctxt = window.AudioContext || window.webkitAudioContext;
       __t = new ctxt();
       tests = {
@@ -13356,9 +13367,152 @@ return jQuery;
       };
       tests.all = (tests.unprefixed = window.AudioContext != null) ? tests.all : false;
       tests.all = (tests.start_stop = __t.createOscillator().start != null) ? tests.all : false;
-      tests.all = (tests.stereo_panner = __t.createStereoPanner != null) ? tests.all : false;
+      if (!(__t.createStereoPanner != null)) {
+        tests.stereo_panner = 'patched';
+        this.patch_StereoPanner();
+      }
       tests.all = (tests.script_processor = __t.createScriptProcessor != null) ? tests.all : false;
-      return tests;
+      return this.browser_test_results = tests;
+    };
+
+    Mooog.patch_StereoPanner = function() {
+      var StereoPannerImpl, WS_CURVE_SIZE, ctxt, curveL, curveR, i, j, ref;
+      WS_CURVE_SIZE = 4096;
+      curveL = new Float32Array(WS_CURVE_SIZE);
+      curveR = new Float32Array(WS_CURVE_SIZE);
+      for (i = j = 0, ref = WS_CURVE_SIZE; 0 <= ref ? j <= ref : j >= ref; i = 0 <= ref ? ++j : --j) {
+        curveL[i] = Math.cos((i / WS_CURVE_SIZE) * Math.PI * 0.5);
+        curveR[i] = Math.sin((i / WS_CURVE_SIZE) * Math.PI * 0.5);
+      }
+
+      /*
+          
+       *  StereoPannerImpl
+       *  +--------------------------------+  +------------------------+
+       *  | ChannelSplitter(inlet)         |  | BufferSourceNode(_dc1) |
+       *  +--------------------------------+  | buffer: [ 1, 1 ]       |
+       *    |                            |    | loop: true             |
+       *    |                            |    +------------------------+
+       *    |                            |       |
+       *    |                            |  +----------------+
+       *    |                            |  | GainNode(_pan) |
+       *    |                            |  | gain: 0(pan)   |
+       *    |                            |  +----------------+
+       *    |                            |    |
+       *    |    +-----------------------|----+
+       *    |    |                       |    |
+       *    |  +----------------------+  |  +----------------------+
+       *    |  | WaveShaperNode(_wsL) |  |  | WaveShaperNode(_wsR) |
+       *    |  | curve: curveL        |  |  | curve: curveR        |
+       *    |  +----------------------+  |  +----------------------+
+       *    |               |            |               |
+       *    |               |            |               |
+       *    |               |            |               |
+       *  +--------------+  |          +--------------+  |
+       *  | GainNode(_L) |  |          | GainNode(_R) |  |
+       *  | gain: 0    <----+          | gain: 0    <----+
+       *  +--------------+             +--------------+
+       *    |                            |
+       *  +--------------------------------+
+       *  | ChannelMergerNode(outlet)      |
+       *  +--------------------------------+
+       */
+      StereoPannerImpl = (function() {
+        function StereoPannerImpl(audioContext) {
+          this.audioContext = audioContext;
+          this.inlet = audioContext.createChannelSplitter(2);
+          this._pan = audioContext.createGain();
+          this.pan = this._pan.gain;
+          this._wsL = audioContext.createWaveShaper();
+          this._wsR = audioContext.createWaveShaper();
+          this._L = audioContext.createGain();
+          this._R = audioContext.createGain();
+          this.outlet = audioContext.createChannelMerger(2);
+          this.inlet.channelCount = 2;
+          this.inlet.channelCountMode = "explicit";
+          this._pan.gain.value = 0;
+          this._wsL.curve = curveL;
+          this._wsR.curve = curveR;
+          this._L.gain.value = 0;
+          this._R.gain.value = 0;
+          this.inlet.connect(this._L, 0);
+          this.inlet.connect(this._R, 1);
+          this._L.connect(this.outlet, 0, 0);
+          this._R.connect(this.outlet, 0, 1);
+          this._pan.connect(this._wsL);
+          this._pan.connect(this._wsR);
+          this._wsL.connect(this._L.gain);
+          this._wsR.connect(this._R.gain);
+          this._isConnected = false;
+          this._dc1buffer = null;
+          this._dc1 = null;
+        }
+
+        StereoPannerImpl.prototype.connect = function(destination) {
+          var audioContext;
+          audioContext = this.audioContext;
+          if (!this._isConnected) {
+            this._isConnected = true;
+            this._dc1buffer = audioContext.createBuffer(1, 2, audioContext.sampleRate);
+            this._dc1buffer.getChannelData(0).set([1, 1]);
+            this._dc1 = audioContext.createBufferSource();
+            this._dc1.buffer = this._dc1buffer;
+            this._dc1.loop = true;
+            this._dc1.start(audioContext.currentTime);
+            this._dc1.connect(this._pan);
+          }
+          return AudioNode.prototype.connect.call(this.outlet, destination);
+        };
+
+        StereoPannerImpl.prototype.disconnect = function() {
+          this.audioContext;
+          if (this._isConnected) {
+            this._isConnected = false;
+            this._dc1.stop(audioContext.currentTime);
+            this._dc1.disconnect();
+            this._dc1 = null;
+            this._dc1buffer = null;
+          }
+          return AudioNode.prototype.disconnect.call(this.outlet);
+        };
+
+        return StereoPannerImpl;
+
+      })();
+      StereoPanner = (function() {
+        function StereoPanner(audioContext) {
+          var impl;
+          impl = new StereoPannerImpl(audioContext);
+          Object.defineProperties(impl.inlet, {
+            pan: {
+              value: impl.pan,
+              enumerable: true
+            },
+            connect: {
+              value: function(node) {
+                return impl.connect(node);
+              }
+            },
+            disconnect: {
+              value: function() {
+                return impl.disconnect();
+              }
+            }
+          });
+          return impl.inlet;
+        }
+
+        return StereoPanner;
+
+      })();
+      ctxt = window.AudioContext || window.webkitAudioContext;
+      if (!ctxt || ctxt.prototype.hasOwnProperty("createStereoPanner")) {
+
+      } else {
+        return ctxt.prototype.createStereoPanner = function() {
+          return new StereoPanner(this);
+        };
+      }
     };
 
     return Mooog;
