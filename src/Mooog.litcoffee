@@ -312,16 +312,19 @@ Convenience function for converting MIDI notes to equal temperament Hz
 ### Mooog.browser_test
 Tests parts of the API to see whether Mooog will run correctly in a browser. Attempts to
 patch a few of them (StereoPanner, noteOn/NoteOff), and returns an object of test results
-including an `all` property which should indicate whether Mooog can do its thing.
+including an `all` property which should indicate whether Mooog can do its thing, or simply
+false if the AudioContext API is not supported at all.
 
       @brower_test_results: false
       
       @browser_test: ()->
         if @browser_test_results
           return @browser_test_results
-        ctxt = window.AudioContext || window.webkitAudioContext
-        __t = new ctxt()
         tests = { all: true }
+        ctxt = window.AudioContext || window.webkitAudioContext
+        tests.all = if (tests.audio_context = !!ctxt) then tests.all else false
+        return false if !ctxt
+        __t = new ctxt()
         tests.all = if (tests.unprefixed = window.AudioContext?) then tests.all else false
         tests.all = if (tests.start_stop = __t.createOscillator().start?) then tests.all else false
         if __t.createStereoPanner?

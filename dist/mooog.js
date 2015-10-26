@@ -1420,11 +1420,15 @@
       if (this.browser_test_results) {
         return this.browser_test_results;
       }
-      ctxt = window.AudioContext || window.webkitAudioContext;
-      __t = new ctxt();
       tests = {
         all: true
       };
+      ctxt = window.AudioContext || window.webkitAudioContext;
+      tests.all = (tests.audio_context = !!ctxt) ? tests.all : false;
+      if (!ctxt) {
+        return false;
+      }
+      __t = new ctxt();
       tests.all = (tests.unprefixed = window.AudioContext != null) ? tests.all : false;
       tests.all = (tests.start_stop = __t.createOscillator().start != null) ? tests.all : false;
       if (__t.createStereoPanner != null) {
