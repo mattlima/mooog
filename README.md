@@ -4,6 +4,18 @@
 
 Version 0.0.4
 
+**Important (Jan. 2016)**
+
+Several of the problems this library was created to solve are addressed in the 
+HTML5 Audio API dev roadmap, most notable connect() returning the AudioNode
+instance and clarifications/behavior specs for the various setValue methods 
+of the AudioParam. To stay up-to-date on this stuff, you can follow the spec 
+at [https://github.com/WebAudio/web-audio-api](https://github.com/WebAudio/web-audio-api).
+Hopefully Mooog's behavior will not conflict with the future standard, but if
+it does, I'll be updating Mooog to stay with the spec. The tldr; is don't use 
+this in production (not like you would, though, amiright?).
+
+
 ### What is Mooog?
 
 Mooog is inspired by audio mixing boards on the one hand and jQuery chainable
