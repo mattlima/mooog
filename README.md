@@ -7,7 +7,7 @@ Version 0.0.4
 **Important (Jan. 2016)**
 
 Several of the problems this library was created to solve are addressed in the 
-HTML5 Audio API dev roadmap, most notable connect() returning the AudioNode
+HTML5 Audio API dev roadmap, most notably connect() returning the AudioNode
 instance and clarifications/behavior specs for the various setValue methods 
 of the AudioParam. To stay up-to-date on this stuff, you can follow the spec 
 at [https://github.com/WebAudio/web-audio-api](https://github.com/WebAudio/web-audio-api).
