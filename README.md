@@ -2,7 +2,7 @@
 
 ##Chainable AudioNode API
 
-Version 0.0.4
+Version 0.0.5
 
 **Important (Jan. 2016)**
 
@@ -418,6 +418,7 @@ If you're feeling generous, you can throw me some dosh [here.](https://www.paypa
 - 0.0.2 : Added ChannelMerger, ChannelSplitter, ScriptProcessor nodes, fixed bug when setting callbacks via the config object.
 - 0.0.3 : Refactor for more rational signatures and easier homebrew Node creation.
 - 0.0.4 : Add shim for StereoPannerNode
+- 0.0.5 : AudioBufferSourceNode retains onended() function between plays once set 
 
 ## Todo:
 
