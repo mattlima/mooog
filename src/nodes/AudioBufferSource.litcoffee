@@ -48,6 +48,10 @@ Wraps the AudioBufferSourceNode AudioContext object
             when 'AudioBuffer', 'boolean', 'number', 'string'
               dest[k] = v
             when 'AudioParam' then dest[k].value = v.value
+            when 'function'
+              dest[k] = v unless source[k].toString().match(/native code/)
+        null
+            
 
       
       

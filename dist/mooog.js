@@ -647,8 +647,7 @@
     };
 
     AudioBufferSource.prototype.clone_AudioNode_properties = function(source, dest) {
-      var k, results, v;
-      results = [];
+      var k, v;
       for (k in source) {
         v = source[k];
         switch (this.__typeof(source[k])) {
@@ -656,16 +655,18 @@
           case 'boolean':
           case 'number':
           case 'string':
-            results.push(dest[k] = v);
+            dest[k] = v;
             break;
           case 'AudioParam':
-            results.push(dest[k].value = v.value);
+            dest[k].value = v.value;
             break;
-          default:
-            results.push(void 0);
+          case 'function':
+            if (!source[k].toString().match(/native code/)) {
+              dest[k] = v;
+            }
         }
       }
-      return results;
+      return null;
     };
 
     return AudioBufferSource;
