@@ -1,0 +1,270 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+
+    <!-- Always force latest IE rendering engine or request Chrome Frame -->
+    <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible">
+
+    <!-- Use title if it's in the page YAML frontmatter -->
+    <title></title>
+
+    <link href="stylesheets/all.css" rel="stylesheet" type="text/css" />
+    <script src="javascripts/modernizr.js" type="text/javascript"></script>
+    <script src="javascripts/all.js" type="text/javascript"></script>
+    <script src="javascripts/highlight/highlight.pack.js" type="text/javascript"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-67532851-1', 'auto');
+  ga('send', 'pageview');
+
+</script>  </head>
+
+
+  <body class="x2">
+
+    <div class="row">
+        <div class="small-12 columns">
+          <a href="http://mattlima.github.io/mooog/"><span class="supertitle label radius">Mooog examples</span></a>
+              <h1>. </h1>
+        </div>
+    </div>
+
+
+    <div class="row">
+    <div class="small-12 columns">
+
+        <h3>Creating tracks and sends</h3>
+
+        <div class="row">
+            <div class="small-12 columns">
+                <fieldset class="panel sound radius">
+
+                <legend>Track#balafon</legend>
+
+                <div class="small-12 medium-2 columns">
+                    <button class="radius expand ding start" >ding.start()</button>
+                    <button class="radius expand ding stop" >ding.stop()</button>
+                </div>
+
+                <div class="small-12 medium-5 columns ">
+                    <div id="balafon-pan" class="range-slider round" data-slider="0" data-mooog-node-target="balafon" data-mooog-param-target="pan" data-mooog-target-type="" data-options="display_selector: #balafon-pan-val;start:-1;end:1;step:0.05;">
+  <label>Balafon Pan <span id="balafon-pan-val">0</span> </label>
+  <span class="range-slider-handle" role="slider" tabindex="0"></span>
+  <span class="range-slider-active-segment"></span>
+  <input type="hidden">
+</div>
+
+
+
+
+                    <div id="balafon-gain" class="range-slider round" data-slider="0.5" data-mooog-node-target="balafon" data-mooog-param-target="gain" data-mooog-target-type="" data-options="display_selector: #balafon-gain-val;start:0;end:1;step:0.05;">
+  <label>Balafon Gain <span id="balafon-gain-val">0.5</span> </label>
+  <span class="range-slider-handle" role="slider" tabindex="0"></span>
+  <span class="range-slider-active-segment"></span>
+  <input type="hidden">
+</div>
+
+
+                </div>
+
+                <div class="small-12 medium-5 columns ">
+                    <div id="balafon-delay-send" class="range-slider round" data-slider="0.5" data-mooog-node-target="balafon" data-mooog-param-target="delay_send" data-mooog-target-type="send" data-options="display_selector: #balafon-delay-send-val;start:0;end:1;step:0.05;">
+  <label>Delay send level <span id="balafon-delay-send-val">0.5</span> </label>
+  <span class="range-slider-handle" role="slider" tabindex="0"></span>
+  <span class="range-slider-active-segment"></span>
+  <input type="hidden">
+</div>
+
+
+
+                    <div id="balafon-reverb-send" class="range-slider round" data-slider="0.25" data-mooog-node-target="balafon" data-mooog-param-target="reverb_send" data-mooog-target-type="send" data-options="display_selector: #balafon-reverb-send-val;start:0;end:1;step:0.05;">
+  <label>Reverb send level <span id="balafon-reverb-send-val">0.25</span> </label>
+  <span class="range-slider-handle" role="slider" tabindex="0"></span>
+  <span class="range-slider-active-segment"></span>
+  <input type="hidden">
+</div>
+
+
+                </div>
+
+
+                </fieldset>
+            </div>
+            <div class="small-6 columns">
+                <fieldset class="panel sound radius">
+
+                <legend>Track#delay</legend>
+
+
+                <div class="small-12 columns ">
+                    <div id="delay-pan" class="range-slider round" data-slider="0" data-mooog-node-target="delay" data-mooog-param-target="pan" data-mooog-target-type="" data-options="display_selector: #delay-pan-val;start:-1;end:1;step:0.05;">
+  <label>Delay Pan <span id="delay-pan-val">0</span> </label>
+  <span class="range-slider-handle" role="slider" tabindex="0"></span>
+  <span class="range-slider-active-segment"></span>
+  <input type="hidden">
+</div>
+
+
+
+
+                    <div id="delay-gain" class="range-slider round" data-slider="0.5" data-mooog-node-target="delay" data-mooog-param-target="gain" data-mooog-target-type="" data-options="display_selector: #delay-gain-val;start:0;end:1;step:0.05;">
+  <label>Delay Gain <span id="delay-gain-val">0.5</span> </label>
+  <span class="range-slider-handle" role="slider" tabindex="0"></span>
+  <span class="range-slider-active-segment"></span>
+  <input type="hidden">
+</div>
+
+
+                </div>
+
+
+
+                </fieldset>
+            </div>
+            <div class="small-6 columns">
+                <fieldset class="panel sound radius">
+
+                <legend>Track#reverb</legend>
+
+
+                <div class="small-12 columns ">
+                    <div id="reverb-pan" class="range-slider round" data-slider="0" data-mooog-node-target="reverb" data-mooog-param-target="pan" data-mooog-target-type="" data-options="display_selector: #reverb-pan-val;start:-1;end:1;step:0.05;">
+  <label>Reverb Pan <span id="reverb-pan-val">0</span> </label>
+  <span class="range-slider-handle" role="slider" tabindex="0"></span>
+  <span class="range-slider-active-segment"></span>
+  <input type="hidden">
+</div>
+
+
+
+
+                    <div id="reverb-gain" class="range-slider round" data-slider="0.5" data-mooog-node-target="reverb" data-mooog-param-target="gain" data-mooog-target-type="" data-options="display_selector: #reverb-gain-val;start:0;end:1;step:0.05;">
+  <label>Reverb Gain <span id="reverb-gain-val">0.5</span> </label>
+  <span class="range-slider-handle" role="slider" tabindex="0"></span>
+  <span class="range-slider-active-segment"></span>
+  <input type="hidden">
+</div>
+
+
+                </div>
+
+
+
+                </fieldset>
+            </div>
+        </div>
+
+
+        <p>In addition to <code>connect()</code> and <code>chain()</code>, Mooog provides a <code>Track</code> object which is a special node that includes a pan/gain stage and a <code>send()</code> method that routes audio to another track, pre- or post-fader. The track object takes a string id as its first argument followed by one or more objects to define the nodes of its internal chain.</p>
+        <p>In this example, we've set up 3 Track objects: an AudioBuffer to play a sound, and two effects tracks for delay (sent post-fader) and a reverb (sent pre-fader). Since the returns are also <code>Track</code> objects, they have their own gain and pan controls.</p>
+        <p>In the code below, the slider change events are omitted for brevity. Track sends are just <code>Gain</code> objects so changing send levels after init is simply: <code>M.track("balafon").send("delay_send").param("gain", new_gain_value);</code></p>
+
+        <pre><code>M = new Mooog();
+M.track( "balafon",
+    { id: "ding", node_type: "AudioBufferSource", buffer_source_file: "sound/balafon1.mp3", loop: true },
+    { id: "compressor", node_type: "DynamicsCompressor", threshold: -30, ratio: 50 } //gross compression to demonstrate automatic chaining
+);
+M.track( "delay",
+    { node_type: "Delay", delayTime: 0.76, feedback: 0.2 }
+);
+M.track( "reverb",
+    { node_type: "Convolver", buffer_source_file: "sound/impulse-responses/st-andrews-church-ortf-shaped.mp3" }
+);
+
+// track.send( id, destination, pre/post, initial_gain )
+M.track("balafon").send( 'delay_send', M.track('delay'), 'post', 0.5);
+M.track("balafon").send( 'reverb_send', M.track('reverb'), 'pre', 0.25);
+
+$(document)
+    .on("mousedown", ".ding.start", function(){
+        M.node("ding").start();
+    })
+    .on("mousedown", ".ding.stop", function(){
+        M.node("ding").stop();
+    })
+
+
+
+</code></pre>
+
+
+
+
+
+
+        <script>
+M = new Mooog();
+M.track( "balafon",
+    { id: "ding", node_type: "AudioBufferSource", buffer_source_file: "sound/balafon1.mp3", loop: true },
+    { id: "compressor", node_type: "DynamicsCompressor", threshold: -30, ratio: 50 } //gross compression to demonstrate automatic chaining
+);
+M.track( "delay",
+    { node_type: "Delay", delayTime: 0.76, feedback: 0.2 }
+);
+M.track( "reverb",
+    { node_type: "Convolver", buffer_source_file: "sound/impulse-responses/st-andrews-church-ortf-shaped.mp3" }
+);
+
+// track.send( id, destination, pre/post, initial_gain )
+M.track("balafon").send( 'delay_send', M.track('delay'), 'post', 0.5);
+M.track("balafon").send( 'reverb_send', M.track('reverb'), 'pre', 0.25);
+
+$(document)
+    .on("mousedown", ".ding.start", function(){
+        M.node("ding").start();
+    })
+    .on("mousedown", ".ding.stop", function(){
+        M.node("ding").stop();
+    })
+
+
+
+
+        </script>
+
+
+
+    </div>
+</div>
+
+
+
+    <div class="row">
+        <div class="small-6 columns text-left">
+        </div>
+        <div class="small-6 columns text-right">
+        </div>
+    </div>
+     <div class="row">
+    <div class="small-12 columns">
+        <footer class="panel radius">
+        	<h3>The fine print</h3>
+        	<p>Responsive design framework by <a href="http://foundation.zurb.com/">Zurb</a>.
+        	</p>
+        	<p>Automatic syntax highlighting by <a href="https://highlightjs.org/">highlight.js</a>.
+        	</p>
+        	<p>The convolver examples use impulse responses from the <a href="http://www.openairlib.net/">OpenAir Impulse Response Library</a> licensed under various Creative Commons licenses.
+        	</p>
+    		 <ul class="disc">
+        	    <li><strong><a href="http://www.openairlib.net/auralizationdb/content/st-andrews-church">st-andrews-church-ortf-shaped.wav</a></strong> : <a href="http://creativecommons.org/licenses/by-sa/3.0/">Attribution Share Alike Creative Commons license</a></li>
+    	    </ul>
+    	    <p><strong>balafon.mp3</strong> is the author's creation, released under the <a href="https://opensource.org/licenses/MIT">MIT License</a></p>
+
+
+        </footer>
+    </div>
+</div>
+
+
+
+
+     <script src="javascripts/body-end.js" type="text/javascript"></script>
+
+  </body>
+</html>
