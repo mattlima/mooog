@@ -164,11 +164,12 @@ $(document)
         </div>
 
         <p>The scheduling methods of the <code>AudioParam</code> API are all accessible through additional properties of the <code>param()</code> argument. See the
-            <a href="https://developer.mozilla.org/en-US/docs/Web/API/AudioParam">AudioParam docs</a> for more information. Mooog runs <code>cancelScheduledValues()</code>
-            for consistency unless you explicity add <code>cancel: true</code> to the argument. By default, <code>linearRampToValueAtTime</code> and <code>exponentialRampToValueAtTime</code>
-            begin their ramps <strong>at the last scheduled change for the parameter, even if it is in the past.</strong> This can lead to confusing
-            behavior where the value jumps abruptly when function is called. To override this behavior, the <code>from_now</code> argument can be set to true, which will force
-            the ramp to start at the current time.</p>
+            <a href="https://developer.mozilla.org/en-US/docs/Web/API/AudioParam">AudioParam docs</a> for more information. By default,
+            <code>linearRampToValueAtTime</code> and <code>exponentialRampToValueAtTime</code> begin their ramps <strong>at the last scheduled change for
+            the parameter, even if it is in the past.</strong> This can lead to confusing behavior where the value jumps abruptly when function is called.
+            To override this behavior, the <code>from_now</code> argument can be set to true, which will force the ramp to start at the current time. In any case,
+            you can add <code>cancel: true</code> to the argument, which will run <code>cancelScheduledValues(0)</code>, which may help you get more consistent
+            results if you are setting up parameter changes dynamically (in response to user input, for example.)</p>
         <table>
           <thead>
             <tr>
