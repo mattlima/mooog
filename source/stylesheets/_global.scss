@@ -43,24 +43,3 @@ fieldset.sound{
   }
 }
 
-.range-slider.round{
-  margin-bottom:2rem;
-
-  .range-slider-handle{
-    background-color: $primary-color-medium;
-    border:1px solid $primary-color-dark;
-    @include hover-dark();
-  }
-  label{
-    position: absolute;
-    top: -21px;
-    left: 0;
-    font-size: 13px;
-    @include aller-bold();
-    color: $primary-color-dark;
-    span{
-      display:inline-block;
-      margin-left:10px;
-    }
-  }
-}
