@@ -390,7 +390,6 @@ but supply a `timeConstant`. *Defaults to true*
           duration = if key.duration then parseFloat(key.duration) else false
           cancel = !!key.cancel
           from_now = !!key.from_now
-          @debug "keyramp", key.ramp
           switch key.ramp
             when "linear" then [rampfun, extra] = ["linearRampToValueAtTime", false]
             when "curve" then [rampfun, extra] = ["setValueCurveAtTime", duration]
@@ -418,18 +417,29 @@ See [https://jsfiddle.net/5xqhwzwu/1/](https://jsfiddle.net/5xqhwzwu/). See the
           when "AudioParam"
             if val?
               @[key].cancelScheduledValues(0) if cancel
+              @debug "#{key}.cancelScheduledValues(0)" if cancel
               val = @_instance.config.fake_zero if val is 0
               val = new Float32Array val if val instanceof Array
               switch rampfun
                 when "linearRampToValueAtTime", "exponentialRampToValueAtTime"
                   @[key].setValueAtTime(@[key].value, @context.currentTime) if from_now
+                  @debug "#{key}.setValueAtTime(#{@[key].value}, \
+                  #{@context.currentTime})" if from_now
                   @[key][rampfun] val, @context.currentTime + at
+                  @debug "#{key}.#{rampfun}(#{val}, \
+                  #{@context.currentTime + at})"
                 when "setValueAtTime"
                   @[key][rampfun] val, @context.currentTime + at
+                  @debug "#{key}.#{rampfun}(#{val}, \
+                  #{@context.currentTime + at})"
                 when "setValueCurveAtTime"
                   @[key][rampfun] val, @context.currentTime + at, extra
+                  @debug "#{key}.#{rampfun}(#{val}, \
+                  #{@context.currentTime + at}, #{extra})"
                 when "setTargetAtTime"
                   @[key][rampfun] val, @context.currentTime + at, extra
+                  @debug "#{key}.#{rampfun}(#{val}, \
+                  #{@context.currentTime + at}, #{extra})"
               return this
             else
               @[key].value
