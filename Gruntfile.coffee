@@ -50,7 +50,7 @@ module.exports = (grunt, options) ->
       app: ['src/**/*.litcoffee']
       options:
         max_line_length:
-          "value": 100,
+          "value": 150,
           "level": "error",
           "limitComments": true
 

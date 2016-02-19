@@ -2,7 +2,7 @@
 
 ##Chainable AudioNode API
 
-Version 0.0.5
+Version 0.0.6
 
 **Important (Jan. 2016)**
 
@@ -419,6 +419,7 @@ If you're feeling generous, you can throw me some dosh [here.](https://www.paypa
 - 0.0.3 : Refactor for more rational signatures and easier homebrew Node creation.
 - 0.0.4 : Add shim for StereoPannerNode
 - 0.0.5 : AudioBufferSourceNode retains onended() function between plays once set 
+- 0.0.6 : `fake_zero` is only used when the ramp type is 'expo'. Changed behavior of `from_now` option in param() to use setTimeout in order to correctly pick up param changes scheduled on the same tick.
 
 ## Todo:
 

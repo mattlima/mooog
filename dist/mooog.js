@@ -379,7 +379,6 @@
         duration = key.duration ? parseFloat(key.duration) : false;
         cancel = !!key.cancel;
         from_now = !!key.from_now;
-        this.debug("keyramp", key.ramp);
         switch (key.ramp) {
           case "linear":
             ref = ["linearRampToValueAtTime", false], rampfun = ref[0], extra = ref[1];
@@ -416,7 +415,10 @@
             if (cancel) {
               this[key].cancelScheduledValues(0);
             }
-            if (val === 0) {
+            if (cancel) {
+              this.debug(key + ".cancelScheduledValues(0)");
+            }
+            if (val === 0 && (rampfun === "setTargetAtTime" || rampfun === "exponentialRampToValueAtTime")) {
               val = this._instance.config.fake_zero;
             }
             if (val instanceof Array) {
@@ -426,18 +428,29 @@
               case "linearRampToValueAtTime":
               case "exponentialRampToValueAtTime":
                 if (from_now) {
-                  this[key].setValueAtTime(this[key].value, this.context.currentTime);
+                  setTimeout(((function(_this) {
+                    return function() {
+                      _this[key].setValueAtTime(_this[key].value, _this.context.currentTime);
+                      _this.debug(key + ".setValueAtTime(" + _this[key].value + ", " + _this.context.currentTime + ")");
+                      _this[key][rampfun](val, _this.context.currentTime + at);
+                      return _this.debug(key + "." + rampfun + "(" + val + ", " + (_this.context.currentTime + at) + ")");
+                    };
+                  })(this)), 1 / (this.context.sampleRate * 1000));
+                } else {
+                  this[key][rampfun](val, this.context.currentTime + at);
                 }
-                this[key][rampfun](val, this.context.currentTime + at);
                 break;
               case "setValueAtTime":
                 this[key][rampfun](val, this.context.currentTime + at);
+                this.debug(key + "." + rampfun + "(" + val + ", " + (this.context.currentTime + at) + ")");
                 break;
               case "setValueCurveAtTime":
                 this[key][rampfun](val, this.context.currentTime + at, extra);
+                this.debug(key + "." + rampfun + "(" + val + ", " + (this.context.currentTime + at) + ", " + extra + ")");
                 break;
               case "setTargetAtTime":
                 this[key][rampfun](val, this.context.currentTime + at, extra);
+                this.debug(key + "." + rampfun + "(" + val + ", " + (this.context.currentTime + at) + ", " + extra + ")");
             }
             return this;
           } else {

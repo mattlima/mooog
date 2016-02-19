@@ -374,7 +374,13 @@ the change:
 `at`: A float representing a number of seconds in the future at which to arrive at
 or start the changes, depending on the ramp function.  
 `from_now`: A boolean indicating whether the start of value changes via `linearRampToValueAtTime`
-and `exponentialRampToValueAtTime` is now or after the previous value change. *Defaults to false*
+and `exponentialRampToValueAtTime` occurs now or after the previous value change. Internally,
+setting this to true calls setValueAtTime using the parameter's current value and the 
+current time. In order to ensure that param.value reflects previous changes to the
+parameter made on this tick, the setValueAtTime and subequent ramp function calls
+are delayed by 1 sample or the minimum setTimeout value for the browser, whichever is larger. 
+If you really need the ramp to start at the current time, use param(key, value) to set the
+current value and then call param(), omitting `from_now` which *defaults to false*
 `cancel`: whether to call `cancelScheduledValues` before setting the parameter(s). 
 *Defaults to false* 
 - To use `setValueCurveAtTime`, `ramp` should be set to `curve` and the `duration` property 
@@ -418,16 +424,19 @@ See [https://jsfiddle.net/5xqhwzwu/1/](https://jsfiddle.net/5xqhwzwu/). See the
             if val?
               @[key].cancelScheduledValues(0) if cancel
               @debug "#{key}.cancelScheduledValues(0)" if cancel
-              val = @_instance.config.fake_zero if val is 0
+              val = @_instance.config.fake_zero if val is 0 and rampfun in ["setTargetAtTime", "exponentialRampToValueAtTime"]
               val = new Float32Array val if val instanceof Array
               switch rampfun
                 when "linearRampToValueAtTime", "exponentialRampToValueAtTime"
-                  @[key].setValueAtTime(@[key].value, @context.currentTime) if from_now
-                  @debug "#{key}.setValueAtTime(#{@[key].value}, \
-                  #{@context.currentTime})" if from_now
-                  @[key][rampfun] val, @context.currentTime + at
-                  @debug "#{key}.#{rampfun}(#{val}, \
-                  #{@context.currentTime + at})"
+                  if from_now
+                    setTimeout( (()=>
+                      @[key].setValueAtTime(@[key].value, @context.currentTime)
+                      @debug "#{key}.setValueAtTime(#{@[key].value}, #{@context.currentTime})"
+                      @[key][rampfun] val, @context.currentTime + at
+                      @debug "#{key}.#{rampfun}(#{val}, \
+                      #{@context.currentTime + at})"), 1/(@context.sampleRate * 1000) )
+                  else
+                    @[key][rampfun] val, @context.currentTime + at
                 when "setValueAtTime"
                   @[key][rampfun] val, @context.currentTime + at
                   @debug "#{key}.#{rampfun}(#{val}, \
