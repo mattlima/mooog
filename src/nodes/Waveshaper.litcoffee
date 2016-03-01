@@ -30,7 +30,6 @@ Wraps the WaveShaperNode AudioContext object
           lasttemp = lasttemp.map( (x) -> -1 * x )
           newcurrent = for el, i in current
             lasttemp[i] + current[i]
-          console.log current, lasttemp, "new cur", newcurrent, this
           return @chebyshev terms, last, newcurrent
       
       # used by the chebyshev generator once the coefficients have been calculated
