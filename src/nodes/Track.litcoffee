@@ -3,7 +3,9 @@
 A convenience function that creates a chain with the specified node(s)
 followed by a panner/gain stage. It can also create pre/post sends with their 
 own gain. The gain and pan `AudioParams` of those stages can be accessed
-via `gain` and `pan` methods exposed on the track object.
+via `gain` and `pan` methods exposed on the track object. Track objects can
+be the source or destination of `connect` and `chain` methods, just like any
+other node.
 
 
     class Track extends MooogAudioNode

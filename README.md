@@ -2,7 +2,7 @@
 
 ##Chainable AudioNode API
 
-Version 0.0.6
+Version 0.0.7
 
 **Important (Jan. 2016)**
 
@@ -283,7 +283,7 @@ node. The Track object routes the last node in its internal chain through a pan/
 the native methods/properties of the first node in its internal chain, but it also exposes the `gain` and `pan` AudioParams of 
 the nodes in the pan/gain stage directly. 
 
-Tracks can be used interchangeably with nodes as arguments to functions like `connect()` and `chain()`. 
+Tracks can be used interchangeably with nodes as source or destination objects for methods `connect()` and `chain()`. 
 
 Tracks have a `send()` function analagous to mixing board sends. Once created, the send (which is a `Gain` node) is referenced by string id, just like Tracks and other nodes. 
 
@@ -420,6 +420,7 @@ If you're feeling generous, you can throw me some dosh [here.](https://www.paypa
 - 0.0.4 : Add shim for StereoPannerNode
 - 0.0.5 : AudioBufferSourceNode retains onended() function between plays once set 
 - 0.0.6 : `fake_zero` is only used when the ramp type is 'expo'. Changed behavior of `from_now` option in param() to use setTimeout in order to correctly pick up param changes scheduled on the same tick.
+- 0.0.7 : Track objects behave just like other Nodes when used as source or target of `.connect` and `.chain`
 
 ## Todo:
 
