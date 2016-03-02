@@ -94,6 +94,9 @@
       if (thing instanceof AudioListener) {
         return "AudioListener";
       }
+      if (thing instanceof Track) {
+        return "Track";
+      }
       if (thing instanceof MooogAudioNode) {
         return "MooogAudioNode";
       }
@@ -202,7 +205,7 @@
     MooogAudioNode.prototype.disconnect_incoming = function() {};
 
     MooogAudioNode.prototype.connect = function(node, output, input, return_this) {
-      var target;
+      var source, target;
       if (output == null) {
         output = 0;
       }
@@ -231,12 +234,13 @@
           throw new Error("Unknown node type passed to connect");
       }
       this._connections.push([node, output, input]);
+      source = this instanceof Track ? this._gain_stage : this._nodes[this._nodes.length - 1];
       switch (false) {
         case typeof output !== 'string':
-          this._nodes[this._nodes.length - 1].connect(target[output], input);
+          source.connect(target[output], input);
           break;
         case typeof output !== 'number':
-          this._nodes[this._nodes.length - 1].connect(target, output, input);
+          source.connect(target, output, input);
       }
       if (return_this) {
         return this;
@@ -332,6 +336,9 @@
         case "AudioParam":
           source = node1;
           break;
+        case "Track":
+          source = node1._gain_stage;
+          break;
         case "string":
           source = this._instance.node(node1);
           break;
@@ -340,6 +347,7 @@
       }
       switch (this.__typeof(node2)) {
         case "MooogAudioNode":
+        case "Track":
           target = node2._nodes[0];
           break;
         case "AudioNode":

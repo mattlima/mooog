@@ -113,6 +113,7 @@ This is a modified `typeof` to filter AudioContext API-specific object types
         return "AudioBuffer" if thing instanceof AudioBuffer
         return "PeriodicWave" if thing instanceof PeriodicWave
         return "AudioListener" if thing instanceof AudioListener
+        return "Track" if thing instanceof Track
         return "MooogAudioNode" if thing instanceof MooogAudioNode
         return typeof(thing)
 
@@ -243,11 +244,13 @@ to connect to.
           
         @_connections.push [node, output, input]
         
+        source = if this instanceof Track then @_gain_stage else @_nodes[ @_nodes.length - 1 ]
+        
         switch
-          when typeof(output) is 'string'
-            @_nodes[ @_nodes.length - 1 ].connect target[output], input
-          when typeof(output) is 'number'
-            @_nodes[ @_nodes.length - 1 ].connect target, output, input
+          when typeof(output) is 'string' #connecting to AudioParam
+            source.connect target[output], input
+          when typeof(output) is 'number' #connecting to a Node
+            source.connect target, output, input
         
         return if return_this then this else node
 
@@ -329,10 +332,11 @@ a node that's not already connected.
         switch @__typeof node1
           when "MooogAudioNode" then source = node1._nodes[ node1._nodes.length - 1 ]
           when "AudioNode", "AudioParam" then source = node1
+          when "Track" then source = node1._gain_stage
           when "string" then source = @_instance.node node1
           else throw new Error "Unknown node type passed to disconnect"
         switch @__typeof node2
-          when "MooogAudioNode" then target = node2._nodes[0]
+          when "MooogAudioNode", "Track" then target = node2._nodes[0]
           when "AudioNode", "AudioParam" then target = node2
           when "string" then target = @_instance.node node2
           else throw new Error "Unknown node type passed to disconnect"
