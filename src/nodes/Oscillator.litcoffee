@@ -10,7 +10,8 @@ Wraps the OscillatorNode AudioContext object
         @insert_node @context.createOscillator(), 0
       
       after_config: (config)->
-        @insert_node new Gain( @_instance, { connect_to_destination: @config.connect_to_destination, gain: 1.0 } )
+        @insert_node new Gain( @_instance, { connect_to_destination: @config.connect_to_destination } )
+        @_nodes[1].gain.value = 1.0
         @_is_started = false
         @_state = 'stopped'
         @_timeout = false

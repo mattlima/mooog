@@ -892,9 +892,9 @@
 
     Oscillator.prototype.after_config = function(config) {
       this.insert_node(new Gain(this._instance, {
-        connect_to_destination: this.config.connect_to_destination,
-        gain: 1.0
+        connect_to_destination: this.config.connect_to_destination
       }));
+      this._nodes[1].gain.value = 1.0;
       this._is_started = false;
       this._state = 'stopped';
       this._timeout = false;
