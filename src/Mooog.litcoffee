@@ -25,6 +25,12 @@ as the Mooog global.
         'WaveShaper': WaveShaper
       
       @MooogAudioNode = MooogAudioNode
+      
+      @EVENT_NAMES:
+        AUDIO_BUFFER_LOADED: 'mooog.audioBufferLoaded'
+      
+
+
 
       
       constructor: (@initConfig = {}) ->
@@ -37,6 +43,15 @@ as the Mooog global.
           curve_length: 65536
           fake_zero: 1/65536
           allow_multiple_audiocontexts: false
+
+
+It's not unusual to have several AudioBufferNodes using the same buffer source
+file. If they are initialized at the same time, each one will make an HTTP
+request for the file, resulting in a lot of unnecessary network traffic. We store
+the URLs of audio assets here to make sure they're only loaded once by any object that needs them
+      
+      
+        @audioBuffersLoaded = {}
               
 
 `_BROWSER_CONSTRUCTOR` Stores the type of constructor used for the AudioContext 

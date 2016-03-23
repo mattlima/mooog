@@ -236,11 +236,11 @@ to connect to.
           when "string"
             node = @_instance.node node
             target = node._nodes[0]
-          when "MooogAudioNode"
+          when "MooogAudioNode", "Track"
             target = node._nodes[0]
           when "AudioNode"
             target = node
-          else throw new Error "Unknown node type passed to connect"
+          else throw new Error "Unknown node type #{@__typeof node} passed to connect"
           
         @_connections.push [node, output, input]
         
@@ -276,9 +276,9 @@ and `disconnect` functions.
       
       to: (node) ->
         switch @__typeof node
-          when "MooogAudioNode" then return node._nodes[0]
+          when "MooogAudioNode", "Track" then return node._nodes[0]
           when "AudioNode" then return node
-          else throw new Error "Unknown node type passed to connect"
+          else throw new Error "Unknown node type #{@__typeof node} passed to connect"
       
       from: @.prototype.to
       
@@ -438,7 +438,7 @@ See [https://jsfiddle.net/5xqhwzwu/1/](https://jsfiddle.net/5xqhwzwu/). See the
                       @debug "#{key}.setValueAtTime(#{@[key].value}, #{@context.currentTime})"
                       @[key][rampfun] val, @context.currentTime + at
                       @debug "#{key}.#{rampfun}(#{val}, \
-                      #{@context.currentTime + at})"), 1/(@context.sampleRate * 1000) )
+                      #{@context.currentTime + at})"), 1000 / @context.sampleRate  )
                   else
                     @[key][rampfun] val, @context.currentTime + at
                 when "setValueAtTime"
@@ -464,31 +464,70 @@ See [https://jsfiddle.net/5xqhwzwu/1/](https://jsfiddle.net/5xqhwzwu/). See the
 
 
 ### MooogAudioNode.define_buffer_source_properties
-Sets up useful functions on `MooogAudioNode`s that have a `buffer` property 
-#Todo: emit loaded event
+Sets up useful functions on `MooogAudioNode`s that have a `buffer` property. To prevent
+multiple HTTP requests for the same file on load, all buffers are tracked in the parent
+instance and used if available there. If an audio asset has already been requested by
+another bufferNode, this node will wait for the loaded event and then load it from the
+shared buffer hash in the parent instance.
+   
       
       define_buffer_source_properties: () ->
         @_buffer_source_file_url = ''
         Object.defineProperty @, 'buffer_source_file', {
           get: ->
             @_buffer_source_file_url
-          set: (filename) =>
-            request = new XMLHttpRequest()
-            request.open('GET', filename, true)
-            request.responseType = 'arraybuffer'
-            request.onload = () =>
-              @debug "loaded #{filename}"
-              @_buffer_source_file_url = filename
-              @_instance.context.decodeAudioData request.response, (buffer) =>
-                @debug "setting buffer",buffer
-                @buffer = buffer
-              , (error) ->
-                throw new Error("Could not decode audio data from #{request.responseURL}
-                 - unsupported file format?")
-            request.send()
+          set: @set_buffer_source_file.bind this
           enumerable: true
           configurable: true
         }
+        null
+
+
+      
+### MooogAudioNode.set_buffer_source_file
+Setter for the `buffer` property.  Used in `define_buffer_source_properties` and 
+as a handler for the audioBufferLoaded event. 
+
+      
+      set_buffer_source_file: (filename, event=false) =>
+        if @_instance.audioBuffersLoaded[filename]
+          if @_instance.audioBuffersLoaded[filename] is "REQUESTED"
+            @debug "#{filename} requested but not yet available to #{@id}, adding event listener"
+            deferredLoad = (filename, event)->
+              if event.detail.filename is filename
+                @debug "deferred load callback for #{filename}"
+                @buffer = @_instance.audioBuffersLoaded[filename]
+                document.removeEventListener Mooog.EVENT_NAMES.AUDIO_BUFFER_LOADED, deferredLoad
+            document.addEventListener Mooog.EVENT_NAMES.AUDIO_BUFFER_LOADED, deferredLoad.bind this, filename
+                
+          else
+            @buffer = @_instance.audioBuffersLoaded[filename]
+            @debug "set buffer #{filename} from cache for #{@id}"
+            return null
+        else
+          @debug "#{filename} not in cache, requesting for #{@id}"
+          @_instance.audioBuffersLoaded[filename] = "REQUESTED"
+          request = new XMLHttpRequest()
+          request.open('GET', filename, true)
+          request.responseType = 'arraybuffer'
+          request.onload = () =>
+            @debug "completed HTTP request for #{filename}"
+            @_buffer_source_file_url = filename
+            @_instance.context.decodeAudioData request.response, (buffer) =>
+              @debug "setting buffer from #{filename} and dispatching #{Mooog.EVENT_NAMES.AUDIO_BUFFER_LOADED}",buffer
+              @_instance.audioBuffersLoaded[filename] = buffer
+              @buffer = buffer
+              event = new CustomEvent Mooog.EVENT_NAMES.AUDIO_BUFFER_LOADED,
+                detail:
+                  filename: filename
+                  buffer: buffer
+              document.dispatchEvent event
+            , (error) ->
+              throw new Error("Could not decode audio data from #{request.responseURL}
+               - unsupported file format?")
+          request.send()
+        
+      
         
 ### MooogAudioNode.define_readonly_property
 
