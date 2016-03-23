@@ -276,7 +276,7 @@ and `disconnect` functions.
       
       to: (node) ->
         switch @__typeof node
-          when "MooogAudioNode" then return node._nodes[0]
+          when "MooogAudioNode","Track" then return node._nodes[0]
           when "AudioNode" then return node
           else throw new Error "Unknown node type passed to connect"
       

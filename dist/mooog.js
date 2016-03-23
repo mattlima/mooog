@@ -266,6 +266,7 @@
     MooogAudioNode.prototype.to = function(node) {
       switch (this.__typeof(node)) {
         case "MooogAudioNode":
+        case "Track":
           return node._nodes[0];
         case "AudioNode":
           return node;
