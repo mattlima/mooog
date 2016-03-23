@@ -1,13 +1,14 @@
 (function() {
   var Analyser, AudioBufferSource, BiquadFilter, ChannelMerger, ChannelSplitter, Convolver, Delay, DynamicsCompressor, Gain, MediaElementSource, Mooog, MooogAudioNode, Oscillator, Panner, ScriptProcessor, StereoPanner, Track, WaveShaper,
+    bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     slice = [].slice,
     extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-    hasProp = {}.hasOwnProperty,
-    bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
+    hasProp = {}.hasOwnProperty;
 
   MooogAudioNode = (function() {
     function MooogAudioNode(_instance, config) {
       this._instance = _instance;
+      this.set_buffer_source_file = bind(this.set_buffer_source_file, this);
       this._destination = this._instance._destination;
       this.context = this._instance.context;
       this._nodes = [];
@@ -225,13 +226,14 @@
           target = node._nodes[0];
           break;
         case "MooogAudioNode":
+        case "Track":
           target = node._nodes[0];
           break;
         case "AudioNode":
           target = node;
           break;
         default:
-          throw new Error("Unknown node type passed to connect");
+          throw new Error("Unknown node type " + (this.__typeof(node)) + " passed to connect");
       }
       this._connections.push([node, output, input]);
       source = this instanceof Track ? this._gain_stage : this._nodes[this._nodes.length - 1];
@@ -271,7 +273,7 @@
         case "AudioNode":
           return node;
         default:
-          throw new Error("Unknown node type passed to connect");
+          throw new Error("Unknown node type " + (this.__typeof(node)) + " passed to connect");
       }
     };
 
@@ -444,7 +446,7 @@
                       _this[key][rampfun](val, _this.context.currentTime + at);
                       return _this.debug(key + "." + rampfun + "(" + val + ", " + (_this.context.currentTime + at) + ")");
                     };
-                  })(this)), 1 / (this.context.sampleRate * 1000));
+                  })(this)), 1000 / this.context.sampleRate);
                 } else {
                   this[key][rampfun](val, this.context.currentTime + at);
                 }
@@ -478,32 +480,66 @@
 
     MooogAudioNode.prototype.define_buffer_source_properties = function() {
       this._buffer_source_file_url = '';
-      return Object.defineProperty(this, 'buffer_source_file', {
+      Object.defineProperty(this, 'buffer_source_file', {
         get: function() {
           return this._buffer_source_file_url;
         },
-        set: (function(_this) {
-          return function(filename) {
-            var request;
-            request = new XMLHttpRequest();
-            request.open('GET', filename, true);
-            request.responseType = 'arraybuffer';
-            request.onload = function() {
-              _this.debug("loaded " + filename);
-              _this._buffer_source_file_url = filename;
-              return _this._instance.context.decodeAudioData(request.response, function(buffer) {
-                _this.debug("setting buffer", buffer);
-                return _this.buffer = buffer;
-              }, function(error) {
-                throw new Error("Could not decode audio data from " + request.responseURL + " - unsupported file format?");
-              });
-            };
-            return request.send();
-          };
-        })(this),
+        set: this.set_buffer_source_file.bind(this),
         enumerable: true,
         configurable: true
       });
+      return null;
+    };
+
+    MooogAudioNode.prototype.set_buffer_source_file = function(filename, event) {
+      var deferredLoad, request;
+      if (event == null) {
+        event = false;
+      }
+      if (this._instance.audioBuffersLoaded[filename]) {
+        if (this._instance.audioBuffersLoaded[filename] === "REQUESTED") {
+          this.debug(filename + " requested but not yet available to " + this.id + ", adding event listener");
+          deferredLoad = function(filename, event) {
+            if (event.detail.filename === filename) {
+              this.debug("deferred load callback for " + filename);
+              this.buffer = this._instance.audioBuffersLoaded[filename];
+              return document.removeEventListener(Mooog.EVENT_NAMES.AUDIO_BUFFER_LOADED, deferredLoad);
+            }
+          };
+          return document.addEventListener(Mooog.EVENT_NAMES.AUDIO_BUFFER_LOADED, deferredLoad.bind(this, filename));
+        } else {
+          this.buffer = this._instance.audioBuffersLoaded[filename];
+          this.debug("set buffer " + filename + " from cache for " + this.id);
+          return null;
+        }
+      } else {
+        this.debug(filename + " not in cache, requesting for " + this.id);
+        this._instance.audioBuffersLoaded[filename] = "REQUESTED";
+        request = new XMLHttpRequest();
+        request.open('GET', filename, true);
+        request.responseType = 'arraybuffer';
+        request.onload = (function(_this) {
+          return function() {
+            _this.debug("completed HTTP request for " + filename);
+            _this._buffer_source_file_url = filename;
+            return _this._instance.context.decodeAudioData(request.response, function(buffer) {
+              _this.debug("setting buffer from " + filename + " and dispatching " + Mooog.EVENT_NAMES.AUDIO_BUFFER_LOADED, buffer);
+              _this._instance.audioBuffersLoaded[filename] = buffer;
+              _this.buffer = buffer;
+              event = new CustomEvent(Mooog.EVENT_NAMES.AUDIO_BUFFER_LOADED, {
+                detail: {
+                  filename: filename,
+                  buffer: buffer
+                }
+              });
+              return document.dispatchEvent(event);
+            }, function(error) {
+              throw new Error("Could not decode audio data from " + request.responseURL + " - unsupported file format?");
+            });
+          };
+        })(this);
+        return request.send();
+      }
     };
 
     MooogAudioNode.prototype.define_readonly_property = function(prop_name, func) {
@@ -650,7 +686,8 @@
       }
       this._state = 'playing';
       this._nodes[1].param('gain', 1);
-      return this._nodes[0].start();
+      this._nodes[0].start();
+      return this;
     };
 
     AudioBufferSource.prototype.stop = function() {
@@ -1203,6 +1240,10 @@
 
     Mooog.MooogAudioNode = MooogAudioNode;
 
+    Mooog.EVENT_NAMES = {
+      AUDIO_BUFFER_LOADED: 'mooog.audioBufferLoaded'
+    };
+
     function Mooog(initConfig1) {
       this.initConfig = initConfig1 != null ? initConfig1 : {};
       this.config = {
@@ -1215,6 +1256,7 @@
         fake_zero: 1 / 65536,
         allow_multiple_audiocontexts: false
       };
+      this.audioBuffersLoaded = {};
       this._BROWSER_CONSTRUCTOR = false;
       this.context = this.create_context();
       this._destination = this.context.destination;

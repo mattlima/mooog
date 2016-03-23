@@ -29,6 +29,7 @@ Wraps the AudioBufferSourceNode AudioContext object
         @_state = 'playing'
         @_nodes[1].param('gain', 1)
         @_nodes[0].start()
+        this
         
       stop: () ->
         return @ if @_state is 'stopped'
@@ -39,7 +40,7 @@ Wraps the AudioBufferSourceNode AudioContext object
         @delete_node 0
         @insert_node new_source, 0
         @expose_properties_of @_nodes[0]
-        @
+        this
       
       
       clone_AudioNode_properties: (source, dest) ->

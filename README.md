@@ -2,7 +2,7 @@
 
 ##Chainable AudioNode API
 
-Version 0.0.7
+Version 0.0.8
 
 **Important (Jan. 2016)**
 
@@ -63,6 +63,17 @@ chain) so you can talk to them just like the underlying AudioNode.
 Many of them offer additional functionality. There are also utilities like 
 an ADSR generator as well as functions to generate common waveshaping curves like Chebyshevs 
 and `tanh`.
+
+All nodes with a `buffer` property fire a `mooog.audioBufferLoaded` event when the 
+requested audio asset has finished loading. Using the same file for mulitple buffers can
+cause duplicate requests if the first request hasn't finished loading and the browser hasn't
+cached it yet. To prevent this, Mooog caches these buffers internally and automatically
+subscribes the requesting node to the load event for that file path, setting the buffer
+when the file is ready, so that each audio asset is only requested once. 
+
+`mooog.audioBufferLoaded` is a synthetic event fired on the `document` element with 
+the file path and loaded `AudioBuffer` in the `detail` property, so you can listen
+for it to make sure your audio files are loaded before you do any playback.
 
 There is also a specialized MooogAudioNode object called `Track`, which will automatically
 create panner and gain nodes at the end of its internal chain that can be controlled 
@@ -344,6 +355,8 @@ Returns a sine `PeriodicWave`.
 which to create an AudioBuffer and then set the `buffer` of the underlying `AudioNode`
 - Automatically regenerates the `buffer` when the `stop()` method is used so you can repeatedly `stop` 
 and `start` without initializing a new Node.
+- Fires `mooog.audioBufferLoaded` event when an external audio asset is completely loaded. The file
+path is available in the `detail` property.
 
 ### ChannelMerger and ChannelSplitter
 Constructor parameters `numberOfInputs` or `numberOfOutputs` can be passed in
@@ -352,6 +365,8 @@ the configuration object
 ### Convolver
 - Includes a config object property `buffer_source_file` indicating the URL of an audio asset (impulse
 response) from which to create an AudioBuffer and then set the `buffer` of the underlying `AudioNode`
+- Fires `mooog.audioBufferLoaded` event when an external audio asset is completely loaded. The file
+path is available in the `detail` property.
 
 ### Delay
 - Exposes a `feedback` property that maps to the `Gain` of a feedback stage. Defaults to zero,
@@ -387,7 +402,7 @@ shaper.curve = shaper.chebyshev(5);
 
 The MIT License (MIT)
 
-Copyright (c) 2015 Matthew Lima
+Copyright (c) 2016 Matthew Lima
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -417,10 +432,11 @@ If you're feeling generous, you can throw me some dosh [here.](https://www.paypa
 - 0.0.1 : First working version.
 - 0.0.2 : Added ChannelMerger, ChannelSplitter, ScriptProcessor nodes, fixed bug when setting callbacks via the config object.
 - 0.0.3 : Refactor for more rational signatures and easier homebrew Node creation.
-- 0.0.4 : Add shim for StereoPannerNode
-- 0.0.5 : AudioBufferSourceNode retains onended() function between plays once set 
+- 0.0.4 : Add shim for StereoPannerNode.
+- 0.0.5 : AudioBufferSourceNode retains onended() function between plays once set.
 - 0.0.6 : `fake_zero` is only used when the ramp type is 'expo'. Changed behavior of `from_now` option in param() to use setTimeout in order to correctly pick up param changes scheduled on the same tick.
 - 0.0.7 : Track objects behave just like other Nodes when used as source or target of `.connect` and `.chain`
+- 0.0.8 : Nodes with a `buffer` property fire loaded events. Buffer source load requests are cached to avoid logjam on page load.
 
 ## Todo:
 
