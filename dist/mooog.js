@@ -252,6 +252,7 @@
     };
 
     MooogAudioNode.prototype.chain = function(node, output, input) {
+      var destination;
       if (output == null) {
         output = 0;
       }
@@ -261,7 +262,8 @@
       if (this.__typeof(node) === "AudioParam" && typeof output !== 'string') {
         throw new Error("MooogAudioNode.chain() can only target AudioParams when used with the signature .chain(target_node:Node, target_param_name:string)");
       }
-      this.disconnect(this._destination);
+      destination = this instanceof Track ? this._instance._destination : this._destination;
+      this.disconnect(destination);
       return this.connect(node, output, input, false);
     };
 
@@ -364,6 +366,7 @@
           throw new Error("Unknown node type passed to disconnect");
       }
       try {
+        this.debug("Disconnecting ", source, target);
         source.disconnect(target, output, input);
       } catch (_error) {
         e = _error;

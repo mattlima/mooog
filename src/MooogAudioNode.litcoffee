@@ -125,6 +125,7 @@ This is a modified `typeof` to filter AudioContext API-specific object types
         length = @_nodes.length
         ord = length unless ord?
         
+
         node.disconnect node._destination if node._destination?
                 
         if ord > length
@@ -266,7 +267,8 @@ use the name of the param as the second argument (and the base `MooogAudioNode` 
         if @__typeof(node) is "AudioParam" and typeof(output) isnt 'string'
           throw new Error "MooogAudioNode.chain() can only target AudioParams when used with
           the signature .chain(target_node:Node, target_param_name:string)"
-        @disconnect @_destination
+        destination = if this instanceof Track then @_instance._destination else @_destination
+        @disconnect destination
         @connect node, output, input, false
 
 
@@ -341,6 +343,7 @@ a node that's not already connected.
           when "string" then target = @_instance.node node2
           else throw new Error "Unknown node type passed to disconnect"
         try
+          @debug "Disconnecting ", source, target
           source.disconnect target, output, input
         catch e
           @debug("ignored InvalidAccessError disconnecting #{target} from #{source}")
