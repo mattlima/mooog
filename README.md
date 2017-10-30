@@ -1,6 +1,6 @@
 # Mooog
 
-##Chainable AudioNode API
+## Chainable AudioNode API
 
 Version 0.0.8
 
@@ -24,19 +24,19 @@ Mooog's goal is to take some of the tedium out of working with AudioNodes,
 as well as patching some odd behaviors. With Mooog, instead of writing this:
 
 ```javascript
-AudioContext = AudioContext || webkitAudioContext;  
-var ctxt = new AudioContext();  
-var osc = ctxt.createOscillator();  
-var lfo = ctxt.createOscillator();  
-var gain = ctxt.createGain();  
-osc.frequency.value = 300;  
-lfo.type = 'sawtooth';  
-lfo.frequency.value = 3;  
-lfo.connect(gain);  
-gain.gain.value = 40;  
-gain.connect(osc.frequency);  
-osc.connect(ctxt.destination);  
-lfo.start();  
+AudioContext = AudioContext || webkitAudioContext;
+var ctxt = new AudioContext();
+var osc = ctxt.createOscillator();
+var lfo = ctxt.createOscillator();
+var gain = ctxt.createGain();
+osc.frequency.value = 300;
+lfo.type = 'sawtooth';
+lfo.frequency.value = 3;
+lfo.connect(gain);
+gain.gain.value = 40;
+gain.connect(osc.frequency);
+osc.connect(ctxt.destination);
+lfo.start();
 osc.start();
 ```
 
@@ -58,36 +58,20 @@ M.node(
 
 ### Features
 Mooog provides a `MooogAudioNode` object that can wrap one or more AudioNodes. 
-At a minumum, it exposes the methods of the wrapped Node (or the first in its internal
-chain) so you can talk to them just like the underlying AudioNode. 
+At a minimum, it exposes the methods of the wrapped Node (or the first in its internal chain) so you can talk to them just like the underlying AudioNode. 
 Many of them offer additional functionality. There are also utilities like 
-an ADSR generator as well as functions to generate common waveshaping curves like Chebyshevs 
-and `tanh`.
+an ADSR generator as well as functions to generate common waveshaping curves like Chebyshevs and `tanh`.
 
-All nodes with a `buffer` property fire a `mooog.audioBufferLoaded` event when the 
-requested audio asset has finished loading. Using the same file for mulitple buffers can
-cause duplicate requests if the first request hasn't finished loading and the browser hasn't
-cached it yet. To prevent this, Mooog caches these buffers internally and automatically
-subscribes the requesting node to the load event for that file path, setting the buffer
-when the file is ready, so that each audio asset is only requested once. 
+All nodes with a `buffer` property fire a `mooog.audioBufferLoaded` event when the requested audio asset has finished loading. Using the same file for multiple buffers can cause duplicate requests if the first request hasn't finished loading and the browser hasn't cached it yet. To prevent this, Mooog caches these buffers internally and automatically subscribes the requesting node to the load event for that file path, setting the buffer when the file is ready, so that each audio asset is only requested once. 
 
-`mooog.audioBufferLoaded` is a synthetic event fired on the `document` element with 
-the file path and loaded `AudioBuffer` in the `detail` property, so you can listen
-for it to make sure your audio files are loaded before you do any playback.
+`mooog.audioBufferLoaded` is a synthetic event fired on the `document` element with the file path and loaded `AudioBuffer` in the `detail` property, so you can listen for it to make sure your audio files are loaded before you do any playback.
 
-There is also a specialized MooogAudioNode object called `Track`, which will automatically
-create panner and gain nodes at the end of its internal chain that can be controlled 
-from a single place and easily create sends to other `Track`s. Like the base 
-`MooogAudioNode`, it automatically routes the end of its internal chain to the destinationNode.
+There is also a specialized MooogAudioNode object called `Track`, which will automatically create panner and gain nodes at the end of its internal chain that can be controlled from a single place and easily create sends to other `Track`s. Like the base `MooogAudioNode`, it automatically routes the end of its internal chain to the destinationNode.
 
 ### Patches
-The Web Audio API is not, and never will be, supported on IE (though it is supported on Edge), which
-limits its usefulness for general web projects until Edge supplants IE. Even where it is supported, the 
-API still has not matured (AudioWorkers, for example, are not implemented anywhere yet) so Mooog doesn't
-worry too much about cross-browser compatibility issues. It does, however, implement a patch 
-for the absence of the StereoPannerNode on for the deprecated Audio API, since panning is such a 
-basic audio operation and the Mooog `Track` object relies on it. Ensuring cross-platform
-consistency is on the to-do list once the API stabilizes and browser support improves.
+The Web Audio API is not, and never will be, supported on IE (though it is supported on Edge), which limits its usefulness for general web projects until Edge supplants IE. Even where it is supported, the 
+API still has not matured (AudioWorkers, for example, are not implemented anywhere yet) so Mooog doesn't worry too much about cross-browser compatibility issues. It does, however, implement a patch 
+for the absence of the StereoPannerNode on for the deprecated Audio API, since panning is such a basic audio operation and the Mooog `Track` object relies on it. Ensuring cross-platform consistency is on the to-do list once the API stabilizes and browser support improves.
 
 #### StereoPannerNode
 Mooog shims the `StereoPannerNode` on webkit browsers like Safari that don't support it. 
@@ -224,30 +208,30 @@ be used to call any of them by adding properties to the object submitted. Here a
 an oscillator's `frequency` parameter. Note the use of `from_now` which causes a call to `setValueAtTime`
 at the currentTime if used with linear or exponential ramp functions.
 
-- Set `frequency` to 800 immediately. (Use `setValueAtTime`)  
+- Set `frequency` to 800 immediately. (Use `setValueAtTime`)
 `osc.param( {frequency: 800} );`
 
-- Set `frequency` to 800, 4 seconds from now. (Use `setValueAtTime`)  
+- Set `frequency` to 800, 4 seconds from now. (Use `setValueAtTime`)
 `osc.param( {frequency: 800, at: 4} );`
 
 - Ramp `frequency` linearly to 800, starting after the last scheduled value change (or now, if 
-there isn't one) and arriving 4 seconds from now. (Use `linearRampToValueAtTime`)  
+there isn't one) and arriving 4 seconds from now. (Use `linearRampToValueAtTime`)
 `osc.param( {frequency: 800, at: 4, ramp: 'linear'} );`
 
 - Ramp `frequency` linearly to 800, starting now and arriving 4 seconds from now.
 `osc.param( {frequency: 800, at: 4, ramp: 'linear', from_now: true} );`
 
 - Ramp `frequency` exponentially to 800 over 4 seconds, starting now.
-(Use `exponentialRampToValueAtTime`)  
+(Use `exponentialRampToValueAtTime`)
 `osc.param( {frequency: 800, at: 4, ramp: 'expo', from_now: true } );`
 
 - Set `frequency` to asymptotically approach 800, beginning 4 seconds from now. 
-(Use `setTargetAtTime`)  
+(Use `setTargetAtTime`)
 `osc.param( {frequency: 800, at: 4, ramp: 'expo', timeConstant: 1.5} );`
 
 - Set `frequency` to values 300, 550, 900, 800 over a period of 2 seconds.* 
-(Use `setValueCurveAtTime`)  
-`osc.param( {frequency: [300, 550, 900, 800], duration: 2, ramp: 'curve'} );`  
+(Use `setValueCurveAtTime`)
+`osc.param( {frequency: [300, 550, 900, 800], duration: 2, ramp: 'curve'} );`
 *The rhythmic irregularity of the frequency progression produced by the `setValueCurveAtTime()`
 method is due to the nearest-value interpolation algorithm it uses. The function is meant for much larger arrays 
 of values describing smooth curves.
@@ -259,7 +243,7 @@ For convenience, you can create ADSR, ASR, or ADS envelopes with the `adsr` meth
 
 > `MooogAudioNode.adsr( param: mixed, config: object )` 
 
-`param`: An `AudioParam` or the string name of the `AudioParam`, assumed to be on `this`.  
+`param`: An `AudioParam` or the string name of the `AudioParam`, assumed to be on `this`.
 `config`: Object with the following properties: 
 - base: The value to start and end with. *Defaults to 'zero'*
 - times: An array of time values representing the ending time of each of the 
@@ -270,7 +254,7 @@ The release stage can be suppressed by passing an array of 2 elements, in which 
 envelope will be an ADS envelope (useful if you're responding to user input or the duration of the note cannot be predetermined.)
 - a: The final value of the parameter at the end of the attack stage. *Defaults to 1*
 - s: The value of the parameter at the end of the delay stage (or attack stage, 
-if delay is omitted), to be held until the beginning of the release stage. *Defaults to 1*  
+if delay is omitted), to be held until the beginning of the release stage. *Defaults to 1*
 - ramp: 'linear' or 'expo', determines the ramping function to use. *Defaults to the `default_ramp_type`
 property of the Mooog config object*
 
@@ -296,7 +280,7 @@ the nodes in the pan/gain stage directly.
 
 Tracks can be used interchangeably with nodes as source or destination objects for methods `connect()` and `chain()`. 
 
-Tracks have a `send()` function analagous to mixing board sends. Once created, the send (which is a `Gain` node) is referenced by string id, just like Tracks and other nodes. 
+Tracks have a `send()` function analogous to mixing board sends. Once created, the send (which is a `Gain` node) is referenced by string id, just like Tracks and other nodes. 
 
 ```javascript
 /* create the track */
@@ -328,8 +312,7 @@ A convenience function for converting MIDI notes to equal temperament Hz
 ### PeriodicWave constructors
 
 The native versions of the native (Sine, Sawtooth, Triangle, Square) waveforms 
-are louder than equivalent waveforms created with `createPeriodicWave` so if your signal path
-includes both it may be easier to mix them if you use generated versions of the native waveforms: 
+are louder than equivalent waveforms created with `createPeriodicWave` so if your signal path includes both it may be easier to mix them if you use generated versions of the native waveforms: 
  
 ####Mooog.sawtoothPeriodicWave(n)
 
@@ -351,8 +334,7 @@ Returns a sine `PeriodicWave`.
 
 ### AudioBufferSource
 - Exposes a `state` property that is either 'stopped' or 'playing'
-- Includes a config object property `buffer_source_file` indicating the URL of an audio asset from
-which to create an AudioBuffer and then set the `buffer` of the underlying `AudioNode`
+- Includes a config object property `buffer_source_file` indicating the URL of an audio asset from which to create an AudioBuffer and then set the `buffer` of the underlying `AudioNode`
 - Automatically regenerates the `buffer` when the `stop()` method is used so you can repeatedly `stop` 
 and `start` without initializing a new Node.
 - Fires `mooog.audioBufferLoaded` event when an external audio asset is completely loaded. The file
@@ -363,19 +345,14 @@ Constructor parameters `numberOfInputs` or `numberOfOutputs` can be passed in
 the configuration object
 
 ### Convolver
-- Includes a config object property `buffer_source_file` indicating the URL of an audio asset (impulse
-response) from which to create an AudioBuffer and then set the `buffer` of the underlying `AudioNode`
-- Fires `mooog.audioBufferLoaded` event when an external audio asset is completely loaded. The file
-path is available in the `detail` property.
+- Includes a config object property `buffer_source_file` indicating the URL of an audio asset (impulse response) from which to create an AudioBuffer and then set the `buffer` of the underlying `AudioNode`
+- Fires `mooog.audioBufferLoaded` event when an external audio asset is completely loaded. The file path is available in the `detail` property.
 
 ### Delay
-- Exposes a `feedback` property that maps to the `Gain` of a feedback stage. Defaults to zero,
-and can be set on initialization: `Mooog.node( { node_type: 'Delay', feedback: 0.2 } )`
+- Exposes a `feedback` property that maps to the `Gain` of a feedback stage. Defaults to zero, and can be set on initialization: `Mooog.node( { node_type: 'Delay', feedback: 0.2 } )`
 
 ### Gain
-- Saturation can easily occur in signal chains with multiple paths when they are summed at the output.
-To alleviate this effectm the `Gain` object is initiliazed with `gain` set to 0.5 instead of 1.0. You can 
-change this default with the `default_gain` Mooog config option.
+- Saturation can easily occur in signal chains with multiple paths when they are summed at the output. To alleviate this effect, the `Gain` object is initialized with `gain` set to 0.5 instead of 1.0. You can change this default with the `default_gain` Mooog config option.
 
 ### Oscillator
 - Exposes a `state` property that is either 'stopped' or 'playing'
