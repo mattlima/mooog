@@ -314,19 +314,19 @@ A convenience function for converting MIDI notes to equal temperament Hz
 The native versions of the native (Sine, Sawtooth, Triangle, Square) waveforms 
 are louder than equivalent waveforms created with `createPeriodicWave` so if your signal path includes both it may be easier to mix them if you use generated versions of the native waveforms: 
  
-####Mooog.sawtoothPeriodicWave(n)
+#### Mooog.sawtoothPeriodicWave(n)
 
 Calculates and returns a sawtooth `PeriodicWave` up to the nth partial.
  
-####Mooog.squarePeriodicWave(n)
+#### Mooog.squarePeriodicWave(n)
 
 Calculates and returns a square `PeriodicWave` up to the nth partial.
  
-####Mooog.trianglePeriodicWave(n)
+#### Mooog.trianglePeriodicWave(n)
 
 Calculates and returns a triangle `PeriodicWave` up to the nth partial.
  
-####Mooog.sinePeriodicWave()
+#### Mooog.sinePeriodicWave()
 
 Returns a sine `PeriodicWave`.
 
@@ -357,6 +357,7 @@ the configuration object
 ### Oscillator
 - Exposes a `state` property that is either 'stopped' or 'playing'
 - Sets an internal `gain` so you can repeatedly `stop` and `start` without initializing a new Node.
+> This means, of course, that no guarantees about phase can be made for subsequent calls to `start()`. If you need to control phase on node `start()` you should use a raw `OscillatorNode`.
 
 ### ScriptProcessor
 Constructor arguments `numberOfInputChannels`, `numberOfOutputChannels` and `bufferSize` can be 
